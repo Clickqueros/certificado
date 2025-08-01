@@ -1173,6 +1173,7 @@ startxref
             
             // Incluir todas las dependencias necesarias de Dompdf
             require_once $dompdf_path;
+            require_once plugin_dir_path(__FILE__) . 'libs/dompdf/lib/Cpdf.php'; // Core Cpdf library
             require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Options.php';
             require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Canvas.php';
             require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/CanvasFactory.php';
