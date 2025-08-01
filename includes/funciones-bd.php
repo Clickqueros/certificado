@@ -41,7 +41,8 @@ class CertificadosPersonalizadosBD {
             'user_id' => get_current_user_id(),
             'codigo_unico' => self::generar_codigo_unico(),
             'estado' => 'pendiente',
-            'notificado' => 0
+            'notificado' => 0,
+            'observaciones' => ''
         );
         
         $datos = wp_parse_args($datos, $datos_default);

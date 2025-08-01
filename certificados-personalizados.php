@@ -114,6 +114,7 @@ class CertificadosPersonalizados {
             nombre VARCHAR(255) NOT NULL,
             actividad VARCHAR(255) NOT NULL,
             fecha DATE NOT NULL,
+            observaciones TEXT,
             estado VARCHAR(50) NOT NULL DEFAULT 'pendiente',
             pdf_path TEXT,
             codigo_unico VARCHAR(100) NOT NULL,
