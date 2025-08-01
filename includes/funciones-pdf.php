@@ -38,45 +38,47 @@ class CertificadosPersonalizadosPDF {
             }
         }
         
-        // Generar nombre del archivo base (sin extensión)
+        // Generar nombre del archivo
         $nombre_base = 'certificado_' . $certificado->codigo_unico;
+        $ruta_pdf = $certificados_dir . $nombre_base . '.pdf';
         
-        // Generar contenido HTML del certificado
-        $html_content = self::generar_html_certificado($certificado);
-        
-        // Intentar generar PDF real primero
+        // Intentar generar PDF real
         $pdf_generado = false;
-        $extension_final = '.html'; // Por defecto HTML
         
         // 1. Intentar con TCPDF
-        $ruta_pdf = $certificados_dir . $nombre_base . '.pdf';
-        if (self::generar_pdf_desde_html($html_content, $ruta_pdf)) {
+        if (self::generar_pdf_desde_html(self::generar_html_certificado($certificado), $ruta_pdf)) {
             $pdf_generado = true;
-            $extension_final = '.pdf';
         }
         // 2. Intentar con FPDF si TCPDF falló
         elseif (self::generar_pdf_con_fpdf_directo($certificado, $ruta_pdf)) {
             $pdf_generado = true;
-            $extension_final = '.pdf';
         }
-        // 3. Si todo falla, generar HTML
+        // 3. Intentar con librería simple
+        elseif (self::generar_pdf_simple_directo($certificado, $ruta_pdf)) {
+            $pdf_generado = true;
+        }
+        // 4. Si todo falla, generar HTML como último recurso
         else {
             $ruta_html = $certificados_dir . $nombre_base . '.html';
+            $html_content = self::generar_html_certificado($certificado);
             if (file_put_contents($ruta_html, $html_content)) {
                 $pdf_generado = true;
-                $extension_final = '.html';
+                $ruta_pdf = $ruta_html; // Usar la ruta HTML
             }
         }
         
         if ($pdf_generado) {
+            // Determinar la extensión correcta
+            $extension = pathinfo($ruta_pdf, PATHINFO_EXTENSION);
+            $nombre_final = $nombre_base . '.' . $extension;
+            
             // Actualizar la ruta en la base de datos
-            $nombre_final = $nombre_base . $extension_final;
             $actualizado = CertificadosPersonalizadosBD::actualizar_certificado($certificado_id, array(
                 'pdf_path' => $upload_dir['baseurl'] . '/certificados/' . $nombre_final
             ));
             
             if ($actualizado) {
-                error_log('CertificadosPersonalizadosPDF: Archivo generado exitosamente para ID: ' . $certificado_id . ' - Extensión: ' . $extension_final);
+                error_log('CertificadosPersonalizadosPDF: Archivo generado exitosamente para ID: ' . $certificado_id . ' - Extensión: ' . $extension);
             } else {
                 error_log('CertificadosPersonalizadosPDF: Error actualizando BD para ID: ' . $certificado_id);
             }
@@ -873,6 +875,283 @@ class CertificadosPersonalizadosPDF {
             error_log('Error generando PDF con FPDF: ' . $e->getMessage());
             return false;
         }
+    }
+    
+    /**
+     * Generar PDF simple directamente sin dependencias externas
+     */
+    private static function generar_pdf_simple_directo($certificado, $ruta_archivo) {
+        // Intentar usar wkhtmltopdf si está disponible
+        $html_content = self::generar_html_certificado($certificado);
+        $html_temp = $ruta_archivo . '.temp.html';
+        
+        if (file_put_contents($html_temp, $html_content)) {
+            $comando = "wkhtmltopdf --quiet --page-size A4 --margin-top 0.75in --margin-right 0.75in --margin-bottom 0.75in --margin-left 0.75in --encoding UTF-8 '$html_temp' '$ruta_archivo'";
+            $resultado = shell_exec($comando);
+            
+            if (file_exists($ruta_archivo)) {
+                if (file_exists($html_temp)) {
+                    unlink($html_temp);
+                }
+                return true;
+            }
+        }
+        
+        if (file_exists($html_temp)) {
+            unlink($html_temp);
+        }
+        
+        // Si wkhtmltopdf no funciona, intentar con una librería PHP simple
+        return self::generar_pdf_con_libreria_simple($certificado, $ruta_archivo);
+    }
+    
+    /**
+     * Generar PDF usando una librería PHP simple
+     */
+    private static function generar_pdf_con_libreria_simple($certificado, $ruta_archivo) {
+        // Crear contenido PDF básico usando funciones nativas de PHP
+        $pdf_content = self::generar_contenido_pdf_basico($certificado);
+        
+        // Intentar usar la librería mPDF si está disponible
+        if (class_exists('mPDF')) {
+            return self::generar_pdf_con_mpdf($certificado, $ruta_archivo);
+        }
+        
+        // Si no hay librerías disponibles, crear un PDF básico
+        return self::generar_pdf_basico_nativo($certificado, $ruta_archivo);
+    }
+    
+    /**
+     * Generar contenido PDF básico
+     */
+    private static function generar_contenido_pdf_basico($certificado) {
+        $fecha_formateada = date('d/m/Y', strtotime($certificado->fecha));
+        
+        return "%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Contents 4 0 R
+/Resources <<
+/Font <<
+/F1 5 0 R
+>>
+>>
+>>
+endobj
+
+4 0 obj
+<<
+/Length 1000
+>>
+stream
+BT
+/F1 24 Tf
+306 720 Td
+(CERTIFICADO) Tj
+ET
+BT
+/F1 12 Tf
+306 680 Td
+(de Participacion y Aprobacion) Tj
+ET
+BT
+/F1 14 Tf
+306 640 Td
+(Se certifica que) Tj
+ET
+BT
+/F1 16 Tf
+306 600 Td
+(" . $certificado->nombre . ") Tj
+ET
+BT
+/F1 12 Tf
+306 560 Td
+(ha participado exitosamente en) Tj
+ET
+BT
+/F1 14 Tf
+306 520 Td
+(" . $certificado->actividad . ") Tj
+ET
+BT
+/F1 12 Tf
+306 480 Td
+(realizado el dia) Tj
+ET
+BT
+/F1 14 Tf
+306 440 Td
+(" . $fecha_formateada . ") Tj
+ET
+BT
+/F1 10 Tf
+306 400 Td
+(Codigo de Validacion: " . $certificado->codigo_unico . ") Tj
+ET
+endstream
+endobj
+
+5 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/BaseFont /Helvetica
+>>
+endobj
+
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000250 00000 n 
+0000000350 00000 n 
+trailer
+<<
+/Size 6
+/Root 1 0 R
+>>
+startxref
+4000
+%%EOF";
+    }
+    
+    /**
+     * Generar PDF básico nativo
+     */
+    private static function generar_pdf_basico_nativo($certificado, $ruta_archivo) {
+        // Crear un PDF muy básico usando funciones nativas
+        $fecha_formateada = date('d/m/Y', strtotime($certificado->fecha));
+        
+        $pdf_content = "%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Contents 4 0 R
+/Resources <<
+/Font <<
+/F1 5 0 R
+>>
+>>
+>>
+endobj
+
+4 0 obj
+<<
+/Length 500
+>>
+stream
+BT
+/F1 24 Tf
+306 720 Td
+(CERTIFICADO) Tj
+ET
+BT
+/F1 12 Tf
+306 680 Td
+(de Participacion) Tj
+ET
+BT
+/F1 14 Tf
+306 640 Td
+(Se certifica que) Tj
+ET
+BT
+/F1 16 Tf
+306 600 Td
+(" . $certificado->nombre . ") Tj
+ET
+BT
+/F1 12 Tf
+306 560 Td
+(ha participado en) Tj
+ET
+BT
+/F1 14 Tf
+306 520 Td
+(" . $certificado->actividad . ") Tj
+ET
+BT
+/F1 12 Tf
+306 480 Td
+(realizado el dia) Tj
+ET
+BT
+/F1 14 Tf
+306 440 Td
+(" . $fecha_formateada . ") Tj
+ET
+BT
+/F1 10 Tf
+306 400 Td
+(Codigo: " . $certificado->codigo_unico . ") Tj
+ET
+endstream
+endobj
+
+5 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/BaseFont /Helvetica
+>>
+endobj
+
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000250 00000 n 
+0000000350 00000 n 
+trailer
+<<
+/Size 6
+/Root 1 0 R
+>>
+startxref
+2000
+%%EOF";
+        
+        return file_put_contents($ruta_archivo, $pdf_content) !== false;
     }
     
     /**
