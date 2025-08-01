@@ -74,7 +74,13 @@ function procesar_solicitud_certificado() {
             'certificado_id' => $certificado_id
         );
     } else {
-        return array('tipo' => 'error', 'mensaje' => 'Error al crear el certificado.');
+        // Agregar información de debug
+        global $wpdb;
+        $error_msg = 'Error al crear el certificado.';
+        if ($wpdb->last_error) {
+            $error_msg .= ' Error DB: ' . $wpdb->last_error;
+        }
+        return array('tipo' => 'error', 'mensaje' => $error_msg);
     }
 }
 
