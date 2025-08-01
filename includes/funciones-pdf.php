@@ -1171,22 +1171,42 @@ startxref
                 return false;
             }
             
-            // Incluir Dompdf
+            // Incluir todas las dependencias necesarias de Dompdf
             require_once $dompdf_path;
             require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Options.php';
             require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Canvas.php';
             require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/CanvasFactory.php';
             require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Exception.php';
+            require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Adapter/CPDF.php';
+            require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Adapter/GD.php';
+            require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Helpers.php';
+            require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/FontMetrics.php';
+            require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Frame.php';
+            require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/LineBox.php';
+            require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Renderer.php';
+            
+            // Verificar que las clases principales estén disponibles
+            if (!class_exists('\\Dompdf\\Dompdf')) {
+                error_log('CertificadosPersonalizadosPDF: Clase Dompdf no encontrada después de incluir archivos');
+                return false;
+            }
+            
+            if (!class_exists('\\Dompdf\\Adapter\\CPDF')) {
+                error_log('CertificadosPersonalizadosPDF: Clase CPDF no encontrada después de incluir archivos');
+                return false;
+            }
             
             // Generar HTML del certificado
             $html_content = self::generar_html_certificado($certificado);
             
-            // Configurar Dompdf
+            // Configurar Dompdf con opciones más básicas
             $options = new \Dompdf\Options();
             $options->set('isHtml5ParserEnabled', true);
             $options->set('isPhpEnabled', false);
             $options->set('isRemoteEnabled', false);
             $options->set('defaultFont', 'Arial');
+            $options->set('defaultPaperSize', 'a4');
+            $options->set('defaultPaperOrientation', 'portrait');
             
             // Crear instancia de Dompdf
             $dompdf = new \Dompdf\Dompdf($options);
@@ -1211,6 +1231,7 @@ startxref
             
         } catch (Exception $e) {
             error_log('CertificadosPersonalizadosPDF: Error con Dompdf: ' . $e->getMessage());
+            error_log('CertificadosPersonalizadosPDF: Stack trace: ' . $e->getTraceAsString());
             return false;
         }
     }
