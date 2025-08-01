@@ -293,6 +293,121 @@ class CertificadosPersonalizadosPDF {
     }
     
     /**
+     * Instalar TCPDF automáticamente si no está disponible
+     */
+    private static function instalar_tcpdf() {
+        $tcpdf_dir = CERTIFICADOS_PERSONALIZADOS_PLUGIN_PATH . 'includes/libs/tcpdf/';
+        
+        // Si ya existe, no hacer nada
+        if (file_exists($tcpdf_dir . 'tcpdf.php')) {
+            return true;
+        }
+        
+        // Crear directorio si no existe
+        if (!file_exists($tcpdf_dir)) {
+            wp_mkdir_p($tcpdf_dir);
+        }
+        
+        // Intentar descargar TCPDF desde GitHub
+        $tcpdf_url = 'https://github.com/tecnickcom/TCPDF/archive/refs/tags/6.6.5.zip';
+        $zip_file = $tcpdf_dir . 'tcpdf.zip';
+        
+        // Descargar archivo
+        $response = wp_remote_get($tcpdf_url);
+        if (is_wp_error($response)) {
+            error_log('CertificadosPersonalizadosPDF: Error descargando TCPDF');
+            return false;
+        }
+        
+        $zip_content = wp_remote_retrieve_body($response);
+        if (empty($zip_content)) {
+            error_log('CertificadosPersonalizadosPDF: Contenido ZIP vacío');
+            return false;
+        }
+        
+        // Guardar ZIP
+        file_put_contents($zip_file, $zip_content);
+        
+        // Extraer ZIP
+        $zip = new ZipArchive;
+        if ($zip->open($zip_file) === TRUE) {
+            $zip->extractTo($tcpdf_dir);
+            $zip->close();
+            
+            // Mover archivos a la ubicación correcta
+            $extracted_dir = $tcpdf_dir . 'TCPDF-6.6.5/';
+            if (file_exists($extracted_dir)) {
+                // Copiar todos los archivos
+                $files = glob($extracted_dir . '*');
+                foreach ($files as $file) {
+                    $filename = basename($file);
+                    if (is_dir($file)) {
+                        // Copiar directorio completo
+                        self::copy_directory($file, $tcpdf_dir . $filename);
+                    } else {
+                        copy($file, $tcpdf_dir . $filename);
+                    }
+                }
+                
+                // Limpiar directorio extraído
+                self::delete_directory($extracted_dir);
+            }
+            
+            // Limpiar archivo ZIP
+            unlink($zip_file);
+            
+            return file_exists($tcpdf_dir . 'tcpdf.php');
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Copiar directorio recursivamente
+     */
+    private static function copy_directory($src, $dst) {
+        $dir = opendir($src);
+        if (!file_exists($dst)) {
+            mkdir($dst, 0755, true);
+        }
+        while (($file = readdir($dir))) {
+            if (($file != '.') && ($file != '..')) {
+                if (is_dir($src . '/' . $file)) {
+                    self::copy_directory($src . '/' . $file, $dst . '/' . $file);
+                } else {
+                    copy($src . '/' . $file, $dst . '/' . $file);
+                }
+            }
+        }
+        closedir($dir);
+    }
+    
+    /**
+     * Eliminar directorio recursivamente
+     */
+    private static function delete_directory($dir) {
+        if (!file_exists($dir)) {
+            return true;
+        }
+        
+        if (!is_dir($dir)) {
+            return unlink($dir);
+        }
+        
+        foreach (scandir($dir) as $item) {
+            if ($item == '.' || $item == '..') {
+                continue;
+            }
+            
+            if (!self::delete_directory($dir . DIRECTORY_SEPARATOR . $item)) {
+                return false;
+            }
+        }
+        
+        return rmdir($dir);
+    }
+
+    /**
      * Generar PDF desde HTML usando TCPDF
      */
     private static function generar_pdf_desde_html($html_content, $ruta_archivo) {
@@ -303,8 +418,13 @@ class CertificadosPersonalizadosPDF {
             if (file_exists($tcpdf_path)) {
                 require_once($tcpdf_path);
             } else {
-                // Si no está disponible, usar una alternativa simple
-                return self::generar_pdf_simple($html_content, $ruta_archivo);
+                // Intentar instalar TCPDF automáticamente
+                if (self::instalar_tcpdf()) {
+                    require_once($tcpdf_path);
+                } else {
+                    // Si no está disponible, usar una alternativa simple
+                    return self::generar_pdf_simple($html_content, $ruta_archivo);
+                }
             }
         }
         
@@ -387,6 +507,11 @@ class CertificadosPersonalizadosPDF {
         $actividad = isset($matches_actividad[1]) ? strip_tags($matches_actividad[1]) : 'Actividad no encontrada';
         $fecha = isset($matches_fecha[1]) ? strip_tags($matches_fecha[1]) : 'Fecha no encontrada';
         $codigo = isset($matches_codigo[1]) ? strip_tags($matches_codigo[1]) : 'Código no encontrado';
+        
+        // Intentar instalar FPDF si no está disponible
+        if (!class_exists('FPDF')) {
+            self::instalar_fpdf();
+        }
         
         // Crear contenido PDF básico usando FPDF si está disponible
         if (class_exists('FPDF')) {
@@ -578,6 +703,80 @@ class CertificadosPersonalizadosPDF {
         file_put_contents($html_final, $html_mejorado);
         
         return file_exists($html_final);
+    }
+    
+    /**
+     * Instalar FPDF automáticamente si no está disponible
+     */
+    private static function instalar_fpdf() {
+        $fpdf_dir = CERTIFICADOS_PERSONALIZADOS_PLUGIN_PATH . 'includes/libs/fpdf/';
+        
+        // Si ya existe, no hacer nada
+        if (file_exists($fpdf_dir . 'fpdf.php')) {
+            require_once($fpdf_dir . 'fpdf.php');
+            return true;
+        }
+        
+        // Crear directorio si no existe
+        if (!file_exists($fpdf_dir)) {
+            wp_mkdir_p($fpdf_dir);
+        }
+        
+        // Intentar descargar FPDF desde GitHub
+        $fpdf_url = 'https://github.com/Setasign/FPDF/archive/refs/tags/1.85.zip';
+        $zip_file = $fpdf_dir . 'fpdf.zip';
+        
+        // Descargar archivo
+        $response = wp_remote_get($fpdf_url);
+        if (is_wp_error($response)) {
+            error_log('CertificadosPersonalizadosPDF: Error descargando FPDF');
+            return false;
+        }
+        
+        $zip_content = wp_remote_retrieve_body($response);
+        if (empty($zip_content)) {
+            error_log('CertificadosPersonalizadosPDF: Contenido ZIP vacío');
+            return false;
+        }
+        
+        // Guardar ZIP
+        file_put_contents($zip_file, $zip_content);
+        
+        // Extraer ZIP
+        $zip = new ZipArchive;
+        if ($zip->open($zip_file) === TRUE) {
+            $zip->extractTo($fpdf_dir);
+            $zip->close();
+            
+            // Mover archivos a la ubicación correcta
+            $extracted_dir = $fpdf_dir . 'FPDF-1.85/';
+            if (file_exists($extracted_dir)) {
+                // Copiar todos los archivos
+                $files = glob($extracted_dir . '*');
+                foreach ($files as $file) {
+                    $filename = basename($file);
+                    if (is_dir($file)) {
+                        // Copiar directorio completo
+                        self::copy_directory($file, $fpdf_dir . $filename);
+                    } else {
+                        copy($file, $fpdf_dir . $filename);
+                    }
+                }
+                
+                // Limpiar directorio extraído
+                self::delete_directory($extracted_dir);
+            }
+            
+            // Limpiar archivo ZIP
+            unlink($zip_file);
+            
+            if (file_exists($fpdf_dir . 'fpdf.php')) {
+                require_once($fpdf_dir . 'fpdf.php');
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /**
