@@ -1,6 +1,7 @@
 <?php
 /**
  * Funciones para generación de PDF - Plugin Certificados Personalizados
+ * VERSIÓN CORREGIDA - Métodos públicos para acceso desde scripts externos
  */
 
 // Prevenir acceso directo
@@ -70,7 +71,7 @@ class CertificadosPersonalizadosPDF {
     /**
      * Generar HTML del certificado
      */
-    private static function generar_html_certificado($certificado) {
+    public static function generar_html_certificado($certificado) {
         // Obtener tipos de actividad
         $tipos_actividad = array(
             'curso' => 'Curso de Capacitación',
@@ -108,7 +109,7 @@ class CertificadosPersonalizadosPDF {
     /**
      * Generar plantilla por defecto si no existe el archivo
      */
-    private static function generar_plantilla_por_defecto($certificado, $tipo_actividad) {
+    public static function generar_plantilla_por_defecto($certificado, $tipo_actividad) {
         $fecha_formateada = date('d/m/Y', strtotime($certificado->fecha));
         
         return '
