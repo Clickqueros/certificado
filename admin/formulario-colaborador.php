@@ -16,12 +16,20 @@ if (!in_array('contributor', $user_roles)) {
     wp_die(__('Acceso no autorizado. Solo los colaboradores pueden acceder a esta página.', 'certificados-personalizados'));
 }
 
-// Procesar formulario si se envió
+// Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['solicitar_certificado'])) {
     $mensaje = procesar_solicitud_certificado();
 }
 
-// Obtener certificados del usuario actual
+// Process redirect messages (from approval submission)
+if (isset($_GET['mensaje']) && isset($_GET['texto'])) {
+    $mensaje = array(
+        'tipo' => sanitize_text_field($_GET['mensaje']),
+        'mensaje' => sanitize_text_field($_GET['texto'])
+    );
+}
+
+// Get current user's certificates
 $certificados = CertificadosPersonalizadosBD::obtener_certificados_usuario();
 
 /**
@@ -121,10 +129,8 @@ function obtener_tipos_actividad() {
             <p><?php echo esc_html($mensaje['mensaje']); ?></p>
             <?php if ($mensaje['tipo'] === 'exito' && isset($mensaje['certificado_id'])): ?>
                 <p>
-                    <button class="button button-secondary" disabled>
-                        <?php _e('Enviar para aprobación', 'certificados-personalizados'); ?>
-                    </button>
-                    <small><?php _e('(Funcionalidad disponible próximamente)', 'certificados-personalizados'); ?></small>
+                    <strong><?php _e('✅ Certificado creado exitosamente', 'certificados-personalizados'); ?></strong><br>
+                    <small><?php _e('Ahora puedes enviarlo para aprobación usando el botón en la tabla de abajo.', 'certificados-personalizados'); ?></small>
                 </p>
             <?php endif; ?>
         </div>
@@ -214,6 +220,7 @@ function obtener_tipos_actividad() {
                             <th><?php _e('Fecha', 'certificados-personalizados'); ?></th>
                             <th><?php _e('Estado', 'certificados-personalizados'); ?></th>
                             <th><?php _e('Fecha Solicitud', 'certificados-personalizados'); ?></th>
+                            <th><?php _e('Acciones', 'certificados-personalizados'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -256,6 +263,26 @@ function obtener_tipos_actividad() {
                                     </span>
                                 </td>
                                 <td><?php echo esc_html(date('d/m/Y H:i', strtotime($certificado->created_at))); ?></td>
+                                <td>
+                                    <?php if ($certificado->estado === 'pendiente' && $certificado->notificado == 0): ?>
+                                        <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" style="display: inline;">
+                                            <input type="hidden" name="action" value="enviar_certificado_aprobacion">
+                                            <input type="hidden" name="certificado_id" value="<?php echo $certificado->id; ?>">
+                                            <?php wp_nonce_field('enviar_certificado_aprobacion', 'enviar_aprobacion_nonce'); ?>
+                                            <button type="submit" class="button button-primary">
+                                                <?php _e('Enviar para Aprobación', 'certificados-personalizados'); ?>
+                                            </button>
+                                        </form>
+                                    <?php elseif ($certificado->notificado == 1): ?>
+                                        <span class="estado-enviado" style="color: #0073aa; font-weight: bold;">
+                                            <?php _e('✅ Enviado', 'certificados-personalizados'); ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="estado-no-enviado" style="color: #666;">
+                                            <?php _e('No disponible', 'certificados-personalizados'); ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

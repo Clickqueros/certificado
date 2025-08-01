@@ -59,6 +59,9 @@ class CertificadosPersonalizados {
         // Hook para actualización manual de tabla
         add_action('admin_post_actualizar_tabla_certificados', array($this, 'forzar_actualizacion_tabla'));
         
+        // Hook para enviar certificado para aprobación
+        add_action('admin_post_enviar_certificado_aprobacion', array($this, 'procesar_envio_aprobacion'));
+        
         // Cargar archivos necesarios
         $this->cargar_archivos();
     }
@@ -99,6 +102,56 @@ class CertificadosPersonalizados {
      */
     public function forzar_actualizacion_tabla() {
         $this->crear_tabla_certificados();
+    }
+    
+    /**
+     * Procesar envío de certificado para aprobación
+     */
+    public function procesar_envio_aprobacion() {
+        // Verificar nonce
+        if (!isset($_POST['enviar_aprobacion_nonce']) || 
+            !wp_verify_nonce($_POST['enviar_aprobacion_nonce'], 'enviar_certificado_aprobacion')) {
+            wp_die('Error de seguridad.');
+        }
+        
+        // Verificar que el usuario esté logueado
+        if (!is_user_logged_in()) {
+            wp_die('Debes estar logueado para realizar esta acción.');
+        }
+        
+        $certificado_id = intval($_POST['certificado_id']);
+        $user_id = get_current_user_id();
+        
+        // Verificar que el certificado existe y pertenece al usuario
+        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        
+        if (!$certificado || $certificado->user_id != $user_id) {
+            wp_die('Certificado no encontrado o no tienes permisos.');
+        }
+        
+        // Verificar que no haya sido notificado ya
+        if ($certificado->notificado == 1) {
+            wp_die('Este certificado ya fue enviado para aprobación.');
+        }
+        
+        // Enviar notificación por correo
+        $correo_enviado = CertificadosPersonalizadosBD::enviar_notificacion_aprobacion($certificado_id);
+        
+        // Marcar como notificado
+        $marcado = CertificadosPersonalizadosBD::marcar_como_notificado($certificado_id);
+        
+        if ($correo_enviado && $marcado) {
+            $mensaje = 'exito';
+            $texto = 'Tu solicitud ha sido enviada al administrador.';
+        } else {
+            $mensaje = 'error';
+            $texto = 'Error al enviar la notificación. Inténtalo de nuevo.';
+        }
+        
+        // Redirigir de vuelta al formulario
+        $redirect_url = admin_url('admin.php?page=mis-certificados&mensaje=' . $mensaje . '&texto=' . urlencode($texto));
+        wp_redirect($redirect_url);
+        exit;
     }
     
     /**

@@ -241,4 +241,82 @@ class CertificadosPersonalizadosBD {
         
         return $wpdb->get_results($sql);
     }
+    
+    /**
+     * Enviar notificación de certificado pendiente a administradores
+     */
+    public static function enviar_notificacion_aprobacion($certificado_id) {
+        $certificado = self::obtener_certificado($certificado_id);
+        
+        if (!$certificado) {
+            return false;
+        }
+        
+        // Obtener administradores
+        $administradores = get_users(['role' => 'administrator']);
+        
+        if (empty($administradores)) {
+            return false;
+        }
+        
+        // Preparar datos del correo
+        $asunto = 'Nuevo certificado pendiente de aprobación';
+        $admin_url = admin_url('admin.php?page=aprobacion-certificados');
+        
+        $tipos_actividad = array(
+            'curso' => 'Curso de Capacitación',
+            'taller' => 'Taller Práctico',
+            'seminario' => 'Seminario',
+            'conferencia' => 'Conferencia',
+            'workshop' => 'Workshop',
+            'otro' => 'Otro'
+        );
+        
+        $tipo_mostrar = isset($tipos_actividad[$certificado->actividad]) ? 
+            $tipos_actividad[$certificado->actividad] : $certificado->actividad;
+        
+        $mensaje = "
+        <h2>Nuevo Certificado Pendiente de Aprobación</h2>
+        
+        <p><strong>Colaborador:</strong> {$certificado->nombre_usuario}</p>
+        <p><strong>Nombre del Certificado:</strong> {$certificado->nombre}</p>
+        <p><strong>Tipo de Actividad:</strong> {$tipo_mostrar}</p>
+        <p><strong>Fecha de Actividad:</strong> " . date('d/m/Y', strtotime($certificado->fecha)) . "</p>
+        <p><strong>Código del Certificado:</strong> {$certificado->codigo_unico}</p>
+        
+        " . (!empty($certificado->observaciones) ? "<p><strong>Observaciones:</strong> {$certificado->observaciones}</p>" : "") . "
+        
+        <p><strong>Fecha de Solicitud:</strong> " . date('d/m/Y H:i', strtotime($certificado->created_at)) . "</p>
+        
+        <p><a href='{$admin_url}' style='background: #0073aa; color: white; padding: 10px 20px; text-decoration: none; border-radius: 3px;'>Ver en Panel de Administración</a></p>
+        
+        <hr>
+        <p><small>Este correo fue enviado automáticamente por el plugin Certificados Personalizados.</small></p>
+        ";
+        
+        $headers = array(
+            'Content-Type: text/html; charset=UTF-8',
+            'From: ' . get_bloginfo('name') . ' <' . get_option('admin_email') . '>'
+        );
+        
+        // Enviar correo a cada administrador
+        $enviado = false;
+        foreach ($administradores as $admin) {
+            $resultado = wp_mail($admin->user_email, $asunto, $mensaje, $headers);
+            if ($resultado) {
+                $enviado = true;
+            }
+        }
+        
+        return $enviado;
+    }
+    
+    /**
+     * Marcar certificado como notificado
+     */
+    public static function marcar_como_notificado($certificado_id) {
+        return self::actualizar_certificado($certificado_id, array(
+            'notificado' => 1
+        ));
+    }
 } 
