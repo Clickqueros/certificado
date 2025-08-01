@@ -76,6 +76,9 @@ class CertificadosPersonalizados {
     private function cargar_archivos() {
         // Cargar funciones de base de datos
         require_once CERTIFICADOS_PERSONALIZADOS_PLUGIN_PATH . 'includes/funciones-bd.php';
+        
+        // Cargar funciones de PDF
+        require_once CERTIFICADOS_PERSONALIZADOS_PLUGIN_PATH . 'includes/funciones-pdf.php';
     }
     
     /**

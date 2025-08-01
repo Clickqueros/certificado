@@ -75,11 +75,15 @@ function procesar_solicitud_certificado() {
     $certificado_id = CertificadosPersonalizadosBD::crear_certificado($datos);
     
     if ($certificado_id) {
+        // Generar PDF automáticamente
+        $pdf_generado = CertificadosPersonalizadosPDF::generar_certificado_pdf($certificado_id);
+        
         $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
         return array(
             'tipo' => 'exito', 
             'mensaje' => 'Certificado solicitado correctamente. Código: ' . $certificado->codigo_unico,
-            'certificado_id' => $certificado_id
+            'certificado_id' => $certificado_id,
+            'pdf_generado' => $pdf_generado
         );
     } else {
         // Agregar información de debug
@@ -131,6 +135,11 @@ function obtener_tipos_actividad() {
                 <p>
                     <strong><?php _e('✅ Certificado creado exitosamente', 'certificados-personalizados'); ?></strong><br>
                     <small><?php _e('Ahora puedes enviarlo para aprobación usando el botón en la tabla de abajo.', 'certificados-personalizados'); ?></small>
+                    <?php if (isset($mensaje['pdf_generado']) && $mensaje['pdf_generado']): ?>
+                        <br><small style="color: #28a745;"><?php _e('📄 PDF generado automáticamente', 'certificados-personalizados'); ?></small>
+                    <?php else: ?>
+                        <br><small style="color: #ffc107;"><?php _e('⚠️ PDF no se pudo generar (se creará después)', 'certificados-personalizados'); ?></small>
+                    <?php endif; ?>
                 </p>
             <?php endif; ?>
         </div>
@@ -219,6 +228,7 @@ function obtener_tipos_actividad() {
                             <th><?php _e('Tipo de Actividad', 'certificados-personalizados'); ?></th>
                             <th><?php _e('Fecha', 'certificados-personalizados'); ?></th>
                             <th><?php _e('Estado', 'certificados-personalizados'); ?></th>
+                            <th><?php _e('PDF', 'certificados-personalizados'); ?></th>
                             <th><?php _e('Fecha Solicitud', 'certificados-personalizados'); ?></th>
                             <th><?php _e('Acciones', 'certificados-personalizados'); ?></th>
                         </tr>
@@ -261,6 +271,17 @@ function obtener_tipos_actividad() {
                                     <span class="estado-certificado <?php echo $estado_clase; ?>">
                                         <?php echo $estado_texto; ?>
                                     </span>
+                                </td>
+                                <td>
+                                    <?php if ($certificado->pdf_path): ?>
+                                        <a href="<?php echo esc_url($certificado->pdf_path); ?>" target="_blank" class="button button-small">
+                                            <?php _e('Ver PDF', 'certificados-personalizados'); ?>
+                                        </a>
+                                    <?php else: ?>
+                                        <span class="estado-no-enviado" style="color: #666;">
+                                            <?php _e('No disponible', 'certificados-personalizados'); ?>
+                                        </span>
+                                    <?php endif; ?>
                                 </td>
                                 <td><?php echo esc_html(date('d/m/Y H:i', strtotime($certificado->created_at))); ?></td>
                                 <td>

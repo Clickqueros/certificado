@@ -95,6 +95,7 @@ function obtener_tipos_actividad_admin() {
                         <th><?php _e('Tipo de Actividad', 'certificados-personalizados'); ?></th>
                         <th><?php _e('Fecha', 'certificados-personalizados'); ?></th>
                         <th><?php _e('Observaciones', 'certificados-personalizados'); ?></th>
+                        <th><?php _e('PDF', 'certificados-personalizados'); ?></th>
                         <th><?php _e('Fecha Solicitud', 'certificados-personalizados'); ?></th>
                         <th><?php _e('Acciones', 'certificados-personalizados'); ?></th>
                     </tr>
@@ -125,7 +126,19 @@ function obtener_tipos_actividad_admin() {
                                     <span class="sin-observaciones">-</span>
                                 <?php endif; ?>
                             </td>
-                            <td><?php echo esc_html(date('d/m/Y H:i', strtotime($certificado->created_at))); ?></td>
+                            <td>
+                                <?php if (!empty($certificado->pdf_path) && file_exists($certificado->pdf_path)): ?>
+                                    <a href="<?php echo esc_url(CertificadosPersonalizadosPDF::obtener_url_pdf($certificado->id)); ?>" 
+                                       target="_blank" class="button button-small">
+                                         <?php _e('📄 Ver PDF', 'certificados-personalizados'); ?>
+                                     </a>
+                                 <?php else: ?>
+                                     <span class="sin-observaciones">
+                                         <?php _e('No disponible', 'certificados-personalizados'); ?>
+                                     </span>
+                                 <?php endif; ?>
+                             </td>
+                             <td><?php echo esc_html(date('d/m/Y H:i', strtotime($certificado->created_at))); ?></td>
                             <td>
                                 <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" style="display: inline;">
                                     <input type="hidden" name="action" value="aprobar_certificado">
