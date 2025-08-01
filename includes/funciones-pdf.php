@@ -21,6 +21,7 @@ class CertificadosPersonalizadosPDF {
         $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
         
         if (!$certificado) {
+            error_log('CertificadosPersonalizadosPDF: No se pudo obtener certificado ID: ' . $certificado_id);
             return false;
         }
         
@@ -29,7 +30,11 @@ class CertificadosPersonalizadosPDF {
         $certificados_dir = $upload_dir['basedir'] . '/certificados/';
         
         if (!file_exists($certificados_dir)) {
-            wp_mkdir_p($certificados_dir);
+            $creado = wp_mkdir_p($certificados_dir);
+            if (!$creado) {
+                error_log('CertificadosPersonalizadosPDF: No se pudo crear directorio: ' . $certificados_dir);
+                return false;
+            }
         }
         
         // Generar nombre del archivo
@@ -45,10 +50,18 @@ class CertificadosPersonalizadosPDF {
         if ($pdf_generado) {
             // Actualizar la ruta en la base de datos
             $actualizado = CertificadosPersonalizadosBD::actualizar_certificado($certificado_id, array(
-                'pdf_path' => $ruta_completa
+                'pdf_path' => $upload_dir['baseurl'] . '/certificados/' . $nombre_archivo
             ));
             
+            if ($actualizado) {
+                error_log('CertificadosPersonalizadosPDF: PDF generado exitosamente para ID: ' . $certificado_id);
+            } else {
+                error_log('CertificadosPersonalizadosPDF: Error actualizando BD para ID: ' . $certificado_id);
+            }
+            
             return $actualizado;
+        } else {
+            error_log('CertificadosPersonalizadosPDF: Error generando PDF para ID: ' . $certificado_id);
         }
         
         return false;
@@ -361,10 +374,8 @@ class CertificadosPersonalizadosPDF {
             return false;
         }
         
-        $upload_dir = wp_upload_dir();
-        $ruta_relativa = str_replace($upload_dir['basedir'], '', $certificado->pdf_path);
-        
-        return $upload_dir['baseurl'] . $ruta_relativa;
+        // Assuming pdf_path stores the full URL now
+        return $certificado->pdf_path;
     }
     
     /**
@@ -377,6 +388,17 @@ class CertificadosPersonalizadosPDF {
             return false;
         }
         
-        return file_exists($certificado->pdf_path);
+        // Convert URL to local path for file_exists check
+        $upload_dir = wp_upload_dir();
+        $local_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $certificado->pdf_path);
+        
+        return file_exists($local_path);
+    }
+    
+    /**
+     * Regenerar PDF para certificados existentes
+     */
+    public static function regenerar_pdf_certificado($certificado_id) {
+        return self::generar_certificado_pdf($certificado_id);
     }
 } 
