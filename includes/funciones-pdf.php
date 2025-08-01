@@ -632,23 +632,29 @@ class CertificadosPersonalizadosPDF {
             return false;
         }
         
-        // Si el pdf_path termina en .html, usar esa URL
-        if (strpos($certificado->pdf_path, '.html') !== false) {
-            return $certificado->pdf_path;
-        }
-        
-        // Si termina en .pdf, verificar si existe, si no, buscar el .html
         $upload_dir = wp_upload_dir();
         $local_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $certificado->pdf_path);
         
+        // Si el archivo existe directamente, usar esa URL
         if (file_exists($local_path)) {
             return $certificado->pdf_path;
-        } else {
-            // Buscar archivo .html correspondiente
+        }
+        
+        // Si el pdf_path termina en .pdf pero el archivo no existe, buscar el .html correspondiente
+        if (strpos($certificado->pdf_path, '.pdf') !== false) {
             $html_path = str_replace('.pdf', '.html', $local_path);
             if (file_exists($html_path)) {
                 $html_url = str_replace('.pdf', '.html', $certificado->pdf_path);
                 return $html_url;
+            }
+        }
+        
+        // Si el pdf_path termina en .html pero el archivo no existe, buscar el .pdf correspondiente
+        if (strpos($certificado->pdf_path, '.html') !== false) {
+            $pdf_path = str_replace('.html', '.pdf', $local_path);
+            if (file_exists($pdf_path)) {
+                $pdf_url = str_replace('.html', '.pdf', $certificado->pdf_path);
+                return $pdf_url;
             }
         }
         
@@ -669,15 +675,25 @@ class CertificadosPersonalizadosPDF {
         $upload_dir = wp_upload_dir();
         $local_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $certificado->pdf_path);
         
-        // Verificar si existe el archivo PDF
+        // Verificar si existe el archivo directamente (ya sea PDF o HTML)
         if (file_exists($local_path)) {
             return true;
         }
         
-        // Si no existe PDF, verificar si existe HTML
-        $html_path = str_replace('.pdf', '.html', $local_path);
-        if (file_exists($html_path)) {
-            return true;
+        // Si el pdf_path termina en .pdf pero el archivo no existe, buscar el .html correspondiente
+        if (strpos($certificado->pdf_path, '.pdf') !== false) {
+            $html_path = str_replace('.pdf', '.html', $local_path);
+            if (file_exists($html_path)) {
+                return true;
+            }
+        }
+        
+        // Si el pdf_path termina en .html pero el archivo no existe, buscar el .pdf correspondiente
+        if (strpos($certificado->pdf_path, '.html') !== false) {
+            $pdf_path = str_replace('.html', '.pdf', $local_path);
+            if (file_exists($pdf_path)) {
+                return true;
+            }
         }
         
         return false;
