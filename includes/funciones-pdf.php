@@ -45,19 +45,23 @@ class CertificadosPersonalizadosPDF {
         // Intentar generar PDF real
         $pdf_generado = false;
         
-        // 1. Intentar con TCPDF
-        if (self::generar_pdf_desde_html(self::generar_html_certificado($certificado), $ruta_pdf)) {
+        // 1. Intentar con Dompdf (PRINCIPAL)
+        if (self::generar_pdf_con_dompdf($certificado, $ruta_pdf)) {
             $pdf_generado = true;
         }
-        // 2. Intentar con FPDF si TCPDF falló
+        // 2. Intentar con TCPDF si Dompdf falló
+        elseif (self::generar_pdf_desde_html(self::generar_html_certificado($certificado), $ruta_pdf)) {
+            $pdf_generado = true;
+        }
+        // 3. Intentar con FPDF si TCPDF falló
         elseif (self::generar_pdf_con_fpdf_directo($certificado, $ruta_pdf)) {
             $pdf_generado = true;
         }
-        // 3. Intentar con librería simple
+        // 4. Intentar con librería simple
         elseif (self::generar_pdf_simple_directo($certificado, $ruta_pdf)) {
             $pdf_generado = true;
         }
-        // 4. Si todo falla, generar HTML como último recurso
+        // 5. Si todo falla, generar HTML como último recurso
         else {
             $ruta_html = $certificados_dir . $nombre_base . '.html';
             $html_content = self::generar_html_certificado($certificado);
@@ -1152,6 +1156,63 @@ startxref
 %%EOF";
         
         return file_put_contents($ruta_archivo, $pdf_content) !== false;
+    }
+    
+    /**
+     * Generar PDF usando Dompdf
+     */
+    private static function generar_pdf_con_dompdf($certificado, $ruta_archivo) {
+        try {
+            // Verificar si Dompdf está disponible
+            $dompdf_path = plugin_dir_path(__FILE__) . 'libs/dompdf/src/Dompdf.php';
+            
+            if (!file_exists($dompdf_path)) {
+                error_log('CertificadosPersonalizadosPDF: Dompdf no encontrado en: ' . $dompdf_path);
+                return false;
+            }
+            
+            // Incluir Dompdf
+            require_once $dompdf_path;
+            require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Options.php';
+            require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Canvas.php';
+            require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/CanvasFactory.php';
+            require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Exception.php';
+            
+            // Generar HTML del certificado
+            $html_content = self::generar_html_certificado($certificado);
+            
+            // Configurar Dompdf
+            $options = new \Dompdf\Options();
+            $options->set('isHtml5ParserEnabled', true);
+            $options->set('isPhpEnabled', false);
+            $options->set('isRemoteEnabled', false);
+            $options->set('defaultFont', 'Arial');
+            
+            // Crear instancia de Dompdf
+            $dompdf = new \Dompdf\Dompdf($options);
+            
+            // Cargar HTML
+            $dompdf->loadHtml($html_content);
+            
+            // Renderizar PDF
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+            
+            // Guardar PDF
+            $output = $dompdf->output();
+            
+            if (file_put_contents($ruta_archivo, $output)) {
+                error_log('CertificadosPersonalizadosPDF: PDF generado exitosamente con Dompdf para: ' . basename($ruta_archivo));
+                return true;
+            } else {
+                error_log('CertificadosPersonalizadosPDF: Error guardando PDF con Dompdf: ' . $ruta_archivo);
+                return false;
+            }
+            
+        } catch (Exception $e) {
+            error_log('CertificadosPersonalizadosPDF: Error con Dompdf: ' . $e->getMessage());
+            return false;
+        }
     }
     
     /**
