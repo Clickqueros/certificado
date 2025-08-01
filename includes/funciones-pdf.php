@@ -1183,6 +1183,7 @@ startxref
             require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/FontMetrics.php';
             require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Frame.php';
             require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/LineBox.php';
+            require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Renderer/AbstractRenderer.php';
             require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Renderer.php';
             
             // Verificar que las clases principales estén disponibles
