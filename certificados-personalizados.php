@@ -62,6 +62,10 @@ class CertificadosPersonalizados {
         // Hook para enviar certificado para aprobación
         add_action('admin_post_enviar_certificado_aprobacion', array($this, 'procesar_envio_aprobacion'));
         
+        // Hooks para aprobar/rechazar certificados
+        add_action('admin_post_aprobar_certificado', array($this, 'procesar_aprobar_certificado'));
+        add_action('admin_post_rechazar_certificado', array($this, 'procesar_rechazar_certificado'));
+        
         // Cargar archivos necesarios
         $this->cargar_archivos();
     }
@@ -150,6 +154,96 @@ class CertificadosPersonalizados {
         
         // Redirigir de vuelta al formulario
         $redirect_url = admin_url('admin.php?page=mis-certificados&mensaje=' . $mensaje . '&texto=' . urlencode($texto));
+        wp_redirect($redirect_url);
+        exit;
+    }
+    
+    /**
+     * Procesar aprobación de certificado
+     */
+    public function procesar_aprobar_certificado() {
+        // Verificar permisos de administrador
+        if (!current_user_can('administrator')) {
+            wp_die('No tienes permisos para realizar esta acción.');
+        }
+        
+        // Verificar nonce
+        if (!isset($_POST['aprobar_certificado_nonce']) || 
+            !wp_verify_nonce($_POST['aprobar_certificado_nonce'], 'aprobar_certificado')) {
+            wp_die('Error de seguridad.');
+        }
+        
+        $certificado_id = intval($_POST['certificado_id']);
+        
+        // Verificar que el certificado existe y está pendiente
+        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        
+        if (!$certificado) {
+            wp_die('Certificado no encontrado.');
+        }
+        
+        if ($certificado->estado !== 'pendiente') {
+            wp_die('Este certificado ya no está pendiente de aprobación.');
+        }
+        
+        // Aprobar certificado
+        $resultado = CertificadosPersonalizadosBD::cambiar_estado_certificado($certificado_id, 'aprobado');
+        
+        if ($resultado) {
+            $mensaje = 'exito';
+            $texto = 'Certificado aprobado correctamente.';
+        } else {
+            $mensaje = 'error';
+            $texto = 'Error al aprobar el certificado.';
+        }
+        
+        // Redirigir de vuelta al panel de aprobación
+        $redirect_url = admin_url('admin.php?page=aprobacion-certificados&mensaje=' . $mensaje . '&texto=' . urlencode($texto));
+        wp_redirect($redirect_url);
+        exit;
+    }
+    
+    /**
+     * Procesar rechazo de certificado
+     */
+    public function procesar_rechazar_certificado() {
+        // Verificar permisos de administrador
+        if (!current_user_can('administrator')) {
+            wp_die('No tienes permisos para realizar esta acción.');
+        }
+        
+        // Verificar nonce
+        if (!isset($_POST['rechazar_certificado_nonce']) || 
+            !wp_verify_nonce($_POST['rechazar_certificado_nonce'], 'rechazar_certificado')) {
+            wp_die('Error de seguridad.');
+        }
+        
+        $certificado_id = intval($_POST['certificado_id']);
+        
+        // Verificar que el certificado existe y está pendiente
+        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        
+        if (!$certificado) {
+            wp_die('Certificado no encontrado.');
+        }
+        
+        if ($certificado->estado !== 'pendiente') {
+            wp_die('Este certificado ya no está pendiente de aprobación.');
+        }
+        
+        // Rechazar certificado
+        $resultado = CertificadosPersonalizadosBD::cambiar_estado_certificado($certificado_id, 'rechazado');
+        
+        if ($resultado) {
+            $mensaje = 'exito';
+            $texto = 'Certificado rechazado correctamente.';
+        } else {
+            $mensaje = 'error';
+            $texto = 'Error al rechazar el certificado.';
+        }
+        
+        // Redirigir de vuelta al panel de aprobación
+        $redirect_url = admin_url('admin.php?page=aprobacion-certificados&mensaje=' . $mensaje . '&texto=' . urlencode($texto));
         wp_redirect($redirect_url);
         exit;
     }
