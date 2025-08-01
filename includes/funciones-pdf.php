@@ -1186,6 +1186,13 @@ startxref
             require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/LineBox.php';
             require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Renderer/AbstractRenderer.php';
             require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Renderer.php';
+            require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Css/Stylesheet.php';
+            require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Css/Style.php';
+            require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Css/Color.php';
+            require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Css/AttributeTranslator.php';
+            require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Css/Content/ContentPart.php';
+            require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Css/Content/Attr.php';
+            require_once plugin_dir_path(__FILE__) . 'libs/dompdf/src/Css/Content/Url.php';
             
             // Verificar que las clases principales estén disponibles
             if (!class_exists('\\Dompdf\\Dompdf')) {
