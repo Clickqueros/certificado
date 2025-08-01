@@ -104,11 +104,12 @@ class CertificadosPersonalizadosPDF {
         }
         
         // Reemplazar placeholders
-        $html = str_replace('{{nombre}}', htmlspecialchars($certificado->nombre), $html);
-        $html = str_replace('{{actividad}}', htmlspecialchars($certificado->actividad), $html);
-        $html = str_replace('{{fecha}}', htmlspecialchars($certificado->fecha), $html);
-        $html = str_replace('{{codigo}}', htmlspecialchars($certificado->codigo_unico), $html);
-        $html = str_replace('{{observaciones}}', htmlspecialchars($certificado->observaciones), $html);
+        $html = str_replace('[NOMBRE_COMPLETO]', htmlspecialchars($certificado->nombre), $html);
+        $html = str_replace('[ACTIVIDAD_CURSO]', htmlspecialchars($certificado->actividad), $html);
+        $html = str_replace('[FECHA_ACTIVIDAD]', htmlspecialchars($certificado->fecha), $html);
+        $html = str_replace('[CODIGO_UNICO]', htmlspecialchars($certificado->codigo_unico), $html);
+        $html = str_replace('[NOMBRE_DIRECTOR]', 'Director General', $html);
+        $html = str_replace('[NOMBRE_COORDINADOR]', 'Coordinador de Recursos Humanos', $html);
         
         return $html;
     }
@@ -318,15 +319,24 @@ class CertificadosPersonalizadosPDF {
         $html = preg_replace('/<style[^>]*>.*?<\/style>/is', '', $html);
         $html = preg_replace('/<script[^>]*>.*?<\/script>/is', '', $html);
         
-        // Reemplazar estilos complejos con estilos básicos
-        $html = str_replace('<div class="certificado">', '<div style="text-align: center; padding: 20px;">', $html);
-        $html = str_replace('<h1 class="titulo">', '<h1 style="color: #333; font-size: 24px; margin-bottom: 20px;">', $html);
-        $html = str_replace('<p class="subtitulo">', '<p style="color: #666; font-size: 16px; margin-bottom: 30px;">', $html);
-        $html = str_replace('<div class="destacado">', '<div style="color: #667eea; font-size: 18px; font-weight: bold; margin: 20px 0;">', $html);
-        $html = str_replace('<div class="codigo">', '<div style="background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; margin: 15px 0;">', $html);
-        $html = str_replace('<div class="contenido">', '<div style="font-size: 14px; line-height: 1.5; margin: 15px 0;">', $html);
-        $html = str_replace('<div class="fecha">', '<div style="font-size: 12px; color: #888; margin-top: 30px;">', $html);
-        $html = str_replace('<div class="firma">', '<div style="border-top: 1px solid #ddd; padding-top: 15px; font-size: 10px; color: #666; margin-top: 40px;">', $html);
+        // Reemplazar estilos complejos con estilos básicos para el template de certificado
+        $html = str_replace('<div class="certificado-container">', '<div style="text-align: center; padding: 40px; border: 2px solid #2c3e50; background: white;">', $html);
+        $html = str_replace('<div class="certificado-header">', '<div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #3498db; padding-bottom: 15px;">', $html);
+        $html = str_replace('<div class="certificado-titulo">', '<div style="font-size: 28px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; text-transform: uppercase;">', $html);
+        $html = str_replace('<div class="certificado-subtitulo">', '<div style="font-size: 16px; color: #7f8c8d; font-style: italic;">', $html);
+        $html = str_replace('<div class="certificado-contenido">', '<div style="text-align: center; margin: 30px 0; line-height: 1.6;">', $html);
+        $html = str_replace('<div class="certificado-texto">', '<div style="font-size: 14px; color: #2c3e50; margin-bottom: 20px;">', $html);
+        $html = str_replace('<div class="certificado-nombre">', '<div style="font-size: 20px; font-weight: bold; color: #2c3e50; margin: 15px 0; text-transform: uppercase; border-bottom: 1px solid #bdc3c7; padding-bottom: 8px;">', $html);
+        $html = str_replace('<div class="certificado-actividad">', '<div style="font-size: 16px; color: #34495e; margin: 12px 0;">', $html);
+        $html = str_replace('<div class="certificado-fecha">', '<div style="font-size: 14px; color: #7f8c8d; margin: 12px 0;">', $html);
+        $html = str_replace('<div class="certificado-codigo">', '<div style="font-size: 12px; color: #95a5a6; margin-top: 25px; font-family: monospace;">', $html);
+        $html = str_replace('<div class="certificado-footer">', '<div style="margin-top: 40px; display: flex; justify-content: space-between; align-items: center;">', $html);
+        $html = str_replace('<div class="certificado-firma">', '<div style="text-align: center; flex: 1;">', $html);
+        $html = str_replace('<div class="firma-linea">', '<div style="width: 150px; height: 1px; background-color: #2c3e50; margin: 8px auto;">', $html);
+        $html = str_replace('<div class="firma-nombre">', '<div style="font-size: 12px; font-weight: bold; color: #2c3e50;">', $html);
+        $html = str_replace('<div class="firma-cargo">', '<div style="font-size: 10px; color: #7f8c8d;">', $html);
+        $html = str_replace('<div class="certificado-sello">', '<div style="position: absolute; top: 15px; right: 15px; width: 60px; height: 60px; border: 2px solid #e74c3c; border-radius: 50%; background: rgba(231, 76, 60, 0.1);">', $html);
+        $html = str_replace('<div class="sello-texto">', '<div style="font-size: 8px; font-weight: bold; color: #e74c3c; text-align: center; text-transform: uppercase;">', $html);
         
         return $html;
     }
