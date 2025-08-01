@@ -38,40 +38,52 @@ class CertificadosPersonalizadosPDF {
             }
         }
         
-        // Generar nombre del archivo
-        $nombre_archivo = 'certificado_' . $certificado->codigo_unico;
-        $ruta_completa = $certificados_dir . $nombre_archivo . '.pdf';
+        // Generar nombre del archivo base (sin extensión)
+        $nombre_base = 'certificado_' . $certificado->codigo_unico;
         
         // Generar contenido HTML del certificado
         $html_content = self::generar_html_certificado($certificado);
         
-        // Generar PDF usando TCPDF
-        $pdf_generado = self::generar_pdf_desde_html($html_content, $ruta_completa);
+        // Intentar generar PDF real primero
+        $pdf_generado = false;
+        $extension_final = '.html'; // Por defecto HTML
+        
+        // 1. Intentar con TCPDF
+        $ruta_pdf = $certificados_dir . $nombre_base . '.pdf';
+        if (self::generar_pdf_desde_html($html_content, $ruta_pdf)) {
+            $pdf_generado = true;
+            $extension_final = '.pdf';
+        }
+        // 2. Intentar con FPDF si TCPDF falló
+        elseif (self::generar_pdf_con_fpdf_directo($certificado, $ruta_pdf)) {
+            $pdf_generado = true;
+            $extension_final = '.pdf';
+        }
+        // 3. Si todo falla, generar HTML
+        else {
+            $ruta_html = $certificados_dir . $nombre_base . '.html';
+            if (file_put_contents($ruta_html, $html_content)) {
+                $pdf_generado = true;
+                $extension_final = '.html';
+            }
+        }
         
         if ($pdf_generado) {
-            // Determinar la extensión del archivo generado
-            $extension = '.pdf';
-            $nombre_final = $nombre_archivo . '.pdf';
-            
-            if (file_exists($ruta_completa . '.html')) {
-                $extension = '.html';
-                $nombre_final = $nombre_archivo . '.html';
-            }
-            
             // Actualizar la ruta en la base de datos
+            $nombre_final = $nombre_base . $extension_final;
             $actualizado = CertificadosPersonalizadosBD::actualizar_certificado($certificado_id, array(
                 'pdf_path' => $upload_dir['baseurl'] . '/certificados/' . $nombre_final
             ));
             
             if ($actualizado) {
-                error_log('CertificadosPersonalizadosPDF: PDF generado exitosamente para ID: ' . $certificado_id);
+                error_log('CertificadosPersonalizadosPDF: Archivo generado exitosamente para ID: ' . $certificado_id . ' - Extensión: ' . $extension_final);
             } else {
                 error_log('CertificadosPersonalizadosPDF: Error actualizando BD para ID: ' . $certificado_id);
             }
             
             return $actualizado;
         } else {
-            error_log('CertificadosPersonalizadosPDF: Error generando PDF para ID: ' . $certificado_id);
+            error_log('CertificadosPersonalizadosPDF: Error generando archivo para ID: ' . $certificado_id);
         }
         
         return false;
@@ -822,6 +834,48 @@ class CertificadosPersonalizadosPDF {
     }
     
     /**
+     * Generar PDF usando FPDF directamente si está disponible
+     */
+    private static function generar_pdf_con_fpdf_directo($certificado, $ruta_archivo) {
+        try {
+            $pdf = new FPDF();
+            $pdf->AddPage();
+            $pdf->SetFont('Arial', 'B', 16);
+            
+            // Título
+            $pdf->Cell(0, 10, 'CERTIFICADO', 0, 1, 'C');
+            $pdf->SetFont('Arial', '', 12);
+            $pdf->Cell(0, 10, 'de Participación y Aprobación', 0, 1, 'C');
+            $pdf->Ln(10);
+            
+            // Contenido
+            $pdf->Cell(0, 10, 'Se certifica que', 0, 1, 'C');
+            $pdf->SetFont('Arial', 'B', 14);
+            $pdf->Cell(0, 10, $certificado->nombre, 0, 1, 'C');
+            $pdf->SetFont('Arial', '', 12);
+            $pdf->Cell(0, 10, 'ha participado exitosamente en', 0, 1, 'C');
+            $pdf->SetFont('Arial', 'B', 12);
+            $pdf->Cell(0, 10, $certificado->actividad, 0, 1, 'C');
+            $pdf->SetFont('Arial', '', 12);
+            $pdf->Cell(0, 10, 'realizado el día', 0, 1, 'C');
+            $pdf->SetFont('Arial', 'B', 12);
+            $pdf->Cell(0, 10, date('d/m/Y', strtotime($certificado->fecha)), 0, 1, 'C');
+            $pdf->Ln(10);
+            
+            // Código
+            $pdf->SetFont('Courier', '', 10);
+            $pdf->Cell(0, 10, 'Código de Validación: ' . $certificado->codigo_unico, 0, 1, 'C');
+            
+            $pdf->Output('F', $ruta_archivo);
+            return file_exists($ruta_archivo);
+            
+        } catch (Exception $e) {
+            error_log('Error generando PDF con FPDF: ' . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
      * Obtener URL del PDF
      */
     public static function obtener_url_pdf($certificado_id) {
@@ -879,6 +933,22 @@ class CertificadosPersonalizadosPDF {
             return true;
         }
         
+        // Buscar archivos con doble extensión y limpiarlos
+        $nombre_base = 'certificado_' . $certificado->codigo_unico;
+        $certificados_dir = $upload_dir['basedir'] . '/certificados/';
+        
+        // Buscar archivos con doble extensión
+        $archivos_dobles = glob($certificados_dir . $nombre_base . '.*.*');
+        foreach ($archivos_dobles as $archivo_doble) {
+            $extension = pathinfo($archivo_doble, PATHINFO_EXTENSION);
+            if ($extension === 'html') {
+                // Renombrar archivo .pdf.html a .html
+                $nuevo_nombre = str_replace('.pdf.html', '.html', $archivo_doble);
+                rename($archivo_doble, $nuevo_nombre);
+                error_log('CertificadosPersonalizadosPDF: Archivo renombrado de ' . basename($archivo_doble) . ' a ' . basename($nuevo_nombre));
+            }
+        }
+        
         // Si el pdf_path termina en .pdf pero el archivo no existe, buscar el .html correspondiente
         if (strpos($certificado->pdf_path, '.pdf') !== false) {
             $html_path = str_replace('.pdf', '.html', $local_path);
@@ -903,5 +973,31 @@ class CertificadosPersonalizadosPDF {
      */
     public static function regenerar_pdf_certificado($certificado_id) {
         return self::generar_certificado_pdf($certificado_id);
+    }
+    
+    /**
+     * Limpiar archivos con doble extensión
+     */
+    public static function limpiar_archivos_dobles() {
+        $upload_dir = wp_upload_dir();
+        $certificados_dir = $upload_dir['basedir'] . '/certificados/';
+        
+        if (!file_exists($certificados_dir)) {
+            return false;
+        }
+        
+        $archivos_limpiados = 0;
+        
+        // Buscar todos los archivos con doble extensión
+        $archivos_dobles = glob($certificados_dir . '*.pdf.html');
+        foreach ($archivos_dobles as $archivo_doble) {
+            $nuevo_nombre = str_replace('.pdf.html', '.html', $archivo_doble);
+            if (rename($archivo_doble, $nuevo_nombre)) {
+                $archivos_limpiados++;
+                error_log('CertificadosPersonalizadosPDF: Archivo limpiado: ' . basename($archivo_doble) . ' -> ' . basename($nuevo_nombre));
+            }
+        }
+        
+        return $archivos_limpiados;
     }
 } 
