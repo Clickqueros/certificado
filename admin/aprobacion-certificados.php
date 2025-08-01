@@ -184,7 +184,7 @@ function obtener_tipos_actividad_admin() {
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <?php if (!empty($certificado->pdf_path) && file_exists($certificado->pdf_path)): ?>
+                                <?php if (CertificadosPersonalizadosPDF::existe_pdf($certificado->id)): ?>
                                     <a href="<?php echo esc_url(CertificadosPersonalizadosPDF::obtener_url_pdf($certificado->id)); ?>" 
                                        target="_blank" class="button button-small">
                                          <?php _e('📄 Ver PDF', 'certificados-personalizados'); ?>

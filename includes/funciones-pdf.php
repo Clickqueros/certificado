@@ -39,8 +39,8 @@ class CertificadosPersonalizadosPDF {
         }
         
         // Generar nombre del archivo
-        $nombre_archivo = 'certificado_' . $certificado->codigo_unico . '.pdf';
-        $ruta_completa = $certificados_dir . $nombre_archivo;
+        $nombre_archivo = 'certificado_' . $certificado->codigo_unico;
+        $ruta_completa = $certificados_dir . $nombre_archivo . '.pdf';
         
         // Generar contenido HTML del certificado
         $html_content = self::generar_html_certificado($certificado);
@@ -51,14 +51,16 @@ class CertificadosPersonalizadosPDF {
         if ($pdf_generado) {
             // Determinar la extensión del archivo generado
             $extension = '.pdf';
+            $nombre_final = $nombre_archivo . '.pdf';
+            
             if (file_exists($ruta_completa . '.html')) {
                 $extension = '.html';
-                $nombre_archivo = $nombre_archivo . '.html';
+                $nombre_final = $nombre_archivo . '.html';
             }
             
             // Actualizar la ruta en la base de datos
             $actualizado = CertificadosPersonalizadosBD::actualizar_certificado($certificado_id, array(
-                'pdf_path' => $upload_dir['baseurl'] . '/certificados/' . $nombre_archivo
+                'pdf_path' => $upload_dir['baseurl'] . '/certificados/' . $nombre_final
             ));
             
             if ($actualizado) {
