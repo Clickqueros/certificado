@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificado</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            margin: 0;
+            padding: 40px;
+            background-color: #f8f9fa;
+        }
+        
+        .certificado-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 60px;
+            border: 3px solid #2c3e50;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .certificado-header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 20px;
+        }
+        
+        .certificado-titulo {
+            font-size: 36px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        
+        .certificado-subtitulo {
+            font-size: 18px;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        
+        .certificado-contenido {
+            text-align: center;
+            margin: 40px 0;
+            line-height: 1.8;
+        }
+        
+        .certificado-texto {
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        
+        .certificado-nombre {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 20px 0;
+            text-transform: uppercase;
+            border-bottom: 1px solid #bdc3c7;
+            padding-bottom: 10px;
+        }
+        
+        .certificado-actividad {
+            font-size: 18px;
+            color: #34495e;
+            margin: 15px 0;
+        }
+        
+        .certificado-fecha {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin: 15px 0;
+        }
+        
+        .certificado-codigo {
+            font-size: 14px;
+            color: #95a5a6;
+            margin-top: 30px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .certificado-footer {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .certificado-firma {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .firma-linea {
+            width: 200px;
+            height: 1px;
+            background-color: #2c3e50;
+            margin: 10px auto;
+        }
+        
+        .firma-nombre {
+            font-size: 14px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .firma-cargo {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        .certificado-sello {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 80px;
+            height: 80px;
+            border: 2px solid #e74c3c;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(231, 76, 60, 0.1);
+        }
+        
+        .sello-texto {
+            font-size: 10px;
+            font-weight: bold;
+            color: #e74c3c;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        
+        @media print {
+            body {
+                background-color: white;
+            }
+            
+            .certificado-container {
+                box-shadow: none;
+                border: 2px solid #2c3e50;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="certificado-container">
+        <!-- Sello de validación -->
+        <div class="certificado-sello">
+            <div class="sello-texto">
+                Válido<br>
+                Certificado
+            </div>
+        </div>
+        
+        <!-- Encabezado -->
+        <div class="certificado-header">
+            <div class="certificado-titulo">Certificado</div>
+            <div class="certificado-subtitulo">de Participación y Aprobación</div>
+        </div>
+        
+        <!-- Contenido principal -->
+        <div class="certificado-contenido">
+            <div class="certificado-texto">
+                Se certifica que
+            </div>
+            
+            <div class="certificado-nombre">
+                [NOMBRE_COMPLETO]
+            </div>
+            
+            <div class="certificado-texto">
+                ha participado exitosamente en
+            </div>
+            
+            <div class="certificado-actividad">
+                [ACTIVIDAD_CURSO]
+            </div>
+            
+            <div class="certificado-texto">
+                realizado el día
+            </div>
+            
+            <div class="certificado-fecha">
+                [FECHA_ACTIVIDAD]
+            </div>
+            
+            <div class="certificado-texto">
+                Este certificado es otorgado en reconocimiento a su participación y cumplimiento de los objetivos establecidos.
+            </div>
+        </div>
+        
+        <!-- Código único -->
+        <div class="certificado-codigo">
+            Código de Validación: [CODIGO_UNICO]
+        </div>
+        
+        <!-- Pie de página con firmas -->
+        <div class="certificado-footer">
+            <div class="certificado-firma">
+                <div class="firma-linea"></div>
+                <div class="firma-nombre">[NOMBRE_DIRECTOR]</div>
+                <div class="firma-cargo">Director</div>
+            </div>
+            
+            <div class="certificado-firma">
+                <div class="firma-linea"></div>
+                <div class="firma-nombre">[NOMBRE_COORDINADOR]</div>
+                <div class="firma-cargo">Coordinador</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 
