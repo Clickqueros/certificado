@@ -27,6 +27,12 @@ if (isset($_GET['mensaje']) && isset($_GET['texto'])) {
 // Get pending certificates
 $certificados_pendientes = CertificadosPersonalizadosBD::obtener_todos_certificados('pendiente');
 
+// Get filter parameter
+$estado_filtro = isset($_GET['estado']) ? sanitize_text_field($_GET['estado']) : 'pendiente';
+
+// Get certificates based on filter
+$certificados = CertificadosPersonalizadosBD::obtener_todos_certificados($estado_filtro);
+
 // Get statistics
 $estadisticas = CertificadosPersonalizadosBD::obtener_estadisticas();
 
@@ -77,13 +83,53 @@ function obtener_tipos_actividad_admin() {
         </div>
     </div>
     
+    <!-- Filtros -->
+    <div class="filtros-certificados">
+        <h2><?php _e('Filtrar Certificados', 'certificados-personalizados'); ?></h2>
+        <form method="get" action="">
+            <input type="hidden" name="page" value="aprobacion-certificados">
+            <select name="estado" onchange="this.form.submit()">
+                <option value="pendiente" <?php selected($estado_filtro, 'pendiente'); ?>>
+                    <?php _e('Pendientes de Aprobación', 'certificados-personalizados'); ?>
+                </option>
+                <option value="aprobado" <?php selected($estado_filtro, 'aprobado'); ?>>
+                    <?php _e('Aprobados', 'certificados-personalizados'); ?>
+                </option>
+                <option value="rechazado" <?php selected($estado_filtro, 'rechazado'); ?>>
+                    <?php _e('Rechazados', 'certificados-personalizados'); ?>
+                </option>
+                <option value="" <?php selected($estado_filtro, ''); ?>>
+                    <?php _e('Todos los Certificados', 'certificados-personalizados'); ?>
+                </option>
+            </select>
+            <input type="submit" class="button" value="<?php _e('Filtrar', 'certificados-personalizados'); ?>">
+        </form>
+    </div>
+    
     <!-- Lista de certificados pendientes -->
     <div class="certificados-pendientes">
-        <h2><?php _e('Certificados Pendientes de Aprobación', 'certificados-personalizados'); ?></h2>
+        <h2>
+            <?php 
+            switch($estado_filtro) {
+                case 'pendiente':
+                    _e('Certificados Pendientes de Aprobación', 'certificados-personalizados');
+                    break;
+                case 'aprobado':
+                    _e('Certificados Aprobados', 'certificados-personalizados');
+                    break;
+                case 'rechazado':
+                    _e('Certificados Rechazados', 'certificados-personalizados');
+                    break;
+                default:
+                    _e('Todos los Certificados', 'certificados-personalizados');
+                    break;
+            }
+            ?>
+        </h2>
         
-        <?php if (empty($certificados_pendientes)): ?>
+        <?php if (empty($certificados)): ?>
             <div class="notice notice-info">
-                <p><?php _e('No hay certificados pendientes de aprobación.', 'certificados-personalizados'); ?></p>
+                <p><?php _e('No hay certificados que mostrar con el filtro seleccionado.', 'certificados-personalizados'); ?></p>
             </div>
         <?php else: ?>
             <table class="wp-list-table widefat fixed striped">
@@ -94,6 +140,7 @@ function obtener_tipos_actividad_admin() {
                         <th><?php _e('Nombre del Certificado', 'certificados-personalizados'); ?></th>
                         <th><?php _e('Tipo de Actividad', 'certificados-personalizados'); ?></th>
                         <th><?php _e('Fecha', 'certificados-personalizados'); ?></th>
+                        <th><?php _e('Estado', 'certificados-personalizados'); ?></th>
                         <th><?php _e('Observaciones', 'certificados-personalizados'); ?></th>
                         <th><?php _e('PDF', 'certificados-personalizados'); ?></th>
                         <th><?php _e('Fecha Solicitud', 'certificados-personalizados'); ?></th>
@@ -101,7 +148,7 @@ function obtener_tipos_actividad_admin() {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($certificados_pendientes as $certificado): ?>
+                    <?php foreach ($certificados as $certificado): ?>
                         <tr>
                             <td>
                                 <strong><?php echo esc_html($certificado->codigo_unico); ?></strong>
@@ -116,6 +163,16 @@ function obtener_tipos_actividad_admin() {
                                 ?>
                             </td>
                             <td><?php echo esc_html(date('d/m/Y', strtotime($certificado->fecha))); ?></td>
+                            <td>
+                                <?php 
+                                $estados = array(
+                                    'pendiente' => __('Pendiente', 'certificados-personalizados'),
+                                    'aprobado' => __('Aprobado', 'certificados-personalizados'),
+                                    'rechazado' => __('Rechazado', 'certificados-personalizados')
+                                );
+                                echo esc_html($estados[$certificado->estado] ?? 'Desconocido');
+                                ?>
+                            </td>
                             <td>
                                 <?php if (!empty($certificado->observaciones)): ?>
                                     <span class="observaciones-texto" title="<?php echo esc_attr($certificado->observaciones); ?>">
@@ -132,34 +189,53 @@ function obtener_tipos_actividad_admin() {
                                        target="_blank" class="button button-small">
                                          <?php _e('📄 Ver PDF', 'certificados-personalizados'); ?>
                                      </a>
+                                     <br>
+                                     <a href="<?php echo esc_url(CertificadosPersonalizadosPDF::obtener_url_pdf($certificado->id)); ?>" 
+                                        download class="button button-small button-secondary">
+                                         <?php _e('⬇️ Descargar', 'certificados-personalizados'); ?>
+                                     </a>
                                  <?php else: ?>
                                      <span class="sin-observaciones">
                                          <?php _e('No disponible', 'certificados-personalizados'); ?>
                                      </span>
+                                     <?php if (current_user_can('manage_options')): ?>
+                                         <br>
+                                         <small style="color: #999;">
+                                             <?php _e('(Ruta: ', 'certificados-personalizados'); ?>
+                                             <?php echo esc_html($certificado->pdf_path ?: 'Vacía'); ?>
+                                             <?php _e(')', 'certificados-personalizados'); ?>
+                                         </small>
+                                     <?php endif; ?>
                                  <?php endif; ?>
                              </td>
                              <td><?php echo esc_html(date('d/m/Y H:i', strtotime($certificado->created_at))); ?></td>
-                            <td>
-                                <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" style="display: inline;">
-                                    <input type="hidden" name="action" value="aprobar_certificado">
-                                    <input type="hidden" name="certificado_id" value="<?php echo $certificado->id; ?>">
-                                    <?php wp_nonce_field('aprobar_certificado', 'aprobar_certificado_nonce'); ?>
-                                    <button type="submit" class="button button-primary" 
-                                            onclick="return confirm('¿Estás seguro de que quieres aprobar este certificado?')">
-                                        <?php _e('✅ Aprobar', 'certificados-personalizados'); ?>
-                                    </button>
-                                </form>
-                                
-                                <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" style="display: inline;">
-                                    <input type="hidden" name="action" value="rechazar_certificado">
-                                    <input type="hidden" name="certificado_id" value="<?php echo $certificado->id; ?>">
-                                    <?php wp_nonce_field('rechazar_certificado', 'rechazar_certificado_nonce'); ?>
-                                    <button type="submit" class="button button-secondary" 
-                                            onclick="return confirm('¿Estás seguro de que quieres rechazar este certificado?')">
-                                        <?php _e('❌ Rechazar', 'certificados-personalizados'); ?>
-                                    </button>
-                                </form>
-                            </td>
+                             <td>
+                                 <?php if ($certificado->estado === 'pendiente'): ?>
+                                     <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" style="display: inline;">
+                                         <input type="hidden" name="action" value="aprobar_certificado">
+                                         <input type="hidden" name="certificado_id" value="<?php echo $certificado->id; ?>">
+                                         <?php wp_nonce_field('aprobar_certificado', 'aprobar_certificado_nonce'); ?>
+                                         <button type="submit" class="button button-primary" 
+                                                 onclick="return confirm('¿Estás seguro de que quieres aprobar este certificado?')">
+                                             <?php _e('✅ Aprobar', 'certificados-personalizados'); ?>
+                                         </button>
+                                     </form>
+                                     
+                                     <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" style="display: inline;">
+                                         <input type="hidden" name="action" value="rechazar_certificado">
+                                         <input type="hidden" name="certificado_id" value="<?php echo $certificado->id; ?>">
+                                         <?php wp_nonce_field('rechazar_certificado', 'rechazar_certificado_nonce'); ?>
+                                         <button type="submit" class="button button-secondary" 
+                                                 onclick="return confirm('¿Estás seguro de que quieres rechazar este certificado?')">
+                                             <?php _e('❌ Rechazar', 'certificados-personalizados'); ?>
+                                         </button>
+                                     </form>
+                                 <?php else: ?>
+                                     <span class="estado-finalizado" style="color: #666; font-style: italic;">
+                                         <?php _e('Sin acciones disponibles', 'certificados-personalizados'); ?>
+                                     </span>
+                                 <?php endif; ?>
+                             </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -175,6 +251,19 @@ function obtener_tipos_actividad_admin() {
     border: 1px solid #ccd0d4;
     border-radius: 4px;
     margin-bottom: 30px;
+}
+
+.filtros-certificados {
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.filtros-certificados select {
+    margin-right: 10px;
+    min-width: 200px;
 }
 
 .estadisticas-grid {
