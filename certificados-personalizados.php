@@ -56,6 +56,9 @@ class CertificadosPersonalizados {
         add_action('init', array($this, 'inicializar_plugin'));
         add_action('admin_menu', array($this, 'agregar_menus_admin'));
         
+        // Hook para actualización manual de tabla
+        add_action('admin_post_actualizar_tabla_certificados', array($this, 'forzar_actualizacion_tabla'));
+        
         // Cargar archivos necesarios
         $this->cargar_archivos();
     }
@@ -89,6 +92,13 @@ class CertificadosPersonalizados {
         
         // Flush rewrite rules
         flush_rewrite_rules();
+    }
+    
+    /**
+     * Forzar actualización de tabla (para desarrollo)
+     */
+    public function forzar_actualizacion_tabla() {
+        $this->crear_tabla_certificados();
     }
     
     /**

@@ -102,6 +102,20 @@ function obtener_tipos_actividad() {
 <div class="wrap">
     <h1><?php _e('Mis Certificados', 'certificados-personalizados'); ?></h1>
     
+    <!-- Botón para actualizar tabla (solo para desarrollo) -->
+    <?php if (current_user_can('manage_options')): ?>
+        <div class="notice notice-info">
+            <p>
+                <strong>Desarrollo:</strong> 
+                <a href="<?php echo admin_url('admin-post.php?action=actualizar_tabla_certificados'); ?>" 
+                   class="button button-secondary">
+                    Actualizar Tabla de Base de Datos
+                </a>
+                <small>(Solo para administradores)</small>
+            </p>
+        </div>
+    <?php endif; ?>
+    
     <?php if (isset($mensaje)): ?>
         <div class="notice notice-<?php echo $mensaje['tipo']; ?> is-dismissible">
             <p><?php echo esc_html($mensaje['mensaje']); ?></p>
