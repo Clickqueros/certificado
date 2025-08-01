@@ -55,6 +55,7 @@ class CertificadosPersonalizados {
         // Hooks de inicialización
         add_action('init', array($this, 'inicializar_plugin'));
         add_action('admin_menu', array($this, 'agregar_menus_admin'));
+        add_action('init', array($this, 'registrar_shortcodes'));
         
         // Hook para actualización manual de tabla
         add_action('admin_post_actualizar_tabla_certificados', array($this, 'forzar_actualizacion_tabla'));
@@ -350,6 +351,39 @@ class CertificadosPersonalizados {
         
         // Cargar vista
         include CERTIFICADOS_PERSONALIZADOS_PLUGIN_PATH . 'admin/aprobacion-certificados.php';
+    }
+    
+    /**
+     * Registrar shortcode para mostrar certificados aprobados
+     */
+    public function registrar_shortcodes() {
+        add_shortcode('certificados_aprobados', array($this, 'mostrar_certificados_aprobados'));
+    }
+    
+    /**
+     * Shortcode para mostrar certificados aprobados con buscador
+     */
+    public function mostrar_certificados_aprobados($atts) {
+        // Procesar búsqueda si se envió
+        $busqueda = isset($_GET['buscar_certificado']) ? sanitize_text_field($_GET['buscar_certificado']) : '';
+        
+        // Obtener certificados aprobados
+        $certificados = CertificadosPersonalizadosBD::obtener_certificados_aprobados($busqueda);
+        
+        // Incluir estilos CSS
+        wp_enqueue_style('certificados-public', plugin_dir_url(__FILE__) . 'public/css/certificados-public.css', array(), '1.0.0');
+        
+        // Incluir JavaScript
+        wp_enqueue_script('certificados-public', plugin_dir_url(__FILE__) . 'public/js/certificados-public.js', array('jquery'), '1.0.0', true);
+        
+        // Iniciar buffer de salida
+        ob_start();
+        
+        // Incluir template
+        include CERTIFICADOS_PERSONALIZADOS_PLUGIN_PATH . 'public/template-certificados-public.php';
+        
+        // Retornar contenido
+        return ob_get_clean();
     }
 }
 

@@ -319,4 +319,34 @@ class CertificadosPersonalizadosBD {
             'notificado' => 1
         ));
     }
+    
+    /**
+     * Obtener certificados aprobados para el shortcode público
+     */
+    public static function obtener_certificados_aprobados($busqueda = '') {
+        global $wpdb;
+        
+        $tabla = self::obtener_tabla();
+        
+        $where_conditions = array("estado = 'aprobado'");
+        $where_values = array();
+        
+        // Agregar búsqueda si se proporciona
+        if (!empty($busqueda)) {
+            $where_conditions[] = "(nombre LIKE %s OR codigo_unico LIKE %s)";
+            $busqueda_like = '%' . $wpdb->esc_like($busqueda) . '%';
+            $where_values[] = $busqueda_like;
+            $where_values[] = $busqueda_like;
+        }
+        
+        $where_clause = implode(' AND ', $where_conditions);
+        
+        $sql = "SELECT * FROM $tabla WHERE $where_clause ORDER BY created_at DESC";
+        
+        if (!empty($where_values)) {
+            $sql = $wpdb->prepare($sql, $where_values);
+        }
+        
+        return $wpdb->get_results($sql);
+    }
 } 
