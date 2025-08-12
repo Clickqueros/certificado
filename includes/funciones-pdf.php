@@ -89,6 +89,16 @@ class CertificadosPersonalizadosPDF {
             $timestamp = time();
             $url_con_timestamp = $upload_dir['baseurl'] . '/certificados/' . $nombre_final . '?v=' . $timestamp;
             
+            // Limpiar caché de WordPress si está disponible
+            if (function_exists('wp_cache_flush')) {
+                wp_cache_flush();
+            }
+            
+            // Limpiar caché de transients
+            if (function_exists('delete_transient')) {
+                delete_transient('certificado_pdf_' . $certificado_id);
+            }
+            
             $actualizado = CertificadosPersonalizadosBD::actualizar_certificado($certificado_id, array(
                 'pdf_path' => $url_con_timestamp
             ));
@@ -127,8 +137,15 @@ class CertificadosPersonalizadosPDF {
         
         // Verificar que el archivo existe y tiene contenido
         if (file_exists($ruta_completa) && filesize($ruta_completa) > 0) {
-            error_log('CertificadosPersonalizadosPDF: PDF verificado correctamente para ID: ' . $certificado_id . ' - Tamaño: ' . filesize($ruta_completa) . ' bytes');
-            return true;
+            // Verificar que el contenido contiene el nombre actualizado
+            $contenido_archivo = file_get_contents($ruta_completa);
+            if (strpos($contenido_archivo, $certificado->nombre) !== false) {
+                error_log('CertificadosPersonalizadosPDF: PDF verificado correctamente para ID: ' . $certificado_id . ' - Tamaño: ' . filesize($ruta_completa) . ' bytes - Nombre encontrado: ' . $certificado->nombre);
+                return true;
+            } else {
+                error_log('CertificadosPersonalizadosPDF: PDF no contiene el nombre actualizado para ID: ' . $certificado_id . ' - Nombre esperado: ' . $certificado->nombre);
+                return false;
+            }
         } else {
             error_log('CertificadosPersonalizadosPDF: PDF no encontrado o vacío para ID: ' . $certificado_id . ' - Ruta: ' . $ruta_completa);
             return false;
@@ -147,13 +164,23 @@ class CertificadosPersonalizadosPDF {
             $html = self::generar_plantilla_por_defecto($certificado, $certificado->actividad);
         }
         
-        // Reemplazar placeholders
+        // Reemplazar placeholders - tanto los antiguos como los nuevos
         $html = str_replace('[NOMBRE_COMPLETO]', htmlspecialchars($certificado->nombre), $html);
         $html = str_replace('[ACTIVIDAD_CURSO]', htmlspecialchars($certificado->actividad), $html);
         $html = str_replace('[FECHA_ACTIVIDAD]', htmlspecialchars($certificado->fecha), $html);
         $html = str_replace('[CODIGO_UNICO]', htmlspecialchars($certificado->codigo_unico), $html);
         $html = str_replace('[NOMBRE_DIRECTOR]', 'Director General', $html);
         $html = str_replace('[NOMBRE_COORDINADOR]', 'Coordinador de Recursos Humanos', $html);
+        
+        // Reemplazar placeholders con formato {{variable}}
+        $html = str_replace('{{nombre}}', htmlspecialchars($certificado->nombre), $html);
+        $html = str_replace('{{actividad}}', htmlspecialchars($certificado->actividad), $html);
+        $html = str_replace('{{fecha}}', htmlspecialchars($certificado->fecha), $html);
+        $html = str_replace('{{codigo}}', htmlspecialchars($certificado->codigo_unico), $html);
+        $html = str_replace('{{observaciones}}', htmlspecialchars($certificado->observaciones), $html);
+        
+        // Debug: Log para verificar que se están reemplazando correctamente
+        error_log('CertificadosPersonalizadosPDF: Reemplazando nombre "' . $certificado->nombre . '" en HTML');
         
         return $html;
     }
@@ -639,6 +666,52 @@ class CertificadosPersonalizadosPDF {
      */
     public static function regenerar_pdf_certificado($certificado_id) {
         return self::generar_certificado_pdf($certificado_id);
+    }
+    
+    /**
+     * Forzar regeneración completa del PDF
+     */
+    public static function forzar_regeneracion_pdf($certificado_id) {
+        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        
+        if (!$certificado) {
+            error_log('CertificadosPersonalizadosPDF: No se pudo obtener certificado para regeneración forzada ID: ' . $certificado_id);
+            return false;
+        }
+        
+        // Limpiar archivo anterior completamente
+        $upload_dir = wp_upload_dir();
+        $certificados_dir = $upload_dir['basedir'] . '/certificados/';
+        $nombre_base = 'certificado_' . $certificado->codigo_unico;
+        
+        // Eliminar todos los archivos relacionados
+        $archivos_a_eliminar = [
+            $certificados_dir . $nombre_base . '.pdf',
+            $certificados_dir . $nombre_base . '.html'
+        ];
+        
+        foreach ($archivos_a_eliminar as $archivo) {
+            if (file_exists($archivo)) {
+                unlink($archivo);
+                error_log('CertificadosPersonalizadosPDF: Archivo eliminado para regeneración forzada: ' . basename($archivo));
+            }
+        }
+        
+        // Limpiar caché
+        if (function_exists('wp_cache_flush')) {
+            wp_cache_flush();
+        }
+        
+        // Regenerar PDF
+        $resultado = self::generar_certificado_pdf($certificado_id);
+        
+        if ($resultado) {
+            error_log('CertificadosPersonalizadosPDF: Regeneración forzada exitosa para ID: ' . $certificado_id);
+        } else {
+            error_log('CertificadosPersonalizadosPDF: Error en regeneración forzada para ID: ' . $certificado_id);
+        }
+        
+        return $resultado;
     }
     
     /**

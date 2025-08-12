@@ -455,8 +455,8 @@ class CertificadosPersonalizados {
             // Verificar que la actualización fue exitosa obteniendo los datos actualizados
             $certificado_actualizado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
             
-            // Forzar regeneración del PDF (siempre, no solo si existe)
-            $pdf_regenerado = CertificadosPersonalizadosPDF::generar_certificado_pdf($certificado_id);
+            // Forzar regeneración completa del PDF
+            $pdf_regenerado = CertificadosPersonalizadosPDF::forzar_regeneracion_pdf($certificado_id);
             
             // Verificar que el PDF se actualizó correctamente
             $pdf_verificado = CertificadosPersonalizadosPDF::verificar_pdf_actualizado($certificado_id);
