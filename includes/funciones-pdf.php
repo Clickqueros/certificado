@@ -42,6 +42,19 @@ class CertificadosPersonalizadosPDF {
         $nombre_base = 'certificado_' . $certificado->codigo_unico;
         $ruta_pdf = $certificados_dir . $nombre_base . '.pdf';
         
+        // Eliminar archivo anterior si existe para forzar regeneración
+        if (file_exists($ruta_pdf)) {
+            unlink($ruta_pdf);
+            error_log('CertificadosPersonalizadosPDF: Archivo anterior eliminado: ' . $ruta_pdf);
+        }
+        
+        // También eliminar archivo HTML si existe
+        $ruta_html = $certificados_dir . $nombre_base . '.html';
+        if (file_exists($ruta_html)) {
+            unlink($ruta_html);
+            error_log('CertificadosPersonalizadosPDF: Archivo HTML anterior eliminado: ' . $ruta_html);
+        }
+        
         // Intentar generar PDF real
         $pdf_generado = false;
         
@@ -72,13 +85,16 @@ class CertificadosPersonalizadosPDF {
             $extension = pathinfo($ruta_pdf, PATHINFO_EXTENSION);
             $nombre_final = $nombre_base . '.' . $extension;
             
-            // Actualizar la ruta en la base de datos
+            // Actualizar la ruta en la base de datos con timestamp para evitar caché
+            $timestamp = time();
+            $url_con_timestamp = $upload_dir['baseurl'] . '/certificados/' . $nombre_final . '?v=' . $timestamp;
+            
             $actualizado = CertificadosPersonalizadosBD::actualizar_certificado($certificado_id, array(
-                'pdf_path' => $upload_dir['baseurl'] . '/certificados/' . $nombre_final
+                'pdf_path' => $url_con_timestamp
             ));
             
             if ($actualizado) {
-                error_log('CertificadosPersonalizadosPDF: Archivo generado exitosamente para ID: ' . $certificado_id . ' - Extensión: ' . $extension);
+                error_log('CertificadosPersonalizadosPDF: Archivo generado exitosamente para ID: ' . $certificado_id . ' - Extensión: ' . $extension . ' - Timestamp: ' . $timestamp);
             } else {
                 error_log('CertificadosPersonalizadosPDF: Error actualizando BD para ID: ' . $certificado_id);
             }
@@ -89,6 +105,34 @@ class CertificadosPersonalizadosPDF {
         }
         
         return false;
+    }
+    
+    /**
+     * Verificar si el PDF está actualizado
+     */
+    public static function verificar_pdf_actualizado($certificado_id) {
+        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        
+        if (!$certificado || !$certificado->pdf_path) {
+            return false;
+        }
+        
+        // Extraer la ruta del archivo sin parámetros
+        $url_parts = parse_url($certificado->pdf_path);
+        $ruta_archivo = $url_parts['path'];
+        
+        // Convertir URL a ruta del sistema
+        $upload_dir = wp_upload_dir();
+        $ruta_completa = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $ruta_archivo);
+        
+        // Verificar que el archivo existe y tiene contenido
+        if (file_exists($ruta_completa) && filesize($ruta_completa) > 0) {
+            error_log('CertificadosPersonalizadosPDF: PDF verificado correctamente para ID: ' . $certificado_id . ' - Tamaño: ' . filesize($ruta_completa) . ' bytes');
+            return true;
+        } else {
+            error_log('CertificadosPersonalizadosPDF: PDF no encontrado o vacío para ID: ' . $certificado_id . ' - Ruta: ' . $ruta_completa);
+            return false;
+        }
     }
     
     /**

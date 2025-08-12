@@ -455,13 +455,22 @@ class CertificadosPersonalizados {
             // Verificar que la actualización fue exitosa obteniendo los datos actualizados
             $certificado_actualizado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
             
-            // Regenerar PDF si existe
-            if ($certificado->pdf_path) {
-                CertificadosPersonalizadosPDF::generar_certificado_pdf($certificado_id);
+            // Forzar regeneración del PDF (siempre, no solo si existe)
+            $pdf_regenerado = CertificadosPersonalizadosPDF::generar_certificado_pdf($certificado_id);
+            
+            // Verificar que el PDF se actualizó correctamente
+            $pdf_verificado = CertificadosPersonalizadosPDF::verificar_pdf_actualizado($certificado_id);
+            
+            if ($pdf_regenerado && $pdf_verificado) {
+                $mensaje_texto = 'Certificado actualizado correctamente. PDF regenerado y verificado.';
+            } elseif ($pdf_regenerado) {
+                $mensaje_texto = 'Certificado actualizado correctamente. PDF regenerado (verificación pendiente).';
+            } else {
+                $mensaje_texto = 'Certificado actualizado correctamente. Error al regenerar PDF.';
             }
             
             // Redirigir con mensaje de éxito
-            $url_redirect = admin_url('admin.php?page=mis-certificados&mensaje=exito&texto=' . urlencode('Certificado actualizado correctamente.'));
+            $url_redirect = admin_url('admin.php?page=mis-certificados&mensaje=exito&texto=' . urlencode($mensaje_texto));
             wp_redirect($url_redirect);
             exit;
         } else {
