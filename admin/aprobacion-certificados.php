@@ -216,40 +216,10 @@ function obtener_tipos_actividad_admin() {
                                        target="_blank" class="button button-small">
                                          <?php _e('📄 Ver PDF', 'certificados-personalizados'); ?>
                                      </a>
-                                     <br>
-                                    <a href="<?php echo esc_url(CertificadosPersonalizadosPDF::obtener_url_pdf_admin_forzada($certificado->id)); ?>" 
-                                       download class="button button-small button-secondary">
-                                         <?php _e('⬇️ Descargar', 'certificados-personalizados'); ?>
-                                     </a>
-                                     <br>
-                                     <a href="<?php echo esc_url(CertificadosPersonalizadosPDF::obtener_url_pdf_admin_forzada($certificado->id) . '&force=1'); ?>" 
-                                        target="_blank" class="button button-small button-secondary">
-                                         🔄 <?php _e('Ver PDF (Sin Caché)', 'certificados-personalizados'); ?>
-                                     </a>
-                                     <br>
-                                     <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" style="display: inline;">
-                                         <input type="hidden" name="action" value="regenerar_pdf_admin">
-                                         <input type="hidden" name="certificado_id" value="<?php echo $certificado->id; ?>">
-                                         <?php wp_nonce_field('regenerar_pdf_admin', 'regenerar_pdf_admin_nonce'); ?>
-                                         <button type="submit" class="button button-small button-secondary" 
-                                                 onclick="return confirm('¿Regenerar PDF? Esto actualizará el archivo con los datos más recientes.')">
-                                             🔄 <?php _e('Regenerar PDF', 'certificados-personalizados'); ?>
-                                         </button>
-                                     </form>
                                  <?php else: ?>
                                      <span class="sin-observaciones">
                                          <?php _e('No disponible', 'certificados-personalizados'); ?>
                                      </span>
-                                     <br>
-                                     <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" style="display: inline;">
-                                         <input type="hidden" name="action" value="regenerar_pdf_admin">
-                                         <input type="hidden" name="certificado_id" value="<?php echo $certificado->id; ?>">
-                                         <?php wp_nonce_field('regenerar_pdf_admin', 'regenerar_pdf_admin_nonce'); ?>
-                                         <button type="submit" class="button button-small button-primary" 
-                                                 onclick="return confirm('¿Generar PDF? Esto creará el archivo PDF para este certificado.')">
-                                             📄 <?php _e('Generar PDF', 'certificados-personalizados'); ?>
-                                         </button>
-                                     </form>
                                      <?php if (current_user_can('manage_options')): ?>
                                          <br>
                                          <small style="color: #999;">
