@@ -87,11 +87,30 @@ class CertificadosPersonalizados {
      * Cargar archivos del plugin
      */
     private function cargar_archivos() {
-        // Cargar funciones de base de datos
-        require_once CERTIFICADOS_PERSONALIZADOS_PLUGIN_PATH . 'includes/funciones-bd.php';
-        
-        // Cargar funciones de PDF
-        require_once CERTIFICADOS_PERSONALIZADOS_PLUGIN_PATH . 'includes/funciones-pdf.php';
+        try {
+            // Verificar que los archivos existen antes de cargarlos
+            $archivo_bd = CERTIFICADOS_PERSONALIZADOS_PLUGIN_PATH . 'includes/funciones-bd.php';
+            $archivo_pdf = CERTIFICADOS_PERSONALIZADOS_PLUGIN_PATH . 'includes/funciones-pdf.php';
+            
+            if (!file_exists($archivo_bd)) {
+                error_log('CertificadosPersonalizados: Archivo funciones-bd.php no encontrado en: ' . $archivo_bd);
+                return;
+            }
+            
+            if (!file_exists($archivo_pdf)) {
+                error_log('CertificadosPersonalizados: Archivo funciones-pdf.php no encontrado en: ' . $archivo_pdf);
+                return;
+            }
+            
+            // Cargar funciones de base de datos
+            require_once $archivo_bd;
+            
+            // Cargar funciones de PDF
+            require_once $archivo_pdf;
+            
+        } catch (Exception $e) {
+            error_log('CertificadosPersonalizados: Error al cargar archivos: ' . $e->getMessage());
+        }
     }
     
     /**
@@ -702,19 +721,32 @@ class CertificadosPersonalizados {
      * Interceptar acceso a PDFs para agregar headers de no-caché
      */
     public function interceptar_acceso_pdf() {
-        if (is_admin()) {
-            return; // No modificar para administradores
+        // No ejecutar durante la instalación o activación del plugin
+        if (is_admin() || defined('WP_INSTALLING') || defined('WP_ACTIVATING')) {
+            return;
         }
 
-        // Obtener la URL actual
-        $current_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https://" : "http://") . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+        // Verificar que las variables del servidor estén disponibles
+        if (!isset($_SERVER['HTTP_HOST']) || !isset($_SERVER['REQUEST_URI'])) {
+            return;
+        }
 
-        // Verificar si la URL termina con .pdf
-        if (pathinfo($current_url, PATHINFO_EXTENSION) === 'pdf') {
-            // Agregar headers de no-caché
-            header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP 1.1
-            header("Pragma: no-cache"); // HTTP 1.0
-            header("Expires: 0"); // Proxies
+        try {
+            // Obtener la URL actual de forma segura
+            $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https://" : "http://";
+            $current_url = $protocol . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+
+            // Verificar si la URL termina con .pdf
+            if (pathinfo($current_url, PATHINFO_EXTENSION) === 'pdf') {
+                // Agregar headers de no-caché solo si no se han enviado ya
+                if (!headers_sent()) {
+                    header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP 1.1
+                    header("Pragma: no-cache"); // HTTP 1.0
+                    header("Expires: 0"); // Proxies
+                }
+            }
+        } catch (Exception $e) {
+            error_log('CertificadosPersonalizados: Error en interceptar_acceso_pdf: ' . $e->getMessage());
         }
     }
 }
