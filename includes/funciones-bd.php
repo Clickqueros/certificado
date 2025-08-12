@@ -194,7 +194,12 @@ class CertificadosPersonalizadosBD {
      * Verificar si un certificado es editable
      */
     public static function certificado_es_editable($certificado) {
-        // Solo certificados pendientes que no han sido enviados
+        // Los administradores pueden editar cualquier certificado
+        if (current_user_can('administrator')) {
+            return true;
+        }
+        
+        // Los colaboradores solo pueden editar certificados pendientes que no han sido enviados
         return $certificado->estado === 'pendiente' && $certificado->notificado == 0;
     }
     
@@ -210,10 +215,19 @@ class CertificadosPersonalizadosBD {
         // Limpiar caché de consultas para asegurar datos frescos
         $wpdb->flush();
         
-        $sql = $wpdb->prepare(
-            "SELECT * FROM $tabla WHERE id = %d AND user_id = %d",
-            $id, $user_id
-        );
+        // Si es administrador, puede editar cualquier certificado
+        if (current_user_can('administrator')) {
+            $sql = $wpdb->prepare(
+                "SELECT * FROM $tabla WHERE id = %d",
+                $id
+            );
+        } else {
+            // Si es colaborador, solo puede editar sus propios certificados
+            $sql = $wpdb->prepare(
+                "SELECT * FROM $tabla WHERE id = %d AND user_id = %d",
+                $id, $user_id
+            );
+        }
         
         $certificado = $wpdb->get_row($sql);
         
@@ -246,6 +260,31 @@ class CertificadosPersonalizadosBD {
         
         if ($certificado) {
             error_log("Debug Certificado ID {$id}: " . print_r($certificado, true));
+        }
+        
+        return $certificado;
+    }
+    
+    /**
+     * Obtener certificado para edición de administrador (sin restricciones de estado)
+     */
+    public static function obtener_certificado_para_edicion_admin($id) {
+        global $wpdb;
+        
+        $tabla = self::obtener_tabla();
+        
+        // Limpiar caché de consultas para asegurar datos frescos
+        $wpdb->flush();
+        
+        $sql = $wpdb->prepare(
+            "SELECT * FROM $tabla WHERE id = %d",
+            $id
+        );
+        
+        $certificado = $wpdb->get_row($sql);
+        
+        if (!$certificado) {
+            return false;
         }
         
         return $certificado;

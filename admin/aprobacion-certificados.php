@@ -16,6 +16,19 @@ if (!in_array('administrator', $user_roles)) {
     wp_die(__('Acceso no autorizado. Solo los administradores pueden acceder a esta página.', 'certificados-personalizados'));
 }
 
+// Verificar si estamos en modo edición
+$modo_edicion = false;
+$certificado_edicion = null;
+
+if (isset($_GET['editar']) && !empty($_GET['editar'])) {
+    $certificado_id = intval($_GET['editar']);
+    $certificado_edicion = CertificadosPersonalizadosBD::obtener_certificado_para_edicion_admin($certificado_id);
+    
+    if ($certificado_edicion) {
+        $modo_edicion = true;
+    }
+}
+
 // Process redirect messages (from approve/reject actions)
 if (isset($_GET['mensaje']) && isset($_GET['texto'])) {
     $mensaje = array(
@@ -235,6 +248,13 @@ function obtener_tipos_actividad_admin() {
                                          <?php _e('Sin acciones disponibles', 'certificados-personalizados'); ?>
                                      </span>
                                  <?php endif; ?>
+                                 
+                                 <!-- Botón de Editar para Administradores -->
+                                 <br><br>
+                                 <a href="<?php echo admin_url('admin.php?page=aprobacion-certificados&editar=' . $certificado->id); ?>" 
+                                    class="button button-secondary">
+                                     ✏️ <?php _e('Editar', 'certificados-personalizados'); ?>
+                                 </a>
                              </td>
                         </tr>
                     <?php endforeach; ?>
@@ -242,6 +262,97 @@ function obtener_tipos_actividad_admin() {
             </table>
         <?php endif; ?>
     </div>
+    
+    <!-- Formulario de Edición para Administradores -->
+    <?php if ($modo_edicion && $certificado_edicion): ?>
+        <div class="formulario-edicion-admin">
+            <h2><?php _e('Editar Certificado', 'certificados-personalizados'); ?></h2>
+            <p><a href="<?php echo admin_url('admin.php?page=aprobacion-certificados'); ?>" class="button button-secondary">
+                ← <?php _e('Volver a Lista', 'certificados-personalizados'); ?>
+            </a></p>
+            
+            <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" id="formulario-edicion-admin">
+                <?php wp_nonce_field('editar_certificado_admin', 'editar_certificado_admin_nonce'); ?>
+                <input type="hidden" name="action" value="editar_certificado_admin">
+                <input type="hidden" name="certificado_id" value="<?php echo $certificado_edicion->id; ?>">
+                
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="nombre"><?php _e('Nombre', 'certificados-personalizados'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="nombre" name="nombre" class="regular-text" 
+                                   value="<?php echo esc_attr($certificado_edicion->nombre); ?>" required>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="fecha_evento"><?php _e('Fecha del Evento', 'certificados-personalizados'); ?></label>
+                        </th>
+                        <td>
+                            <input type="date" id="fecha_evento" name="fecha_evento" 
+                                   value="<?php echo esc_attr($certificado_edicion->fecha); ?>" required>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="tipo_actividad"><?php _e('Tipo de Actividad', 'certificados-personalizados'); ?></label>
+                        </th>
+                        <td>
+                            <select id="tipo_actividad" name="tipo_actividad" required>
+                                <?php 
+                                $tipos = obtener_tipos_actividad_admin();
+                                foreach ($tipos as $valor => $etiqueta): 
+                                ?>
+                                    <option value="<?php echo esc_attr($valor); ?>" 
+                                            <?php selected($certificado_edicion->actividad, $valor); ?>>
+                                        <?php echo esc_html($etiqueta); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="observaciones"><?php _e('Observaciones', 'certificados-personalizados'); ?></label>
+                        </th>
+                        <td>
+                            <textarea id="observaciones" name="observaciones" rows="4" cols="50" class="large-text"><?php echo esc_textarea($certificado_edicion->observaciones); ?></textarea>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="estado"><?php _e('Estado', 'certificados-personalizados'); ?></label>
+                        </th>
+                        <td>
+                            <select id="estado" name="estado" required>
+                                <option value="pendiente" <?php selected($certificado_edicion->estado, 'pendiente'); ?>>
+                                    <?php _e('Pendiente', 'certificados-personalizados'); ?>
+                                </option>
+                                <option value="aprobado" <?php selected($certificado_edicion->estado, 'aprobado'); ?>>
+                                    <?php _e('Aprobado', 'certificados-personalizados'); ?>
+                                </option>
+                                <option value="rechazado" <?php selected($certificado_edicion->estado, 'rechazado'); ?>>
+                                    <?php _e('Rechazado', 'certificados-personalizados'); ?>
+                                </option>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+                
+                <p class="submit">
+                    <button type="submit" class="button button-primary">
+                        <?php _e('Actualizar Certificado', 'certificados-personalizados'); ?>
+                    </button>
+                </p>
+            </form>
+        </div>
+    <?php endif; ?>
 </div>
 
 <style>
@@ -328,5 +439,41 @@ function obtener_tipos_actividad_admin() {
 
 .notice {
     margin: 20px 0;
+}
+
+.formulario-edicion-admin {
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+
+.formulario-edicion-admin h2 {
+    margin-top: 0;
+    color: #23282d;
+}
+
+.formulario-edicion-admin .form-table th {
+    width: 200px;
+    padding: 15px 10px 15px 0;
+}
+
+.formulario-edicion-admin .form-table td {
+    padding: 15px 10px;
+}
+
+.formulario-edicion-admin input[type="text"],
+.formulario-edicion-admin input[type="date"],
+.formulario-edicion-admin select,
+.formulario-edicion-admin textarea {
+    width: 100%;
+    max-width: 400px;
+}
+
+.formulario-edicion-admin .submit {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
 }
 </style> 

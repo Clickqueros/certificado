@@ -70,6 +70,9 @@ class CertificadosPersonalizados {
         // Hook para editar certificados
         add_action('admin_post_editar_certificado', array($this, 'procesar_edicion_certificado'));
         
+        // Hook para editar certificados por administradores
+        add_action('admin_post_editar_certificado_admin', array($this, 'procesar_edicion_certificado_admin'));
+        
         // Cargar archivos necesarios
         $this->cargar_archivos();
     }
@@ -471,6 +474,100 @@ class CertificadosPersonalizados {
             
             // Redirigir con mensaje de éxito
             $url_redirect = admin_url('admin.php?page=mis-certificados&mensaje=exito&texto=' . urlencode($mensaje_texto));
+            wp_redirect($url_redirect);
+            exit;
+        } else {
+            wp_die('Error al actualizar el certificado.');
+        }
+    }
+    
+    /**
+     * Procesar edición de certificado por administrador
+     */
+    public function procesar_edicion_certificado_admin() {
+        // Verificar permisos de administrador
+        if (!current_user_can('administrator')) {
+            wp_die('No tienes permisos para realizar esta acción.');
+        }
+        
+        // Verificar nonce
+        if (!isset($_POST['editar_certificado_admin_nonce']) || 
+            !wp_verify_nonce($_POST['editar_certificado_admin_nonce'], 'editar_certificado_admin')) {
+            wp_die('Error de seguridad.');
+        }
+        
+        $certificado_id = intval($_POST['certificado_id']);
+        
+        // Obtener certificado para administrador (sin restricciones)
+        $certificado = CertificadosPersonalizadosBD::obtener_certificado_para_edicion_admin($certificado_id);
+        
+        if (!$certificado) {
+            wp_die('Certificado no encontrado.');
+        }
+        
+        // Validar datos
+        $nombre = sanitize_text_field($_POST['nombre']);
+        $fecha_evento = sanitize_text_field($_POST['fecha_evento']);
+        $tipo_actividad = sanitize_text_field($_POST['tipo_actividad']);
+        $observaciones = sanitize_textarea_field($_POST['observaciones']);
+        $estado = sanitize_text_field($_POST['estado']);
+        
+        // Validaciones
+        if (empty($nombre) || empty($fecha_evento) || empty($tipo_actividad)) {
+            wp_die('Los campos Nombre, Fecha del evento y Tipo de actividad son obligatorios.');
+        }
+        
+        // Validar fecha
+        $fecha_actual = date('Y-m-d');
+        if ($fecha_evento > $fecha_actual) {
+            wp_die('La fecha del evento no puede ser futura.');
+        }
+        
+        // Validar tipo de actividad
+        $tipos_validos = array('curso', 'taller', 'seminario', 'conferencia', 'workshop', 'otro');
+        if (!in_array($tipo_actividad, $tipos_validos)) {
+            wp_die('Tipo de actividad no válido.');
+        }
+        
+        // Validar estado
+        $estados_validos = array('pendiente', 'aprobado', 'rechazado');
+        if (!in_array($estado, $estados_validos)) {
+            wp_die('Estado no válido.');
+        }
+        
+        // Preparar datos para actualización
+        $datos_actualizados = array(
+            'nombre' => $nombre,
+            'actividad' => $tipo_actividad,
+            'fecha' => $fecha_evento,
+            'observaciones' => $observaciones,
+            'estado' => $estado,
+            'updated_at' => current_time('mysql')
+        );
+        
+        // Actualizar certificado
+        $resultado = CertificadosPersonalizadosBD::actualizar_certificado($certificado_id, $datos_actualizados);
+        
+        if ($resultado) {
+            // Debug: Verificar datos actualizados
+            CertificadosPersonalizadosBD::debug_certificado($certificado_id);
+            
+            // Forzar regeneración completa del PDF
+            $pdf_regenerado = CertificadosPersonalizadosPDF::forzar_regeneracion_pdf($certificado_id);
+            
+            // Verificar que el PDF se actualizó correctamente
+            $pdf_verificado = CertificadosPersonalizadosPDF::verificar_pdf_actualizado($certificado_id);
+            
+            if ($pdf_regenerado && $pdf_verificado) {
+                $mensaje_texto = 'Certificado actualizado correctamente. PDF regenerado y verificado.';
+            } elseif ($pdf_regenerado) {
+                $mensaje_texto = 'Certificado actualizado correctamente. PDF regenerado (verificación pendiente).';
+            } else {
+                $mensaje_texto = 'Certificado actualizado correctamente. Error al regenerar PDF.';
+            }
+            
+            // Redirigir con mensaje de éxito
+            $url_redirect = admin_url('admin.php?page=aprobacion-certificados&mensaje=exito&texto=' . urlencode($mensaje_texto));
             wp_redirect($url_redirect);
             exit;
         } else {
