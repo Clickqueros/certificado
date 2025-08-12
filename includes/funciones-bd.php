@@ -183,6 +183,42 @@ class CertificadosPersonalizadosBD {
     }
     
     /**
+     * Verificar si un certificado es editable
+     */
+    public static function certificado_es_editable($certificado) {
+        // Solo certificados pendientes que no han sido enviados
+        return $certificado->estado === 'pendiente' && $certificado->notificado == 0;
+    }
+    
+    /**
+     * Obtener certificado por ID verificando permisos de usuario
+     */
+    public static function obtener_certificado_para_edicion($id) {
+        global $wpdb;
+        
+        $tabla = self::obtener_tabla();
+        $user_id = get_current_user_id();
+        
+        $sql = $wpdb->prepare(
+            "SELECT * FROM $tabla WHERE id = %d AND user_id = %d",
+            $id, $user_id
+        );
+        
+        $certificado = $wpdb->get_row($sql);
+        
+        if (!$certificado) {
+            return false;
+        }
+        
+        // Verificar si es editable
+        if (!self::certificado_es_editable($certificado)) {
+            return false;
+        }
+        
+        return $certificado;
+    }
+    
+    /**
      * Obtener estadísticas de certificados
      */
     public static function obtener_estadisticas() {

@@ -67,6 +67,9 @@ class CertificadosPersonalizados {
         add_action('admin_post_aprobar_certificado', array($this, 'procesar_aprobar_certificado'));
         add_action('admin_post_rechazar_certificado', array($this, 'procesar_rechazar_certificado'));
         
+        // Hook para editar certificados
+        add_action('admin_post_editar_certificado', array($this, 'procesar_edicion_certificado'));
+        
         // Cargar archivos necesarios
         $this->cargar_archivos();
     }
@@ -384,6 +387,80 @@ class CertificadosPersonalizados {
         
         // Retornar contenido
         return ob_get_clean();
+    }
+    
+    /**
+     * Procesar edición de certificado
+     */
+    public function procesar_edicion_certificado() {
+        // Verificar nonce
+        if (!isset($_POST['editar_certificado_nonce']) || 
+            !wp_verify_nonce($_POST['editar_certificado_nonce'], 'editar_certificado')) {
+            wp_die('Error de seguridad.');
+        }
+        
+        // Verificar que el usuario esté logueado
+        if (!is_user_logged_in()) {
+            wp_die('Debes estar logueado para realizar esta acción.');
+        }
+        
+        $certificado_id = intval($_POST['certificado_id']);
+        
+        // Obtener certificado verificando permisos y editabilidad
+        $certificado = CertificadosPersonalizadosBD::obtener_certificado_para_edicion($certificado_id);
+        
+        if (!$certificado) {
+            wp_die('Certificado no encontrado, no tienes permisos o no es editable.');
+        }
+        
+        // Validar datos
+        $nombre = sanitize_text_field($_POST['nombre']);
+        $fecha_evento = sanitize_text_field($_POST['fecha_evento']);
+        $tipo_actividad = sanitize_text_field($_POST['tipo_actividad']);
+        $observaciones = sanitize_textarea_field($_POST['observaciones']);
+        
+        // Validaciones
+        if (empty($nombre) || empty($fecha_evento) || empty($tipo_actividad)) {
+            wp_die('Los campos Nombre, Fecha del evento y Tipo de actividad son obligatorios.');
+        }
+        
+        // Validar fecha
+        $fecha_actual = date('Y-m-d');
+        if ($fecha_evento > $fecha_actual) {
+            wp_die('La fecha del evento no puede ser futura.');
+        }
+        
+        // Validar tipo de actividad
+        $tipos_validos = array('curso', 'taller', 'seminario', 'conferencia', 'workshop', 'otro');
+        if (!in_array($tipo_actividad, $tipos_validos)) {
+            wp_die('Tipo de actividad no válido.');
+        }
+        
+        // Preparar datos para actualización
+        $datos_actualizados = array(
+            'nombre' => $nombre,
+            'actividad' => $tipo_actividad,
+            'fecha' => $fecha_evento,
+            'observaciones' => $observaciones,
+            'updated_at' => current_time('mysql')
+        );
+        
+        // Actualizar certificado
+        $resultado = CertificadosPersonalizadosBD::actualizar_certificado($certificado_id, $datos_actualizados);
+        
+        if ($resultado) {
+            // Regenerar PDF si existe
+            if ($certificado->pdf_path) {
+                CertificadosPersonalizadosPDF::generar_certificado_pdf($certificado_id);
+            }
+            
+            // Redirigir con mensaje de éxito
+            $url_redirect = admin_url('admin.php?page=mis-certificados&mensaje=exito&texto=' . urlencode('Certificado actualizado correctamente.'));
+            wp_redirect($url_redirect);
+            exit;
+        } else {
+            wp_die('Error al actualizar el certificado.');
+        }
     }
 }
 

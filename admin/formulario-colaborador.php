@@ -29,6 +29,19 @@ if (isset($_GET['mensaje']) && isset($_GET['texto'])) {
     );
 }
 
+// Verificar si estamos en modo edición
+$modo_edicion = false;
+$certificado_edicion = null;
+
+if (isset($_GET['editar']) && !empty($_GET['editar'])) {
+    $certificado_id = intval($_GET['editar']);
+    $certificado_edicion = CertificadosPersonalizadosBD::obtener_certificado_para_edicion($certificado_id);
+    
+    if ($certificado_edicion) {
+        $modo_edicion = true;
+    }
+}
+
 // Get current user's certificates
 $certificados = CertificadosPersonalizadosBD::obtener_certificados_usuario();
 
@@ -148,10 +161,25 @@ function obtener_tipos_actividad() {
     <div class="certificados-container">
         <!-- Formulario de solicitud -->
         <div class="certificado-formulario">
-            <h2><?php _e('Solicitar Nuevo Certificado', 'certificados-personalizados'); ?></h2>
+            <h2>
+                <?php if ($modo_edicion): ?>
+                    <?php _e('Editar Certificado', 'certificados-personalizados'); ?>
+                    <a href="<?php echo admin_url('admin.php?page=mis-certificados'); ?>" class="button button-secondary" style="float: right;">
+                        ← <?php _e('Volver a Lista', 'certificados-personalizados'); ?>
+                    </a>
+                <?php else: ?>
+                    <?php _e('Solicitar Nuevo Certificado', 'certificados-personalizados'); ?>
+                <?php endif; ?>
+            </h2>
             
-            <form method="post" action="" id="formulario-certificado">
-                <?php wp_nonce_field('solicitar_certificado', 'certificado_nonce'); ?>
+            <form method="post" action="<?php echo $modo_edicion ? admin_url('admin-post.php') : ''; ?>" id="formulario-certificado">
+                <?php if ($modo_edicion): ?>
+                    <?php wp_nonce_field('editar_certificado', 'editar_certificado_nonce'); ?>
+                    <input type="hidden" name="action" value="editar_certificado">
+                    <input type="hidden" name="certificado_id" value="<?php echo $certificado_edicion->id; ?>">
+                <?php else: ?>
+                    <?php wp_nonce_field('solicitar_certificado', 'certificado_nonce'); ?>
+                <?php endif; ?>
                 
                 <table class="form-table">
                     <tr>
@@ -160,7 +188,7 @@ function obtener_tipos_actividad() {
                         </th>
                         <td>
                             <input type="text" id="nombre" name="nombre" class="regular-text" 
-                                   value="<?php echo esc_attr(wp_get_current_user()->display_name); ?>" required>
+                                   value="<?php echo $modo_edicion ? esc_attr($certificado_edicion->nombre) : esc_attr(wp_get_current_user()->display_name); ?>" required>
                             <p class="description"><?php _e('Nombre completo de la persona que solicita el certificado.', 'certificados-personalizados'); ?></p>
                         </td>
                     </tr>
@@ -170,7 +198,8 @@ function obtener_tipos_actividad() {
                             <label for="fecha_evento"><?php _e('Fecha del Evento', 'certificados-personalizados'); ?> *</label>
                         </th>
                         <td>
-                            <input type="date" id="fecha_evento" name="fecha_evento" required>
+                            <input type="date" id="fecha_evento" name="fecha_evento" 
+                                   value="<?php echo $modo_edicion ? esc_attr($certificado_edicion->fecha) : ''; ?>" required>
                             <p class="description"><?php _e('Fecha en que se realizó la actividad o evento.', 'certificados-personalizados'); ?></p>
                         </td>
                     </tr>
@@ -186,7 +215,8 @@ function obtener_tipos_actividad() {
                                 $tipos = obtener_tipos_actividad();
                                 foreach ($tipos as $valor => $etiqueta): 
                                 ?>
-                                    <option value="<?php echo esc_attr($valor); ?>">
+                                    <option value="<?php echo esc_attr($valor); ?>" 
+                                            <?php echo ($modo_edicion && $certificado_edicion->actividad === $valor) ? 'selected' : ''; ?>>
                                         <?php echo esc_html($etiqueta); ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -200,7 +230,7 @@ function obtener_tipos_actividad() {
                             <label for="observaciones"><?php _e('Observaciones', 'certificados-personalizados'); ?></label>
                         </th>
                         <td>
-                            <textarea id="observaciones" name="observaciones" rows="4" cols="50" class="large-text"></textarea>
+                            <textarea id="observaciones" name="observaciones" rows="4" cols="50" class="large-text"><?php echo $modo_edicion ? esc_textarea($certificado_edicion->observaciones) : ''; ?></textarea>
                             <p class="description"><?php _e('Información adicional sobre la actividad, curso o evento (opcional).', 'certificados-personalizados'); ?></p>
                         </td>
                     </tr>
@@ -208,7 +238,11 @@ function obtener_tipos_actividad() {
                 
                 <p class="submit">
                     <button type="button" id="btn-confirmar-certificado" class="button-primary">
-                        <?php _e('Solicitar Certificado', 'certificados-personalizados'); ?>
+                        <?php if ($modo_edicion): ?>
+                            <?php _e('Actualizar Certificado', 'certificados-personalizados'); ?>
+                        <?php else: ?>
+                            <?php _e('Solicitar Certificado', 'certificados-personalizados'); ?>
+                        <?php endif; ?>
                     </button>
                 </p>
             </form>
@@ -286,7 +320,18 @@ function obtener_tipos_actividad() {
                                 </td>
                                 <td><?php echo esc_html(date('d/m/Y H:i', strtotime($certificado->created_at))); ?></td>
                                 <td>
-                                    <?php if ($certificado->estado === 'pendiente' && $certificado->notificado == 0): ?>
+                                    <?php 
+                                    $es_editable = CertificadosPersonalizadosBD::certificado_es_editable($certificado);
+                                    ?>
+                                    
+                                    <?php if ($es_editable): ?>
+                                        <!-- Botón Editar -->
+                                        <a href="<?php echo admin_url('admin.php?page=mis-certificados&editar=' . $certificado->id); ?>" 
+                                           class="button button-secondary" style="margin-right: 5px;">
+                                            ✏️ <?php _e('Editar', 'certificados-personalizados'); ?>
+                                        </a>
+                                        
+                                        <!-- Botón Enviar para Aprobación -->
                                         <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" style="display: inline;">
                                             <input type="hidden" name="action" value="enviar_certificado_aprobacion">
                                             <input type="hidden" name="certificado_id" value="<?php echo $certificado->id; ?>">
@@ -295,9 +340,17 @@ function obtener_tipos_actividad() {
                                                 <?php _e('Enviar para Aprobación', 'certificados-personalizados'); ?>
                                             </button>
                                         </form>
-                                    <?php elseif ($certificado->notificado == 1): ?>
+                                    <?php elseif ($certificado->estado === 'pendiente' && $certificado->notificado == 1): ?>
                                         <span class="estado-enviado" style="color: #0073aa; font-weight: bold;">
                                             <?php _e('✅ Enviado', 'certificados-personalizados'); ?>
+                                        </span>
+                                    <?php elseif ($certificado->estado === 'aprobado'): ?>
+                                        <span class="estado-aprobado" style="color: #28a745; font-weight: bold;">
+                                            <?php _e('✅ Aprobado', 'certificados-personalizados'); ?>
+                                        </span>
+                                    <?php elseif ($certificado->estado === 'rechazado'): ?>
+                                        <span class="estado-rechazado" style="color: #dc3545; font-weight: bold;">
+                                            <?php _e('❌ Rechazado', 'certificados-personalizados'); ?>
                                         </span>
                                     <?php else: ?>
                                         <span class="estado-no-enviado" style="color: #666;">
@@ -533,11 +586,11 @@ function obtener_tipos_actividad() {
 <div class="modal-overlay" id="modal-confirmacion">
     <div class="modal-confirmacion">
         <div class="modal-header">
-            <h3>📋 Confirmar Certificado</h3>
+            <h3 id="modal-titulo">📋 Confirmar Certificado</h3>
         </div>
         <div class="modal-body">
             <div class="confirmacion-mensaje">
-                <strong>Por favor, revisa la información antes de generar el certificado:</strong>
+                <strong id="modal-mensaje">Por favor, revisa la información antes de generar el certificado:</strong>
             </div>
             
             <div class="confirmacion-item">
@@ -565,7 +618,7 @@ function obtener_tipos_actividad() {
                 ❌ Cancelar
             </button>
             <button type="button" class="modal-btn modal-btn-confirmar" id="btn-confirmar">
-                ✅ Confirmar y Generar
+                ✅ <span id="btn-confirmar-texto">Confirmar y Generar</span>
             </button>
         </div>
     </div>
@@ -616,6 +669,17 @@ jQuery(document).ready(function($) {
             return false;
         }
         
+        // Configurar modal según el modo
+        if (modoEdicion) {
+            $('#modal-titulo').text('📝 Confirmar Edición');
+            $('#modal-mensaje').text('Por favor, revisa la información antes de actualizar el certificado:');
+            $('#btn-confirmar-texto').text('Confirmar y Actualizar');
+        } else {
+            $('#modal-titulo').text('📋 Confirmar Certificado');
+            $('#modal-mensaje').text('Por favor, revisa la información antes de generar el certificado:');
+            $('#btn-confirmar-texto').text('Confirmar y Generar');
+        }
+        
         // Llenar información en el modal
         $('#confirm-nombre').text(nombre);
         $('#confirm-fecha').text(formatearFecha(fecha));
@@ -646,6 +710,9 @@ jQuery(document).ready(function($) {
         mostrarModal();
     });
     
+    // Verificar si estamos en modo edición
+    const modoEdicion = <?php echo $modo_edicion ? 'true' : 'false'; ?>;
+    
     // Evento para cancelar
     $('#btn-cancelar').on('click', function() {
         ocultarModal();
@@ -654,10 +721,11 @@ jQuery(document).ready(function($) {
     // Evento para confirmar y enviar
     $('#btn-confirmar').on('click', function() {
         // Deshabilitar botón para evitar doble envío
-        $(this).prop('disabled', true).text('⏳ Generando...');
+        const btnText = modoEdicion ? '⏳ Actualizando...' : '⏳ Generando...';
+        $(this).prop('disabled', true).text(btnText);
         
-        // Agregar campo hidden para indicar que es una confirmación
-        if (!$('#solicitar_certificado').length) {
+        // Agregar campo hidden para indicar que es una confirmación (solo en modo creación)
+        if (!modoEdicion && !$('#solicitar_certificado').length) {
             $('<input>').attr({
                 type: 'hidden',
                 name: 'solicitar_certificado',
@@ -696,7 +764,9 @@ jQuery(document).ready(function($) {
         }
     });
     
-    // Inicializar estado del botón
-    $('#btn-confirmar-certificado').prop('disabled', true);
+    // Inicializar estado del botón (solo en modo creación)
+    if (!modoEdicion) {
+        $('#btn-confirmar-certificado').prop('disabled', true);
+    }
 });
 </script> 
