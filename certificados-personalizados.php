@@ -558,6 +558,28 @@ class CertificadosPersonalizados {
             // Debug: Verificar datos actualizados
             CertificadosPersonalizadosBD::debug_certificado($certificado_id);
             
+            // Obtener certificado actualizado para regeneración
+            $certificado_actualizado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+            
+            // Eliminar archivos PDF existentes antes de regenerar
+            if ($certificado_actualizado && $certificado_actualizado->pdf_path) {
+                $upload_dir = wp_upload_dir();
+                $local_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $certificado_actualizado->pdf_path);
+                
+                // Eliminar archivo PDF existente
+                if (file_exists($local_path)) {
+                    unlink($local_path);
+                    error_log('CertificadosPersonalizados: Archivo PDF eliminado antes de regenerar - ' . $local_path);
+                }
+                
+                // Eliminar archivo HTML si existe
+                $html_path = str_replace('.pdf', '.html', $local_path);
+                if (file_exists($html_path)) {
+                    unlink($html_path);
+                    error_log('CertificadosPersonalizados: Archivo HTML eliminado antes de regenerar - ' . $html_path);
+                }
+            }
+            
             // Forzar regeneración completa del PDF
             $pdf_regenerado = CertificadosPersonalizadosPDF::forzar_regeneracion_pdf($certificado_id);
             
@@ -576,13 +598,13 @@ class CertificadosPersonalizados {
             }
             
             // Forzar actualización de la URL del PDF en la base de datos con timestamp completamente nuevo
-            $certificado_actualizado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
-            if ($certificado_actualizado && $certificado_actualizado->pdf_path) {
+            $certificado_final = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+            if ($certificado_final && $certificado_final->pdf_path) {
                 $timestamp = time();
                 $random_suffix = substr(md5(uniqid()), 0, 8);
                 
                 // Remover cualquier timestamp existente y agregar uno completamente nuevo
-                $url_base = preg_replace('/\?v=\d+.*/', '', $certificado_actualizado->pdf_path);
+                $url_base = preg_replace('/\?v=\d+.*/', '', $certificado_final->pdf_path);
                 $url_actualizada = $url_base . '?v=' . $timestamp . '&r=' . $random_suffix;
                 
                 CertificadosPersonalizadosBD::actualizar_certificado($certificado_id, array(

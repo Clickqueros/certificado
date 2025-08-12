@@ -704,6 +704,54 @@ class CertificadosPersonalizadosPDF {
     }
     
     /**
+     * Obtener URL del PDF para administradores con parámetros adicionales para forzar recarga
+     */
+    public static function obtener_url_pdf_admin_forzada($certificado_id) {
+        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        
+        if (!$certificado || empty($certificado->pdf_path)) {
+            return false;
+        }
+        
+        $upload_dir = wp_upload_dir();
+        $local_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $certificado->pdf_path);
+        
+        // Para administradores, generar URL con múltiples parámetros para forzar recarga
+        $timestamp = time();
+        $random_suffix = substr(md5(uniqid()), 0, 8);
+        $session_id = session_id() ?: uniqid();
+        
+        // Si el archivo existe directamente, usar esa URL con múltiples parámetros
+        if (file_exists($local_path)) {
+            $url_base = $certificado->pdf_path;
+            
+            // Remover cualquier parámetro existente
+            $url_base = preg_replace('/\?.*/', '', $url_base);
+            
+            // Agregar múltiples parámetros para forzar recarga completa
+            $url_con_parametros = $url_base . '?v=' . $timestamp . '&r=' . $random_suffix . '&s=' . $session_id . '&force=1&nocache=' . $timestamp;
+            
+            return $url_con_parametros;
+        }
+        
+        // Si no existe, buscar archivos con diferentes extensiones
+        $path_info = pathinfo($local_path);
+        $base_path = $path_info['dirname'] . '/' . $path_info['filename'];
+        
+        // Buscar archivos con diferentes extensiones
+        $extensiones = ['pdf', 'html'];
+        foreach ($extensiones as $ext) {
+            $archivo_buscar = $base_path . '.' . $ext;
+            if (file_exists($archivo_buscar)) {
+                $url_correcta = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $archivo_buscar);
+                return $url_correcta . '?v=' . $timestamp . '&r=' . $random_suffix . '&s=' . $session_id . '&force=1&nocache=' . $timestamp;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
      * Verificar si existe el PDF
      */
     public static function existe_pdf($certificado_id) {
@@ -733,43 +781,64 @@ class CertificadosPersonalizadosPDF {
         $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
         
         if (!$certificado) {
-            error_log('CertificadosPersonalizadosPDF: No se pudo obtener certificado para regeneración forzada ID: ' . $certificado_id);
+            error_log('CertificadosPersonalizados: Certificado no encontrado para regeneración - ID: ' . $certificado_id);
             return false;
         }
         
-        // Limpiar archivo anterior completamente
+        // Obtener directorio de uploads
         $upload_dir = wp_upload_dir();
         $certificados_dir = $upload_dir['basedir'] . '/certificados/';
-        $nombre_base = 'certificado_' . $certificado->codigo_unico;
         
-        // Eliminar todos los archivos relacionados
-        $archivos_a_eliminar = [
-            $certificados_dir . $nombre_base . '.pdf',
-            $certificados_dir . $nombre_base . '.html'
-        ];
+        // Asegurar que el directorio existe
+        if (!file_exists($certificados_dir)) {
+            mkdir($certificados_dir, 0755, true);
+        }
+        
+        // Eliminar archivos existentes relacionados con este certificado
+        $codigo_unico = $certificado->codigo_unico;
+        $archivos_a_eliminar = array(
+            $certificados_dir . 'certificado_' . $codigo_unico . '.pdf',
+            $certificados_dir . 'certificado_' . $codigo_unico . '.html',
+            $certificados_dir . $codigo_unico . '.pdf',
+            $certificados_dir . $codigo_unico . '.html'
+        );
         
         foreach ($archivos_a_eliminar as $archivo) {
             if (file_exists($archivo)) {
                 unlink($archivo);
-                error_log('CertificadosPersonalizadosPDF: Archivo eliminado para regeneración forzada: ' . basename($archivo));
+                error_log('CertificadosPersonalizados: Archivo eliminado antes de regenerar - ' . $archivo);
             }
         }
         
-        // Limpiar caché
+        // Limpiar caché de WordPress
         if (function_exists('wp_cache_flush')) {
             wp_cache_flush();
         }
         
-        // Regenerar PDF
+        if (function_exists('delete_transient')) {
+            delete_transient('certificado_pdf_' . $certificado_id);
+            delete_transient('certificado_url_' . $certificado_id);
+        }
+        
+        // Regenerar PDF completamente
         $resultado = self::generar_certificado_pdf($certificado_id);
         
         if ($resultado) {
-            error_log('CertificadosPersonalizadosPDF: Regeneración forzada exitosa para ID: ' . $certificado_id);
-        } else {
-            error_log('CertificadosPersonalizadosPDF: Error en regeneración forzada para ID: ' . $certificado_id);
+            error_log('CertificadosPersonalizados: PDF regenerado exitosamente - ID: ' . $certificado_id);
+            
+            // Verificar que el archivo se creó correctamente
+            $nuevo_pdf = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+            if ($nuevo_pdf && $nuevo_pdf->pdf_path) {
+                $local_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $nuevo_pdf->pdf_path);
+                if (file_exists($local_path)) {
+                    error_log('CertificadosPersonalizados: Archivo PDF verificado después de regeneración - ' . $local_path);
+                    return true;
+                }
+            }
         }
         
-        return $resultado;
+        error_log('CertificadosPersonalizados: Error al regenerar PDF - ID: ' . $certificado_id);
+        return false;
     }
     
     /**
