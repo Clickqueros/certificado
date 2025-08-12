@@ -150,7 +150,7 @@ function obtener_tipos_actividad() {
         <div class="certificado-formulario">
             <h2><?php _e('Solicitar Nuevo Certificado', 'certificados-personalizados'); ?></h2>
             
-            <form method="post" action="">
+            <form method="post" action="" id="formulario-certificado">
                 <?php wp_nonce_field('solicitar_certificado', 'certificado_nonce'); ?>
                 
                 <table class="form-table">
@@ -207,8 +207,9 @@ function obtener_tipos_actividad() {
                 </table>
                 
                 <p class="submit">
-                    <input type="submit" name="solicitar_certificado" class="button-primary" 
-                           value="<?php _e('Solicitar Certificado', 'certificados-personalizados'); ?>">
+                    <button type="button" id="btn-confirmar-certificado" class="button-primary">
+                        <?php _e('Solicitar Certificado', 'certificados-personalizados'); ?>
+                    </button>
                 </p>
             </form>
         </div>
@@ -374,4 +375,328 @@ function obtener_tipos_actividad() {
 .notice p:last-child {
     margin-bottom: 0;
 }
-</style> 
+
+/* Estilos para el modal de confirmación */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-confirmacion {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px 8px 0 0;
+    text-align: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: 25px;
+}
+
+.confirmacion-item {
+    margin-bottom: 15px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #667eea;
+}
+
+.confirmacion-label {
+    font-weight: 600;
+    color: #495057;
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.confirmacion-valor {
+    color: #2c3e50;
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
+.confirmacion-mensaje {
+    text-align: center;
+    margin: 20px 0;
+    padding: 15px;
+    background: #e3f2fd;
+    border-radius: 6px;
+    border: 1px solid #bbdefb;
+    color: #1565c0;
+    font-weight: 500;
+}
+
+.modal-footer {
+    padding: 20px 25px 25px;
+    text-align: center;
+    border-top: 1px solid #e9ecef;
+}
+
+.modal-btn {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 0 10px;
+    min-width: 120px;
+}
+
+.modal-btn-cancelar {
+    background: #6c757d;
+    color: white;
+}
+
+.modal-btn-cancelar:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+.modal-btn-confirmar {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+}
+
+.modal-btn-confirmar:hover {
+    background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.modal-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modal-confirmacion {
+        width: 95%;
+        margin: 20px;
+    }
+    
+    .modal-footer {
+        padding: 15px 20px 20px;
+    }
+    
+    .modal-btn {
+        display: block;
+        width: 100%;
+        margin: 10px 0;
+    }
+}
+</style>
+
+<!-- Modal de Confirmación -->
+<div class="modal-overlay" id="modal-confirmacion">
+    <div class="modal-confirmacion">
+        <div class="modal-header">
+            <h3>📋 Confirmar Certificado</h3>
+        </div>
+        <div class="modal-body">
+            <div class="confirmacion-mensaje">
+                <strong>Por favor, revisa la información antes de generar el certificado:</strong>
+            </div>
+            
+            <div class="confirmacion-item">
+                <span class="confirmacion-label">Nombre Completo</span>
+                <div class="confirmacion-valor" id="confirm-nombre"></div>
+            </div>
+            
+            <div class="confirmacion-item">
+                <span class="confirmacion-label">Fecha del Evento</span>
+                <div class="confirmacion-valor" id="confirm-fecha"></div>
+            </div>
+            
+            <div class="confirmacion-item">
+                <span class="confirmacion-label">Tipo de Actividad</span>
+                <div class="confirmacion-valor" id="confirm-actividad"></div>
+            </div>
+            
+            <div class="confirmacion-item" id="confirm-observaciones-container" style="display: none;">
+                <span class="confirmacion-label">Observaciones</span>
+                <div class="confirmacion-valor" id="confirm-observaciones"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="modal-btn modal-btn-cancelar" id="btn-cancelar">
+                ❌ Cancelar
+            </button>
+            <button type="button" class="modal-btn modal-btn-confirmar" id="btn-confirmar">
+                ✅ Confirmar y Generar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+jQuery(document).ready(function($) {
+    // Mapeo de tipos de actividad
+    const tiposActividad = {
+        'curso': 'Curso de Capacitación',
+        'taller': 'Taller Práctico',
+        'seminario': 'Seminario',
+        'conferencia': 'Conferencia',
+        'workshop': 'Workshop',
+        'otro': 'Otro'
+    };
+    
+    // Función para formatear fecha
+    function formatearFecha(fecha) {
+        if (!fecha) return 'No especificada';
+        const fechaObj = new Date(fecha);
+        return fechaObj.toLocaleDateString('es-ES', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
+    
+    // Función para mostrar el modal
+    function mostrarModal() {
+        // Obtener valores del formulario
+        const nombre = $('#nombre').val().trim();
+        const fecha = $('#fecha_evento').val();
+        const tipoActividad = $('#tipo_actividad').val();
+        const observaciones = $('#observaciones').val().trim();
+        
+        // Validar campos obligatorios
+        if (!nombre || !fecha || !tipoActividad) {
+            alert('Por favor, completa todos los campos obligatorios antes de continuar.');
+            return false;
+        }
+        
+        // Validar fecha futura
+        const fechaActual = new Date().toISOString().split('T')[0];
+        if (fecha > fechaActual) {
+            alert('La fecha del evento no puede ser futura.');
+            return false;
+        }
+        
+        // Llenar información en el modal
+        $('#confirm-nombre').text(nombre);
+        $('#confirm-fecha').text(formatearFecha(fecha));
+        $('#confirm-actividad').text(tiposActividad[tipoActividad] || tipoActividad);
+        
+        // Mostrar observaciones solo si hay contenido
+        if (observaciones) {
+            $('#confirm-observaciones').text(observaciones);
+            $('#confirm-observaciones-container').show();
+        } else {
+            $('#confirm-observaciones-container').hide();
+        }
+        
+        // Mostrar modal
+        $('#modal-confirmacion').fadeIn(300).css('display', 'flex');
+        
+        return true;
+    }
+    
+    // Función para ocultar el modal
+    function ocultarModal() {
+        $('#modal-confirmacion').fadeOut(300);
+    }
+    
+    // Evento para el botón de confirmar certificado
+    $('#btn-confirmar-certificado').on('click', function(e) {
+        e.preventDefault();
+        mostrarModal();
+    });
+    
+    // Evento para cancelar
+    $('#btn-cancelar').on('click', function() {
+        ocultarModal();
+    });
+    
+    // Evento para confirmar y enviar
+    $('#btn-confirmar').on('click', function() {
+        // Deshabilitar botón para evitar doble envío
+        $(this).prop('disabled', true).text('⏳ Generando...');
+        
+        // Agregar campo hidden para indicar que es una confirmación
+        if (!$('#solicitar_certificado').length) {
+            $('<input>').attr({
+                type: 'hidden',
+                name: 'solicitar_certificado',
+                value: '1'
+            }).appendTo('#formulario-certificado');
+        }
+        
+        // Enviar formulario
+        $('#formulario-certificado').submit();
+    });
+    
+    // Cerrar modal al hacer clic fuera de él
+    $('#modal-confirmacion').on('click', function(e) {
+        if (e.target === this) {
+            ocultarModal();
+        }
+    });
+    
+    // Cerrar modal con ESC
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' && $('#modal-confirmacion').is(':visible')) {
+            ocultarModal();
+        }
+    });
+    
+    // Validación en tiempo real
+    $('#nombre, #fecha_evento, #tipo_actividad').on('input change', function() {
+        const nombre = $('#nombre').val().trim();
+        const fecha = $('#fecha_evento').val();
+        const tipoActividad = $('#tipo_actividad').val();
+        
+        if (nombre && fecha && tipoActividad) {
+            $('#btn-confirmar-certificado').prop('disabled', false);
+        } else {
+            $('#btn-confirmar-certificado').prop('disabled', true);
+        }
+    });
+    
+    // Inicializar estado del botón
+    $('#btn-confirmar-certificado').prop('disabled', true);
+});
+</script> 
