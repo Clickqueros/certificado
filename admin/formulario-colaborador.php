@@ -39,6 +39,18 @@ if (isset($_GET['editar']) && !empty($_GET['editar'])) {
     
     if ($certificado_edicion) {
         $modo_edicion = true;
+        
+        // Debug: Mostrar información del certificado (solo para desarrollo)
+        if (current_user_can('manage_options') && isset($_GET['debug'])) {
+            echo '<div class="notice notice-info">';
+            echo '<p><strong>Debug - Certificado ID:</strong> ' . $certificado_edicion->id . '</p>';
+            echo '<p><strong>Nombre:</strong> ' . esc_html($certificado_edicion->nombre) . '</p>';
+            echo '<p><strong>Actividad:</strong> ' . esc_html($certificado_edicion->actividad) . '</p>';
+            echo '<p><strong>Fecha:</strong> ' . esc_html($certificado_edicion->fecha) . '</p>';
+            echo '<p><strong>Observaciones:</strong> ' . esc_html($certificado_edicion->observaciones) . '</p>';
+            echo '<p><strong>Updated At:</strong> ' . esc_html($certificado_edicion->updated_at) . '</p>';
+            echo '</div>';
+        }
     }
 }
 

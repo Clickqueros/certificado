@@ -147,11 +147,19 @@ class CertificadosPersonalizadosBD {
         
         $tabla = self::obtener_tabla();
         
+        // Asegurar que updated_at se actualice
+        if (!isset($datos['updated_at'])) {
+            $datos['updated_at'] = current_time('mysql');
+        }
+        
         $resultado = $wpdb->update(
             $tabla,
             $datos,
             array('id' => $id)
         );
+        
+        // Limpiar caché después de la actualización
+        $wpdb->flush();
         
         return $resultado !== false;
     }
@@ -199,6 +207,9 @@ class CertificadosPersonalizadosBD {
         $tabla = self::obtener_tabla();
         $user_id = get_current_user_id();
         
+        // Limpiar caché de consultas para asegurar datos frescos
+        $wpdb->flush();
+        
         $sql = $wpdb->prepare(
             "SELECT * FROM $tabla WHERE id = %d AND user_id = %d",
             $id, $user_id
@@ -213,6 +224,28 @@ class CertificadosPersonalizadosBD {
         // Verificar si es editable
         if (!self::certificado_es_editable($certificado)) {
             return false;
+        }
+        
+        return $certificado;
+    }
+    
+    /**
+     * Función de debug para verificar datos de certificado
+     */
+    public static function debug_certificado($id) {
+        global $wpdb;
+        
+        $tabla = self::obtener_tabla();
+        
+        $sql = $wpdb->prepare(
+            "SELECT * FROM $tabla WHERE id = %d",
+            $id
+        );
+        
+        $certificado = $wpdb->get_row($sql);
+        
+        if ($certificado) {
+            error_log("Debug Certificado ID {$id}: " . print_r($certificado, true));
         }
         
         return $certificado;

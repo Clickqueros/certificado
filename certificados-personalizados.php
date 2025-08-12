@@ -449,6 +449,12 @@ class CertificadosPersonalizados {
         $resultado = CertificadosPersonalizadosBD::actualizar_certificado($certificado_id, $datos_actualizados);
         
         if ($resultado) {
+            // Debug: Verificar datos actualizados
+            CertificadosPersonalizadosBD::debug_certificado($certificado_id);
+            
+            // Verificar que la actualización fue exitosa obteniendo los datos actualizados
+            $certificado_actualizado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+            
             // Regenerar PDF si existe
             if ($certificado->pdf_path) {
                 CertificadosPersonalizadosPDF::generar_certificado_pdf($certificado_id);
