@@ -76,6 +76,9 @@ class CertificadosPersonalizados {
         // Hook para regenerar PDF desde panel de administración
         add_action('admin_post_regenerar_pdf_admin', array($this, 'procesar_regenerar_pdf_admin'));
         
+        // Hook para interceptar acceso a PDFs y agregar headers de no-caché
+        add_action('init', array($this, 'interceptar_acceso_pdf'));
+        
         // Cargar archivos necesarios
         $this->cargar_archivos();
     }
@@ -572,16 +575,21 @@ class CertificadosPersonalizados {
                 delete_transient('certificado_url_' . $certificado_id);
             }
             
-            // Forzar actualización de la URL del PDF en la base de datos
+            // Forzar actualización de la URL del PDF en la base de datos con timestamp completamente nuevo
             $certificado_actualizado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
             if ($certificado_actualizado && $certificado_actualizado->pdf_path) {
                 $timestamp = time();
-                $url_actualizada = preg_replace('/\?v=\d+/', '?v=' . $timestamp, $certificado_actualizado->pdf_path);
-                if ($url_actualizada !== $certificado_actualizado->pdf_path) {
-                    CertificadosPersonalizadosBD::actualizar_certificado($certificado_id, array(
-                        'pdf_path' => $url_actualizada
-                    ));
-                }
+                $random_suffix = substr(md5(uniqid()), 0, 8);
+                
+                // Remover cualquier timestamp existente y agregar uno completamente nuevo
+                $url_base = preg_replace('/\?v=\d+.*/', '', $certificado_actualizado->pdf_path);
+                $url_actualizada = $url_base . '?v=' . $timestamp . '&r=' . $random_suffix;
+                
+                CertificadosPersonalizadosBD::actualizar_certificado($certificado_id, array(
+                    'pdf_path' => $url_actualizada
+                ));
+                
+                error_log('CertificadosPersonalizados: URL del PDF actualizada para admin - ID: ' . $certificado_id . ' - Nueva URL: ' . $url_actualizada);
             }
             
             if ($pdf_regenerado && $pdf_verificado) {
@@ -666,6 +674,26 @@ class CertificadosPersonalizados {
         $url_redirect = admin_url('admin.php?page=aprobacion-certificados&mensaje=exito&texto=' . urlencode($mensaje_texto));
         wp_redirect($url_redirect);
         exit;
+    }
+
+    /**
+     * Interceptar acceso a PDFs para agregar headers de no-caché
+     */
+    public function interceptar_acceso_pdf() {
+        if (is_admin()) {
+            return; // No modificar para administradores
+        }
+
+        // Obtener la URL actual
+        $current_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https://" : "http://") . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+
+        // Verificar si la URL termina con .pdf
+        if (pathinfo($current_url, PATHINFO_EXTENSION) === 'pdf') {
+            // Agregar headers de no-caché
+            header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP 1.1
+            header("Pragma: no-cache"); // HTTP 1.0
+            header("Expires: 0"); // Proxies
+        }
     }
 }
 

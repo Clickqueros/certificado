@@ -198,14 +198,19 @@ function obtener_tipos_actividad_admin() {
                             </td>
                             <td>
                                 <?php if (CertificadosPersonalizadosPDF::existe_pdf($certificado->id)): ?>
-                                    <a href="<?php echo esc_url(CertificadosPersonalizadosPDF::obtener_url_pdf($certificado->id)); ?>" 
+                                    <a href="<?php echo esc_url(CertificadosPersonalizadosPDF::obtener_url_pdf_admin($certificado->id)); ?>" 
                                        target="_blank" class="button button-small">
                                          <?php _e('📄 Ver PDF', 'certificados-personalizados'); ?>
                                      </a>
                                      <br>
-                                    <a href="<?php echo esc_url(CertificadosPersonalizadosPDF::obtener_url_pdf($certificado->id)); ?>" 
+                                    <a href="<?php echo esc_url(CertificadosPersonalizadosPDF::obtener_url_pdf_admin($certificado->id)); ?>" 
                                        download class="button button-small button-secondary">
                                          <?php _e('⬇️ Descargar', 'certificados-personalizados'); ?>
+                                     </a>
+                                     <br>
+                                     <a href="<?php echo esc_url(CertificadosPersonalizadosPDF::obtener_url_pdf_admin($certificado->id) . '&force=1'); ?>" 
+                                        target="_blank" class="button button-small button-secondary">
+                                         🔄 <?php _e('Ver PDF (Sin Caché)', 'certificados-personalizados'); ?>
                                      </a>
                                      <br>
                                      <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" style="display: inline;">

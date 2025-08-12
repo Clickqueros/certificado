@@ -657,6 +657,53 @@ class CertificadosPersonalizadosPDF {
     }
     
     /**
+     * Obtener URL del PDF para administradores (sin caché)
+     */
+    public static function obtener_url_pdf_admin($certificado_id) {
+        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        
+        if (!$certificado || empty($certificado->pdf_path)) {
+            return false;
+        }
+        
+        $upload_dir = wp_upload_dir();
+        $local_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $certificado->pdf_path);
+        
+        // Para administradores, siempre generar URL completamente nueva
+        $timestamp = time();
+        $random_suffix = substr(md5(uniqid()), 0, 8);
+        
+        // Si el archivo existe directamente, usar esa URL con timestamp y random
+        if (file_exists($local_path)) {
+            $url_base = $certificado->pdf_path;
+            
+            // Remover cualquier timestamp existente
+            $url_base = preg_replace('/\?v=\d+.*/', '', $url_base);
+            
+            // Agregar timestamp y random para forzar recarga
+            $url_con_timestamp = $url_base . '?v=' . $timestamp . '&r=' . $random_suffix;
+            
+            return $url_con_timestamp;
+        }
+        
+        // Si no existe, buscar archivos con diferentes extensiones
+        $path_info = pathinfo($local_path);
+        $base_path = $path_info['dirname'] . '/' . $path_info['filename'];
+        
+        // Buscar archivos con diferentes extensiones
+        $extensiones = ['pdf', 'html'];
+        foreach ($extensiones as $ext) {
+            $archivo_buscar = $base_path . '.' . $ext;
+            if (file_exists($archivo_buscar)) {
+                $url_correcta = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $archivo_buscar);
+                return $url_correcta . '?v=' . $timestamp . '&r=' . $random_suffix;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
      * Verificar si existe el PDF
      */
     public static function existe_pdf($certificado_id) {
