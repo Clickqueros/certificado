@@ -611,7 +611,7 @@ class CertificadosPersonalizadosPDF {
     }
     
     /**
-     * Obtener URL del PDF
+     * Obtener URL del PDF con timestamp para evitar caché
      */
     public static function obtener_url_pdf($certificado_id) {
         $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
@@ -623,9 +623,19 @@ class CertificadosPersonalizadosPDF {
         $upload_dir = wp_upload_dir();
         $local_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $certificado->pdf_path);
         
-        // Si el archivo existe directamente, usar esa URL
+        // Si el archivo existe directamente, usar esa URL con timestamp
         if (file_exists($local_path)) {
-            return $certificado->pdf_path;
+            $timestamp = time();
+            $url_con_timestamp = $certificado->pdf_path;
+            
+            // Si ya tiene timestamp, reemplazarlo; si no, agregarlo
+            if (strpos($url_con_timestamp, '?v=') !== false) {
+                $url_con_timestamp = preg_replace('/\?v=\d+/', '?v=' . $timestamp, $url_con_timestamp);
+            } else {
+                $url_con_timestamp .= '?v=' . $timestamp;
+            }
+            
+            return $url_con_timestamp;
         }
         
         // Si no existe, buscar archivos con diferentes extensiones
@@ -638,7 +648,8 @@ class CertificadosPersonalizadosPDF {
             $archivo_buscar = $base_path . '.' . $ext;
             if (file_exists($archivo_buscar)) {
                 $url_correcta = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $archivo_buscar);
-                return $url_correcta;
+                $timestamp = time();
+                return $url_correcta . '?v=' . $timestamp;
             }
         }
         

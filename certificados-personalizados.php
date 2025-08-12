@@ -73,6 +73,9 @@ class CertificadosPersonalizados {
         // Hook para editar certificados por administradores
         add_action('admin_post_editar_certificado_admin', array($this, 'procesar_edicion_certificado_admin'));
         
+        // Hook para regenerar PDF desde panel de administración
+        add_action('admin_post_regenerar_pdf_admin', array($this, 'procesar_regenerar_pdf_admin'));
+        
         // Cargar archivos necesarios
         $this->cargar_archivos();
     }
@@ -558,6 +561,29 @@ class CertificadosPersonalizados {
             // Verificar que el PDF se actualizó correctamente
             $pdf_verificado = CertificadosPersonalizadosPDF::verificar_pdf_actualizado($certificado_id);
             
+            // Limpiar caché adicional para el panel de administración
+            if (function_exists('wp_cache_flush')) {
+                wp_cache_flush();
+            }
+            
+            // Limpiar transients específicos
+            if (function_exists('delete_transient')) {
+                delete_transient('certificado_pdf_' . $certificado_id);
+                delete_transient('certificado_url_' . $certificado_id);
+            }
+            
+            // Forzar actualización de la URL del PDF en la base de datos
+            $certificado_actualizado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+            if ($certificado_actualizado && $certificado_actualizado->pdf_path) {
+                $timestamp = time();
+                $url_actualizada = preg_replace('/\?v=\d+/', '?v=' . $timestamp, $certificado_actualizado->pdf_path);
+                if ($url_actualizada !== $certificado_actualizado->pdf_path) {
+                    CertificadosPersonalizadosBD::actualizar_certificado($certificado_id, array(
+                        'pdf_path' => $url_actualizada
+                    ));
+                }
+            }
+            
             if ($pdf_regenerado && $pdf_verificado) {
                 $mensaje_texto = 'Certificado actualizado correctamente. PDF regenerado y verificado.';
             } elseif ($pdf_regenerado) {
@@ -573,6 +599,73 @@ class CertificadosPersonalizados {
         } else {
             wp_die('Error al actualizar el certificado.');
         }
+    }
+    
+    /**
+     * Procesar regeneración de PDF desde panel de administración
+     */
+    public function procesar_regenerar_pdf_admin() {
+        // Verificar permisos de administrador
+        if (!current_user_can('administrator')) {
+            wp_die('No tienes permisos para realizar esta acción.');
+        }
+        
+        // Verificar nonce
+        if (!isset($_POST['regenerar_pdf_admin_nonce']) || 
+            !wp_verify_nonce($_POST['regenerar_pdf_admin_nonce'], 'regenerar_pdf_admin')) {
+            wp_die('Error de seguridad.');
+        }
+        
+        $certificado_id = intval($_POST['certificado_id']);
+        
+        // Verificar que el certificado existe
+        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        
+        if (!$certificado) {
+            wp_die('Certificado no encontrado.');
+        }
+        
+        // Forzar regeneración completa del PDF
+        $pdf_regenerado = CertificadosPersonalizadosPDF::forzar_regeneracion_pdf($certificado_id);
+        
+        // Verificar que el PDF se actualizó correctamente
+        $pdf_verificado = CertificadosPersonalizadosPDF::verificar_pdf_actualizado($certificado_id);
+        
+        // Limpiar caché adicional
+        if (function_exists('wp_cache_flush')) {
+            wp_cache_flush();
+        }
+        
+        // Limpiar transients específicos
+        if (function_exists('delete_transient')) {
+            delete_transient('certificado_pdf_' . $certificado_id);
+            delete_transient('certificado_url_' . $certificado_id);
+        }
+        
+        // Forzar actualización de la URL del PDF en la base de datos
+        $certificado_actualizado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        if ($certificado_actualizado && $certificado_actualizado->pdf_path) {
+            $timestamp = time();
+            $url_actualizada = preg_replace('/\?v=\d+/', '?v=' . $timestamp, $certificado_actualizado->pdf_path);
+            if ($url_actualizada !== $certificado_actualizado->pdf_path) {
+                CertificadosPersonalizadosBD::actualizar_certificado($certificado_id, array(
+                    'pdf_path' => $url_actualizada
+                ));
+            }
+        }
+        
+        if ($pdf_regenerado && $pdf_verificado) {
+            $mensaje_texto = 'PDF regenerado correctamente y verificado.';
+        } elseif ($pdf_regenerado) {
+            $mensaje_texto = 'PDF regenerado correctamente (verificación pendiente).';
+        } else {
+            $mensaje_texto = 'Error al regenerar el PDF.';
+        }
+        
+        // Redirigir con mensaje de éxito
+        $url_redirect = admin_url('admin.php?page=aprobacion-certificados&mensaje=exito&texto=' . urlencode($mensaje_texto));
+        wp_redirect($url_redirect);
+        exit;
     }
 }
 
