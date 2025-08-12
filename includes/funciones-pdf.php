@@ -755,16 +755,42 @@ class CertificadosPersonalizadosPDF {
      * Verificar si existe el PDF
      */
     public static function existe_pdf($certificado_id) {
-        $url = self::obtener_url_pdf($certificado_id);
+        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
         
-        if (!$url) {
+        if (!$certificado) {
+            error_log('CertificadosPersonalizados: Certificado no encontrado para verificar PDF - ID: ' . $certificado_id);
             return false;
         }
         
         $upload_dir = wp_upload_dir();
-        $local_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $url);
+        $certificados_dir = $upload_dir['basedir'] . '/certificados/';
         
-        return file_exists($local_path);
+        // Verificar múltiples ubicaciones posibles
+        $codigo_unico = $certificado->codigo_unico;
+        $archivos_posibles = array(
+            $certificados_dir . 'certificado_' . $codigo_unico . '.pdf',
+            $certificados_dir . 'certificado_' . $codigo_unico . '.html',
+            $certificados_dir . $codigo_unico . '.pdf',
+            $certificados_dir . $codigo_unico . '.html'
+        );
+        
+        // Si hay una ruta específica en la base de datos, verificar esa también
+        if (!empty($certificado->pdf_path)) {
+            $local_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $certificado->pdf_path);
+            // Remover parámetros de la URL
+            $local_path = preg_replace('/\?.*/', '', $local_path);
+            $archivos_posibles[] = $local_path;
+        }
+        
+        foreach ($archivos_posibles as $archivo) {
+            if (file_exists($archivo) && filesize($archivo) > 0) {
+                error_log('CertificadosPersonalizados: PDF encontrado en - ' . $archivo . ' - Tamaño: ' . filesize($archivo) . ' bytes');
+                return true;
+            }
+        }
+        
+        error_log('CertificadosPersonalizados: No se encontró PDF para certificado ID: ' . $certificado_id . ' - Código: ' . $codigo_unico);
+        return false;
     }
     
     /**
