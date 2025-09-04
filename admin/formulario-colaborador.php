@@ -903,22 +903,39 @@ jQuery(document).ready(function($) {
         }
     });
     
-    // Validación en tiempo real
-    $('#nombre, #fecha_evento, #tipo_actividad').on('input change', function() {
-        const nombre = $('#nombre').val().trim();
-        const fecha = $('#fecha_evento').val();
-        const tipoActividad = $('#tipo_actividad').val();
+    // Validación en tiempo real para habilitar/deshabilitar botón
+    $('#nombre_instalacion, #direccion_instalacion, #razon_social, #nit, #tipo_certificado, #numero_certificado, #fecha_aprobacion, #capacidad_almacenamiento, #numero_tanques').on('input change', function() {
+        verificarEstadoBoton();
+    });
+    
+    // Función para verificar estado del botón
+    function verificarEstadoBoton() {
+        const nombreInstalacion = $('#nombre_instalacion').val().trim();
+        const direccion = $('#direccion_instalacion').val().trim();
+        const razonSocial = $('#razon_social').val().trim();
+        const nit = $('#nit').val().trim();
+        const tipoCertificado = $('#tipo_certificado').val();
+        const numeroCertificado = $('#numero_certificado').val();
+        const fechaAprobacion = $('#fecha_aprobacion').val();
+        const capacidad = $('#capacidad_almacenamiento').val();
+        const numeroTanques = $('#numero_tanques').val();
         
-        if (nombre && fecha && tipoActividad) {
+        // Verificar que todos los campos obligatorios estén llenos
+        if (nombreInstalacion && direccion && razonSocial && nit && tipoCertificado && 
+            numeroCertificado && fechaAprobacion && capacidad && numeroTanques) {
             $('#btn-confirmar-certificado').prop('disabled', false);
+            console.log('Botón habilitado - todos los campos llenos');
         } else {
             $('#btn-confirmar-certificado').prop('disabled', true);
+            console.log('Botón deshabilitado - campos faltantes');
         }
-    });
+    }
     
     // Inicializar estado del botón (solo en modo creación)
     if (!modoEdicion) {
         $('#btn-confirmar-certificado').prop('disabled', true);
+        // Verificar estado inicial después de un pequeño delay para asegurar que los campos estén cargados
+        setTimeout(verificarEstadoBoton, 100);
     }
 });
 </script> 
