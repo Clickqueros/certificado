@@ -214,33 +214,33 @@ class CertificadosPersonalizadosPDF {
     private static function obtener_info_certificado($tipo_certificado) {
         $info_certificados = array(
             'PAGLP' => array(
-                'alcance' => 'Certificación de Planta de Almacenamiento de GLP para redes de distribución.',
-                'requisitos' => 'Resolución 40246 de marzo de 2016 del Ministerio de Minas y Energía' . "\n" . 
-                              'Capítulo I - Capítulo II Artículos 6, 7 y 8' . "\n" . 
-                              'Resolución 40867 de septiembre de 2016 del Ministerio de Minas y Energía'
+                'alcance' => 'Certificación de instalaciones para recibo, almacenamiento y distribución de GLP en plantas almacenadoras e industriales.',
+                'requisitos' => 'Resolución 40246:2016 del MME' . "\n" . 
+                              'Cap I / Cap II: Art 6, 7 y 8' . "\n" . 
+                              'Resolución 40867:2016 del MME'
             ),
             'TEGLP' => array(
-                'alcance' => 'Certificación de tanques estacionarios de GLP instalados en domicilio de usuarios finales.',
-                'requisitos' => 'Resolución 40246 de marzo de 2016 del Ministerio de Minas y Energía' . "\n" . 
-                              'Capítulo I - Capítulo III Artículos 9, 10 y 11' . "\n" . 
-                              'Resolución 40867 de septiembre de 2016 del Ministerio de Minas y Energía'
+                'alcance' => 'Certificación de tanques estacionarios de GLP instalados en domicilio de usuarios finales',
+                'requisitos' => 'Resolución 40246:2016 del MME' . "\n" . 
+                              'Cap I / Cap III: Art 9, 10 y 11' . "\n" . 
+                              'Resolución 40867:2016 del MME'
             ),
             'PEGLP' => array(
                 'alcance' => 'Certificación de plantas de envasado de GLP.',
-                'requisitos' => 'Resolución 40247 de marzo de 2016 del Ministerio de Minas y Energía' . "\n" . 
-                              'Resolución 40868 de septiembre de 2016 del Ministerio de Minas y Energía'
+                'requisitos' => 'Resolución 40247:2016 del MME' . "\n" . 
+                              'Resolución 40868:2016 del MME'
             ),
             'DEGLP' => array(
-                'alcance' => 'Certificación de depósitos de cilindros de GLP.',
-                'requisitos' => 'Resolución 40248 de marzo de 2016 del Ministerio de Minas y Energía' . "\n" . 
-                              'Capítulo I - Capítulo II Artículos 6, 7 y 8' . "\n" . 
-                              'Resolución 40869 de septiembre de 2016 del Ministerio de Minas y Energía'
+                'alcance' => 'Certificación de depósitos de cilindros de GLP',
+                'requisitos' => 'Resolución 40248:2016 del MME' . "\n" . 
+                              'Cap I / Cap II: Art 7, 8 y 9' . "\n" . 
+                              'Resolución 40869:2016 del MME'
             ),
             'PVGLP' => array(
-                'alcance' => 'Certificación de expendios y puntos de venta de cilindros de GLP.',
-                'requisitos' => 'Resolución 40248 de marzo de 2016 del Ministerio de Minas y Energía' . "\n" . 
-                              'Capítulo I - Capítulo III Artículos 9, 10 y 11' . "\n" . 
-                              'Resolución 40869 de septiembre de 2016 del Ministerio de Minas y Energía'
+                'alcance' => 'Certificación de expendios y puntos de venta de cilindros de GLP',
+                'requisitos' => 'Resolución 40248:2016 del MME' . "\n" . 
+                              'Cap I / Cap III: Art 9, 10 y 11' . "\n" . 
+                              'Resolución 40869:2016 del MME'
             )
         );
         
