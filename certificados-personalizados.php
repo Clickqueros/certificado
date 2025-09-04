@@ -363,6 +363,16 @@ class CertificadosPersonalizados {
                 'dashicons-yes-alt',
                 31
             );
+            
+            // Submenú para limpiar certificados
+            add_submenu_page(
+                'aprobacion-certificados',
+                __('Limpiar Certificados', 'certificados-personalizados'),
+                __('Limpiar Certificados', 'certificados-personalizados'),
+                'manage_options',
+                'limpiar-certificados',
+                array($this, 'mostrar_limpiar_certificados')
+            );
         }
     }
     
@@ -390,6 +400,19 @@ class CertificadosPersonalizados {
         
         // Cargar vista
         include CERTIFICADOS_PERSONALIZADOS_PLUGIN_PATH . 'admin/aprobacion-certificados.php';
+    }
+    
+    /**
+     * Mostrar página de limpieza de certificados
+     */
+    public function mostrar_limpiar_certificados() {
+        // Verificar permisos
+        if (!current_user_can('manage_options')) {
+            wp_die(__('No tienes permisos para acceder a esta página.', 'certificados-personalizados'));
+        }
+        
+        // Cargar vista
+        include CERTIFICADOS_PERSONALIZADOS_PLUGIN_PATH . 'admin/limpiar-certificados.php';
     }
     
     /**

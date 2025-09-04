@@ -4,8 +4,30 @@
  * Ejecutar una sola vez desde el directorio del plugin
  */
 
-// Incluir WordPress
-require_once('../../../wp-config.php');
+// Verificar si estamos en WordPress
+if (!defined('ABSPATH')) {
+    // Intentar incluir WordPress desde diferentes ubicaciones
+    $wp_config_paths = [
+        '../../../wp-config.php',
+        '../../../../wp-config.php',
+        '../../../../../wp-config.php',
+        dirname(__FILE__) . '/../../../wp-config.php',
+        dirname(__FILE__) . '/../../../../wp-config.php'
+    ];
+    
+    $wp_loaded = false;
+    foreach ($wp_config_paths as $path) {
+        if (file_exists($path)) {
+            require_once($path);
+            $wp_loaded = true;
+            break;
+        }
+    }
+    
+    if (!$wp_loaded) {
+        die('No se pudo encontrar wp-config.php. Asegúrate de que el archivo esté en el directorio correcto del plugin.');
+    }
+}
 
 // Verificar que estamos en el contexto correcto
 if (!defined('ABSPATH')) {
