@@ -97,6 +97,7 @@ function procesar_solicitud_certificado() {
     }
     
     // Validar fecha de aprobación
+    $fecha_actual = date('Y-m-d');
     if ($fecha_aprobacion > $fecha_actual) {
         return array('tipo' => 'error', 'mensaje' => 'La fecha de aprobación no puede ser futura.');
     }
