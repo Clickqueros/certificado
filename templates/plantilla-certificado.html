@@ -3,425 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <title>Certificado de Conformidad GLP</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: white;
-        }
-        
-        .certificate-container {
-            width: 100%;
-            background: white;
-            border: 2px solid #8B4513;
-            border-radius: 0 0 20px 0;
-            padding: 20px;
-            position: relative;
-        }
-        
-        /* Header Section */
-        .header {
-            display: table;
-            width: 100%;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #8B4513;
-            padding-bottom: 20px;
-        }
-        
-        .header-left {
-            display: table-cell;
-            width: 30%;
-            vertical-align: top;
-        }
-        
-        .header-center {
-            display: table-cell;
-            width: 40%;
-            text-align: center;
-            vertical-align: top;
-            padding: 0 20px;
-        }
-        
-        .header-right {
-            display: table-cell;
-            width: 30%;
-            text-align: right;
-            vertical-align: top;
-        }
-        
-        .anetcore-logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: #8B4513;
-            margin-bottom: 10px;
-        }
-        
-        .anetcore-logo .anet {
-            font-size: 28px;
-            display: block;
-        }
-        
-        .anetcore-logo .core {
-            font-size: 16px;
-            margin-left: 5px;
-        }
-        
-        .onac-badge {
-            background: #228B22;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            text-align: center;
-            font-size: 12px;
-            font-weight: bold;
-            display: inline-block;
-        }
-        
-        .onac-badge .onac {
-            font-size: 14px;
-            display: block;
-        }
-        
-        .onac-badge .acreditado {
-            font-size: 10px;
-            display: block;
-        }
-        
-        .iso-info {
-            font-size: 10px;
-            color: #fff;
-            margin-top: 2px;
-            display: block;
-        }
-        
-        .certificate-title h1 {
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .certificate-title p {
-            font-size: 14px;
-            color: #333;
-        }
-        
-        /* Main Content - Two Columns */
-        .main-content {
-            margin-bottom: 30px;
-        }
-        
-        .content-row {
-            display: table;
-            width: 100%;
-        }
-        
-        .content-left {
-            display: table-cell;
-            width: 50%;
-            vertical-align: top;
-            padding-right: 20px;
-        }
-        
-        .content-right {
-            display: table-cell;
-            width: 50%;
-            vertical-align: top;
-            padding-left: 20px;
-        }
-        
-        .installation-name {
-            font-size: 16px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 10px;
-            line-height: 1.3;
-        }
-        
-        .installation-address {
-            font-size: 12px;
-            color: #333;
-            margin-bottom: 20px;
-        }
-        
-        .company-section {
-            margin-bottom: 20px;
-        }
-        
-        .company-label {
-            font-size: 12px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .company-name {
-            font-size: 14px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .nit-number {
-            font-size: 16px;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .certificate-number-section {
-            margin-bottom: 20px;
-        }
-        
-        .cert-number-label {
-            font-size: 12px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .cert-number {
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .dates-section {
-            margin-bottom: 20px;
-        }
-        
-        .date-item {
-            font-size: 12px;
-            color: #333;
-            margin-bottom: 3px;
-        }
-        
-        .certification-scope {
-            font-size: 12px;
-            color: #333;
-            margin-bottom: 15px;
-            line-height: 1.4;
-        }
-        
-        .installation-characteristics {
-            margin-bottom: 10px;
-        }
-        
-        .characteristics-label {
-            font-size: 12px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .characteristic-item {
-            font-size: 12px;
-            color: #333;
-            margin-bottom: 2px;
-        }
-        
-        /* Regulatory Section */
-        .regulatory-section {
-            margin-bottom: 30px;
-        }
-        
-        .regulatory-text {
-            font-size: 11px;
-            color: #333;
-            line-height: 1.4;
-            margin-bottom: 5px;
-        }
-        
-        /* Signature Section */
-        .signature-section {
-            margin-bottom: 20px;
-        }
-        
-        .signature-info {
-            width: 200px;
-        }
-        
-        .signature-line {
-            width: 200px;
-            height: 1px;
-            background: #333;
-            margin-bottom: 5px;
-        }
-        
-        .signature-name {
-            font-size: 14px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 3px;
-        }
-        
-        .signature-title {
-            font-size: 12px;
-            color: #333;
-        }
-        
-        /* Footer */
-        .footer {
-            margin-top: 20px;
-        }
-        
-        .footer-text {
-            font-size: 10px;
-            color: #333;
-            text-align: center;
-            margin-bottom: 5px;
-        }
-        
-        .contact-info {
-            font-size: 10px;
-            color: #333;
-            text-align: center;
-        }
-        
-        .contact-info a {
-            color: #0066CC;
-            text-decoration: underline;
-        }
-        
-        .document-info {
-            font-size: 9px;
-            color: #666;
-            margin-top: 10px;
-        }
-        
-        .page-info {
-            font-size: 9px;
-            color: #666;
-            text-align: right;
-        }
-        
-        .info-row {
-            display: table;
-            width: 100%;
-        }
-        
-        .info-left {
-            display: table-cell;
-            width: 50%;
-            vertical-align: top;
-        }
-        
-        .info-right {
-            display: table-cell;
-            width: 50%;
-            vertical-align: top;
-            text-align: right;
-        }
-        
-        /* Decorative Border */
-        .decorative-border {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(45deg, #8B4513, #D2691E);
-            border-radius: 0 0 20px 0;
-            z-index: -1;
-        }
-    </style>
 </head>
-<body>
-    <div class="certificate-container">
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 20px; background: white;">
+    
+    <!-- Container principal -->
+    <div style="width: 100%; background: white; border: 2px solid #8B4513; padding: 20px; position: relative;">
+        
         <!-- Header -->
-        <div class="header">
-            <div class="header-left">
-                <div class="anetcore-logo">
-                    <span class="anet">anet</span>
-                    <span class="core">core</span>
+        <div style="width: 100%; margin-bottom: 30px; border-bottom: 2px solid #8B4513; padding-bottom: 20px;">
+            
+            <!-- Logo y ONAC -->
+            <div style="float: left; width: 30%;">
+                <div style="font-size: 24px; font-weight: bold; color: #8B4513; margin-bottom: 10px;">
+                    <div style="font-size: 28px;">anet</div>
+                    <div style="font-size: 16px; margin-left: 5px;">core</div>
                 </div>
-                <div class="onac-badge">
-                    <span class="onac">ONAC</span>
-                    <span class="acreditado">ACREDITADO</span>
-                    <span class="iso-info">ISO/IEC 17065:2012</span>
-                    <span class="iso-info">23-CPR-013</span>
-                </div>
-            </div>
-            <div class="header-center">
-                <div class="certificate-title">
-                    <h1>ANETCORE otorga el presente certificado de conformidad</h1>
-                    <p>(Esquema de certificación 6 según ISO/IEC 17067) para:</p>
+                <div style="background: #228B22; color: white; padding: 8px 12px; border-radius: 4px; text-align: center; font-size: 12px; font-weight: bold; display: inline-block;">
+                    <div style="font-size: 14px;">ONAC</div>
+                    <div style="font-size: 10px;">ACREDITADO</div>
+                    <div style="font-size: 10px; color: #fff; margin-top: 2px;">ISO/IEC 17065:2012</div>
+                    <div style="font-size: 10px; color: #fff;">23-CPR-013</div>
                 </div>
             </div>
-            <div class="header-right">
-                <!-- Espacio para elementos adicionales si se necesitan -->
+            
+            <!-- Título central -->
+            <div style="float: left; width: 40%; text-align: center; padding: 0 20px;">
+                <h1 style="font-size: 18px; font-weight: bold; color: #333; margin-bottom: 5px;">ANETCORE otorga el presente certificado de conformidad</h1>
+                <p style="font-size: 14px; color: #333;">(Esquema de certificación 6 según ISO/IEC 17067) para:</p>
             </div>
+            
+            <!-- Espacio derecho -->
+            <div style="float: right; width: 30%;">
+                <!-- Espacio para elementos adicionales -->
+            </div>
+            
+            <div style="clear: both;"></div>
         </div>
         
-        <!-- Main Content - Two Columns -->
-        <div class="main-content">
-            <div class="content-row">
-                <div class="content-left">
-                    <div class="installation-name">[NOMBRE_INSTALACION]</div>
-                    <div class="installation-address">[DIRECCION_INSTALACION]</div>
-                    
-                    <div class="company-section">
-                        <div class="company-label">RAZÓN SOCIAL:</div>
-                        <div class="company-name">[RAZON_SOCIAL]</div>
-                        <div class="nit-number">NIT [NIT]</div>
-                    </div>
+        <!-- Contenido principal - Dos columnas -->
+        <div style="width: 100%; margin-bottom: 30px;">
+            
+            <!-- Columna izquierda -->
+            <div style="float: left; width: 48%; padding-right: 2%;">
+                <div style="font-size: 16px; font-weight: bold; color: #333; margin-bottom: 10px; line-height: 1.3;">[NOMBRE_INSTALACION]</div>
+                <div style="font-size: 12px; color: #333; margin-bottom: 20px;">[DIRECCION_INSTALACION]</div>
+                
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; font-weight: bold; color: #333; margin-bottom: 5px;">RAZÓN SOCIAL:</div>
+                    <div style="font-size: 14px; font-weight: bold; color: #333; margin-bottom: 5px;">[RAZON_SOCIAL]</div>
+                    <div style="font-size: 16px; font-weight: bold; color: #333;">NIT [NIT]</div>
+                </div>
+            </div>
+            
+            <!-- Columna derecha -->
+            <div style="float: right; width: 48%; padding-left: 2%;">
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; font-weight: bold; color: #333; margin-bottom: 5px;">Número de certificado:</div>
+                    <div style="font-size: 18px; font-weight: bold; color: #333;">[NUMERO_CERTIFICADO]</div>
                 </div>
                 
-                <div class="content-right">
-                    <div class="certificate-number-section">
-                        <div class="cert-number-label">Número de certificado:</div>
-                        <div class="cert-number">[NUMERO_CERTIFICADO]</div>
-                    </div>
-                    
-                    <div class="dates-section">
-                        <div class="date-item">Fecha de aprobación: [FECHA_APROBACION]</div>
-                        <div class="date-item">Fecha de modificación: N/A</div>
-                        <div class="date-item">Fecha de vencimiento: [FECHA_VENCIMIENTO]</div>
-                    </div>
-                    
-                    <div class="certification-scope">[ALCANCE_CERTIFICADO]</div>
-                    
-                    <div class="installation-characteristics">
-                        <div class="characteristics-label">Características de la instalación:</div>
-                        <div class="characteristic-item">Capacidad de almacenamiento: [CAPACIDAD_ALMACENAMIENTO] galones</div>
-                        <div class="characteristic-item">Número de tanques: [NUMERO_TANQUES]</div>
-                    </div>
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: #333; margin-bottom: 3px;">Fecha de aprobación: [FECHA_APROBACION]</div>
+                    <div style="font-size: 12px; color: #333; margin-bottom: 3px;">Fecha de modificación: N/A</div>
+                    <div style="font-size: 12px; color: #333; margin-bottom: 3px;">Fecha de vencimiento: [FECHA_VENCIMIENTO]</div>
+                </div>
+                
+                <div style="font-size: 12px; color: #333; margin-bottom: 15px; line-height: 1.4;">[ALCANCE_CERTIFICADO]</div>
+                
+                <div style="margin-bottom: 10px;">
+                    <div style="font-size: 12px; font-weight: bold; color: #333; margin-bottom: 5px;">Características de la instalación:</div>
+                    <div style="font-size: 12px; color: #333; margin-bottom: 2px;">Capacidad de almacenamiento: [CAPACIDAD_ALMACENAMIENTO] galones</div>
+                    <div style="font-size: 12px; color: #333; margin-bottom: 2px;">Número de tanques: [NUMERO_TANQUES]</div>
                 </div>
             </div>
+            
+            <div style="clear: both;"></div>
         </div>
         
-        <!-- Regulatory Section -->
-        <div class="regulatory-section">
-            <div class="regulatory-text">[REQUISITOS_CERTIFICADO]</div>
+        <!-- Sección regulatoria -->
+        <div style="margin-bottom: 30px;">
+            <div style="font-size: 11px; color: #333; line-height: 1.4; margin-bottom: 5px;">[REQUISITOS_CERTIFICADO]</div>
         </div>
         
-        <!-- Signature Section -->
-        <div class="signature-section">
-            <div class="signature-info">
-                <div class="signature-line"></div>
-                <div class="signature-name">JULIAN OSPINA</div>
-                <div class="signature-title">Gerente General</div>
+        <!-- Sección de firma -->
+        <div style="margin-bottom: 20px;">
+            <div style="width: 200px;">
+                <div style="width: 200px; height: 1px; background: #333; margin-bottom: 5px;"></div>
+                <div style="font-size: 14px; font-weight: bold; color: #333; margin-bottom: 3px;">JULIAN OSPINA</div>
+                <div style="font-size: 12px; color: #333;">Gerente General</div>
             </div>
         </div>
         
         <!-- Footer -->
-        <div class="footer">
-            <div class="footer-text">Este certificado es propiedad de ANTCORE y debe ser devuelto cuando sea solicitado por ANETCORE</div>
-            <div class="contact-info">Carrera 11a N. 94-46, Bogotá • Página web: <a href="http://www.anetcore.com">www.anetcore.com</a> • comercial@anetcore.com</div>
+        <div style="margin-top: 20px;">
+            <div style="font-size: 10px; color: #333; text-align: center; margin-bottom: 5px;">Este certificado es propiedad de ANTCORE y debe ser devuelto cuando sea solicitado por ANETCORE</div>
+            <div style="font-size: 10px; color: #333; text-align: center;">Carrera 11a N. 94-46, Bogotá • Página web: www.anetcore.com • comercial@anetcore.com</div>
         </div>
         
-        <!-- Document Info -->
-        <div class="info-row">
-            <div class="info-left">
-                <div class="document-info">ANT-GTE-FT-18-V2</div>
+        <!-- Info del documento -->
+        <div style="margin-top: 20px;">
+            <div style="float: left; width: 50%;">
+                <div style="font-size: 9px; color: #666;">ANT-GTE-FT-18-V2</div>
             </div>
-            <div class="info-right">
-                <div class="page-info">Página 1 de 1</div>
+            <div style="float: right; width: 50%; text-align: right;">
+                <div style="font-size: 9px; color: #666;">Página 1 de 1</div>
             </div>
+            <div style="clear: both;"></div>
         </div>
         
-        <!-- Decorative Border -->
-        <div class="decorative-border"></div>
+        <!-- Borde decorativo -->
+        <div style="position: absolute; bottom: 0; right: 0; width: 100px; height: 100px; background: #8B4513; border-radius: 0 0 20px 0;"></div>
+        
     </div>
+    
 </body>
 </html>
