@@ -772,6 +772,8 @@ function obtener_tipos_certificado() {
 
 <script>
 jQuery(document).ready(function($) {
+    console.log('jQuery cargado correctamente');
+    console.log('Botón encontrado:', $('#btn-confirmar-certificado').length > 0);
     // Mapeo de tipos de certificado
     const tiposCertificado = {
         'PAGLP': 'PAGLP - Planta de Almacenamiento de GLP',
@@ -795,6 +797,7 @@ jQuery(document).ready(function($) {
     
     // Función para mostrar el modal
     function mostrarModal() {
+        console.log('Función mostrarModal ejecutada');
         // Obtener valores del formulario
         const nombreInstalacion = $('#nombre_instalacion').val().trim();
         const direccion = $('#direccion_instalacion').val().trim();
@@ -855,6 +858,7 @@ jQuery(document).ready(function($) {
     // Evento para el botón de confirmar certificado
     $('#btn-confirmar-certificado').on('click', function(e) {
         e.preventDefault();
+        console.log('Botón clickeado - mostrando modal...');
         mostrarModal();
     });
     
