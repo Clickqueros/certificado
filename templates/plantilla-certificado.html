@@ -5,367 +5,407 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Certificado de Conformidad GLP</title>
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
+        * {
             margin: 0;
-            padding: 20px;
-            background-color: #f8f9fa;
-            font-size: 12px;
+            padding: 0;
+            box-sizing: border-box;
         }
         
-        .certificado-container {
-            max-width: 800px;
-            margin: 0 auto;
+        body {
+            font-family: Arial, sans-serif;
             background: white;
-            padding: 40px;
-            border: 2px solid #2c3e50;
+            width: 1080px;
+            height: 830px;
             position: relative;
+            overflow: hidden;
         }
         
-        /* Header con logo y acreditación */
-        .certificado-header {
+        .certificate-container {
+            width: 1080px;
+            height: 830px;
+            position: relative;
+            background: white;
+            border: 2px solid #8B4513;
+            border-radius: 0 0 20px 0;
+        }
+        
+        /* Header Section */
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            height: 80px;
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #2c3e50;
-            padding-bottom: 20px;
         }
         
         .logo-section {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
         }
         
-        .logo-anetcore {
+        .anetcore-logo {
             font-size: 24px;
             font-weight: bold;
-            color: #2c3e50;
+            color: #8B4513;
         }
         
-        .logo-anet {
-            color: #e74c3c;
+        .anetcore-logo .anet {
+            font-size: 28px;
         }
         
-        .acreditacion {
-            background: #27ae60;
+        .anetcore-logo .core {
+            font-size: 16px;
+            margin-left: 5px;
+        }
+        
+        .onac-badge {
+            background: #228B22;
             color: white;
             padding: 8px 12px;
             border-radius: 4px;
             text-align: center;
-            font-size: 10px;
+            font-size: 12px;
             font-weight: bold;
         }
         
-        .acreditacion .titulo {
-            font-size: 12px;
-            margin-bottom: 2px;
+        .onac-badge .onac {
+            font-size: 14px;
         }
         
-        .acreditacion .subtitulo {
-            font-size: 8px;
+        .onac-badge .acreditado {
+            font-size: 10px;
         }
         
-        /* Título principal */
-        .certificado-titulo {
+        .iso-info {
+            font-size: 10px;
+            color: #666;
+            margin-top: 2px;
+        }
+        
+        .certificate-title {
             text-align: center;
-            margin: 30px 0;
+            flex: 1;
+            margin: 0 40px;
+        }
+        
+        .certificate-title h1 {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .certificate-title p {
+            font-size: 14px;
+            color: #333;
+        }
+        
+        /* Main Content */
+        .main-content {
+            position: absolute;
+            top: 120px;
+            left: 40px;
+            right: 40px;
+            height: 400px;
+            display: flex;
+            gap: 40px;
+        }
+        
+        .left-column {
+            flex: 1;
+            padding-right: 20px;
+        }
+        
+        .right-column {
+            flex: 1;
+            padding-left: 20px;
+        }
+        
+        .installation-name {
             font-size: 16px;
             font-weight: bold;
-            color: #2c3e50;
+            color: #333;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+        
+        .installation-address {
+            font-size: 12px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .company-section {
+            margin-bottom: 20px;
+        }
+        
+        .company-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .company-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .nit-number {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .certificate-number-section {
+            margin-bottom: 20px;
+        }
+        
+        .cert-number-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .cert-number {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .dates-section {
+            margin-bottom: 20px;
+        }
+        
+        .date-item {
+            font-size: 12px;
+            color: #333;
+            margin-bottom: 3px;
+        }
+        
+        .certification-scope {
+            font-size: 12px;
+            color: #333;
+            margin-bottom: 15px;
             line-height: 1.4;
         }
         
-        /* Contenido principal en dos columnas */
-        .certificado-contenido {
-            display: flex;
-            gap: 40px;
-            margin: 30px 0;
-        }
-        
-        .columna-izquierda {
-            flex: 1;
-        }
-        
-        .columna-derecha {
-            flex: 1;
-        }
-        
-        .seccion-titulo {
-            font-size: 14px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            border-bottom: 1px solid #bdc3c7;
-            padding-bottom: 5px;
-        }
-        
-        .campo {
-            margin-bottom: 10px;
-            line-height: 1.3;
-        }
-        
-        .campo-label {
-            font-weight: bold;
-            color: #2c3e50;
-            display: inline-block;
-            min-width: 120px;
-        }
-        
-        .campo-valor {
-            color: #34495e;
-        }
-        
-        .direccion {
-            margin-top: 10px;
-            font-style: italic;
-            color: #7f8c8d;
-        }
-        
-        /* Información del certificado */
-        .info-certificado {
-            background: #ecf0f1;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-        }
-        
-        .numero-certificado {
-            font-size: 16px;
-            font-weight: bold;
-            color: #2c3e50;
+        .installation-characteristics {
             margin-bottom: 10px;
         }
         
-        .fechas {
-            display: flex;
-            gap: 20px;
-            margin: 10px 0;
-        }
-        
-        .fecha-item {
-            flex: 1;
-        }
-        
-        .fecha-label {
-            font-size: 10px;
-            color: #7f8c8d;
-            text-transform: uppercase;
-        }
-        
-        .fecha-valor {
+        .characteristics-label {
+            font-size: 12px;
             font-weight: bold;
-            color: #2c3e50;
+            color: #333;
+            margin-bottom: 5px;
         }
         
-        /* Características de la instalación */
-        .caracteristicas {
-            margin: 20px 0;
+        .characteristic-item {
+            font-size: 12px;
+            color: #333;
+            margin-bottom: 2px;
         }
         
-        .caracteristica-item {
-            margin: 8px 0;
+        /* Regulatory Section */
+        .regulatory-section {
+            position: absolute;
+            top: 540px;
+            left: 40px;
+            right: 40px;
+            height: 80px;
+        }
+        
+        .regulatory-text {
+            font-size: 11px;
+            color: #333;
+            line-height: 1.4;
+            margin-bottom: 5px;
+        }
+        
+        /* Signature Section */
+        .signature-section {
+            position: absolute;
+            top: 640px;
+            left: 40px;
+            right: 40px;
+            height: 60px;
             display: flex;
+            align-items: center;
             justify-content: space-between;
         }
         
-        .caracteristica-label {
-            font-weight: bold;
-            color: #2c3e50;
+        .signature-info {
+            flex: 1;
         }
         
-        .caracteristica-valor {
-            color: #34495e;
-        }
-        
-        /* Resoluciones y marco legal */
-        .resoluciones {
-            margin: 30px 0;
-            padding: 15px;
-            background: #f8f9fa;
-            border-left: 4px solid #3498db;
-        }
-        
-        .resoluciones-titulo {
-            font-size: 12px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-        
-        .resolucion-item {
-            margin: 5px 0;
-            font-size: 10px;
-            color: #34495e;
-            line-height: 1.3;
-        }
-        
-        /* Firma */
-        .firma-section {
-            margin-top: 40px;
-            text-align: center;
-        }
-        
-        .firma-nombre {
+        .signature-name {
             font-size: 14px;
             font-weight: bold;
-            color: #2c3e50;
-            margin-top: 20px;
+            color: #333;
+            margin-bottom: 3px;
         }
         
-        .firma-cargo {
+        .signature-title {
             font-size: 12px;
-            color: #7f8c8d;
-            margin-top: 5px;
+            color: #333;
+        }
+        
+        .signature-line {
+            width: 200px;
+            height: 1px;
+            background: #333;
+            margin-bottom: 5px;
         }
         
         /* Footer */
-        .certificado-footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #bdc3c7;
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            left: 40px;
+            right: 40px;
+            height: 60px;
+        }
+        
+        .footer-text {
             font-size: 10px;
-            color: #7f8c8d;
+            color: #333;
+            text-align: center;
+            margin-bottom: 5px;
         }
         
-        .footer-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .contact-info {
+            font-size: 10px;
+            color: #333;
+            text-align: center;
         }
         
-        .contacto {
-            text-align: right;
+        .contact-info a {
+            color: #0066CC;
+            text-decoration: underline;
         }
         
-        .contacto div {
-            margin: 2px 0;
+        .document-info {
+            position: absolute;
+            bottom: 10px;
+            left: 40px;
+            font-size: 9px;
+            color: #666;
         }
         
-        /* Responsive */
-        @media print {
-            body {
-                background-color: white;
-            }
-            
-            .certificado-container {
-                box-shadow: none;
-                border: 1px solid #2c3e50;
-            }
+        .page-info {
+            position: absolute;
+            bottom: 10px;
+            right: 40px;
+            font-size: 9px;
+            color: #666;
+        }
+        
+        /* Decorative Border */
+        .decorative-border {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(45deg, #8B4513, #D2691E);
+            border-radius: 0 0 20px 0;
+            z-index: -1;
         }
     </style>
 </head>
 <body>
-    <div class="certificado-container">
-        <!-- Header con logo y acreditación -->
-        <div class="certificado-header">
+    <div class="certificate-container">
+        <!-- Header -->
+        <div class="header">
             <div class="logo-section">
-                <div class="logo-anetcore">
-                    <span class="logo-anet">anet</span>core
+                <div class="anetcore-logo">
+                    <span class="anet">anet</span><br>
+                    <span class="core">core</span>
                 </div>
-                <div class="acreditacion">
-                    <div class="titulo">ONAC</div>
-                    <div class="subtitulo">ACREDITADO</div>
-                    <div style="font-size: 8px; margin-top: 2px;">ISO/IEC 17065:2012</div>
-                    <div style="font-size: 8px;">23-CPR-013</div>
+                <div class="onac-badge">
+                    <div class="onac">ONAC</div>
+                    <div class="acreditado">ACREDITADO</div>
+                    <div class="iso-info">ISO/IEC 17065:2012</div>
+                    <div class="iso-info">23-CPR-013</div>
                 </div>
+            </div>
+            <div class="certificate-title">
+                <h1>ANETCORE otorga el presente certificado de conformidad</h1>
+                <p>(Esquema de certificación 6 según ISO/IEC 17067) para:</p>
             </div>
         </div>
         
-        <!-- Título principal -->
-        <div class="certificado-titulo">
-            ANETCORE otorga el presente certificado de conformidad<br>
-            (Esquema de certificación 6 según ISO/IEC 17067) para:
-        </div>
-        
-        <!-- Contenido principal en dos columnas -->
-        <div class="certificado-contenido">
-            <!-- Columna izquierda - Información de la instalación -->
-            <div class="columna-izquierda">
-                <div class="seccion-titulo">[TIPO_CERTIFICADO] – [NOMBRE_INSTALACION]</div>
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Column -->
+            <div class="left-column">
+                <div class="installation-name">[NOMBRE_INSTALACION]</div>
+                <div class="installation-address">[DIRECCION_INSTALACION]</div>
                 
-                <div class="direccion">[DIRECCION_INSTALACION]</div>
-                
-                <div class="campo">
-                    <span class="campo-label">RAZÓN SOCIAL:</span>
-                    <span class="campo-valor">[RAZON_SOCIAL]</span>
-                </div>
-                
-                <div class="campo">
-                    <span class="campo-label">NIT:</span>
-                    <span class="campo-valor">[NIT]</span>
+                <div class="company-section">
+                    <div class="company-label">RAZÓN SOCIAL:</div>
+                    <div class="company-name">[RAZON_SOCIAL]</div>
+                    <div class="nit-number">NIT [NIT]</div>
                 </div>
             </div>
             
-            <!-- Columna derecha - Información del certificado -->
-            <div class="columna-derecha">
-                <div class="seccion-titulo">Número de certificado:</div>
-                
-                <div class="numero-certificado">[TIPO_CERTIFICADO]-[NUMERO_CERTIFICADO]</div>
-                
-                <div class="fechas">
-                    <div class="fecha-item">
-                        <div class="fecha-label">Fecha de aprobación:</div>
-                        <div class="fecha-valor">[FECHA_APROBACION]</div>
-                    </div>
-                    <div class="fecha-item">
-                        <div class="fecha-label">Fecha de modificación:</div>
-                        <div class="fecha-valor">N/A</div>
-                    </div>
-                    <div class="fecha-item">
-                        <div class="fecha-label">Fecha de vencimiento:</div>
-                        <div class="fecha-valor">[FECHA_VENCIMIENTO]</div>
-                    </div>
+            <!-- Right Column -->
+            <div class="right-column">
+                <div class="certificate-number-section">
+                    <div class="cert-number-label">Número de certificado:</div>
+                    <div class="cert-number">[NUMERO_CERTIFICADO]</div>
                 </div>
                 
-                <div class="seccion-titulo">Características de la instalación:</div>
+                <div class="dates-section">
+                    <div class="date-item">Fecha de aprobación: [FECHA_APROBACION]</div>
+                    <div class="date-item">Fecha de modificación: N/A</div>
+                    <div class="date-item">Fecha de vencimiento: [FECHA_VENCIMIENTO]</div>
+                </div>
                 
-                <div class="caracteristicas">
-                    <div class="caracteristica-item">
-                        <span class="caracteristica-label">Capacidad de almacenamiento:</span>
-                        <span class="caracteristica-valor">[CAPACIDAD_ALMACENAMIENTO] galones</span>
-                    </div>
-                    <div class="caracteristica-item">
-                        <span class="caracteristica-label">Número de tanques:</span>
-                        <span class="caracteristica-valor">[NUMERO_TANQUES]</span>
-                    </div>
+                <div class="certification-scope">[ALCANCE_CERTIFICADO]</div>
+                
+                <div class="installation-characteristics">
+                    <div class="characteristics-label">Características de la instalación:</div>
+                    <div class="characteristic-item">Capacidad de almacenamiento: [CAPACIDAD_ALMACENAMIENTO] galones</div>
+                    <div class="characteristic-item">Número de tanques: [NUMERO_TANQUES]</div>
                 </div>
             </div>
         </div>
         
-        <!-- Resoluciones -->
-        <div class="resoluciones">
-            <div class="resoluciones-titulo">Resoluciones aplicables:</div>
-            <div class="resolucion-item">Resolución 40246 de marzo de 2016 del Ministerio de Minas y Energía</div>
-            <div class="resolucion-item">Capítulo I - Capítulo II Artículos 6, 7 y 8</div>
-            <div class="resolucion-item">Resolución 40867 de septiembre de 2016 del Ministerio de Minas y Energía</div>
+        <!-- Regulatory Section -->
+        <div class="regulatory-section">
+            <div class="regulatory-text">[REQUISITOS_CERTIFICADO]</div>
         </div>
         
-        <!-- Firma -->
-        <div class="firma-section">
-            <div class="firma-nombre">JULIAN OSPINA</div>
-            <div class="firma-cargo">Gerente General</div>
+        <!-- Signature Section -->
+        <div class="signature-section">
+            <div class="signature-info">
+                <div class="signature-line"></div>
+                <div class="signature-name">JULIAN OSPINA</div>
+                <div class="signature-title">Gerente General</div>
+            </div>
         </div>
         
         <!-- Footer -->
-        <div class="certificado-footer">
-            <div class="footer-info">
-                <div>
-                    Este certificado es propiedad de ANETCORE y debe ser devuelto cuando sea solicitado por ANETCORE
-                </div>
-                <div class="contacto">
-                    <div>Carrera 11a N. 94-46, Bogotá</div>
-                    <div>Página web: www.anetcore.com</div>
-                    <div>comercial@anetcore.com</div>
-                </div>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 9px;">
-                <div>ANT-GTE-FT-18-V2</div>
-                <div>Página 1 de 1</div>
-            </div>
+        <div class="footer">
+            <div class="footer-text">Este certificado es propiedad de ANTCORE y debe ser devuelto cuando sea solicitado por ANETCORE</div>
+            <div class="contact-info">Carrera 11a N. 94-46, Bogotá • Página web: <a href="http://www.anetcore.com">www.anetcore.com</a> • comercial@anetcore.com</div>
         </div>
+        
+        <!-- Document Info -->
+        <div class="document-info">ANT-GTE-FT-18-V2</div>
+        <div class="page-info">Página 1 de 1</div>
+        
+        <!-- Decorative Border -->
+        <div class="decorative-border"></div>
     </div>
 </body>
 </html>

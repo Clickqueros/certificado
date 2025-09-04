@@ -343,6 +343,29 @@ function obtener_tipos_certificado() {
                         </td>
                     </tr>
                     
+                    <!-- Información dinámica del certificado -->
+                    <tr>
+                        <th scope="row">
+                            <label><?php _e('Información del Certificado', 'certificados-personalizados'); ?></label>
+                        </th>
+                        <td>
+                            <div id="certificate-info" style="background: #f9f9f9; padding: 15px; border-radius: 5px; border-left: 4px solid #0073aa;">
+                                <div id="certificate-scope" style="margin-bottom: 10px;">
+                                    <strong>Alcance:</strong> <span id="scope-text">Selecciona un tipo de certificado para ver el alcance</span>
+                                </div>
+                                <div id="certificate-requirements" style="margin-bottom: 10px;">
+                                    <strong>Requisitos:</strong> <span id="requirements-text">Selecciona un tipo de certificado para ver los requisitos</span>
+                                </div>
+                                <div id="certificate-validity" style="margin-bottom: 10px;">
+                                    <strong>Vigencia:</strong> <span id="validity-text">Selecciona un tipo de certificado para ver la vigencia</span>
+                                </div>
+                                <div id="certificate-expiry" style="margin-bottom: 10px;">
+                                    <strong>Fecha de Vencimiento:</strong> <span id="expiry-text">Selecciona fecha de aprobación para calcular vencimiento</span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    
                 </table>
                 
                 <p class="submit">
@@ -784,6 +807,35 @@ jQuery(document).ready(function($) {
         'PVGLP': 'PVGLP - Punto de Venta de GLP'
     };
     
+    // Información detallada de cada tipo de certificado
+    const infoCertificados = {
+        'PAGLP': {
+            alcance: 'Certificación de Planta de Almacenamiento de GLP para redes de distribución.',
+            requisitos: 'Resolución 40246 de marzo de 2016 del Ministerio de Minas y Energía\nCapítulo I - Capítulo II Artículos 6, 7 y 8\nResolución 40867 de septiembre de 2016 del Ministerio de Minas y Energía',
+            vigencia: '5 años'
+        },
+        'TEGLP': {
+            alcance: 'Certificación de tanques estacionarios de GLP instalados en domicilio de usuarios finales.',
+            requisitos: 'Resolución 40246 de marzo de 2016 del Ministerio de Minas y Energía\nCapítulo I - Capítulo III Artículos 9, 10 y 11\nResolución 40867 de septiembre de 2016 del Ministerio de Minas y Energía',
+            vigencia: '5 años'
+        },
+        'PEGLP': {
+            alcance: 'Certificación de plantas de envasado de GLP.',
+            requisitos: 'Resolución 40247 de marzo de 2016 del Ministerio de Minas y Energía\nResolución 40868 de septiembre de 2016 del Ministerio de Minas y Energía',
+            vigencia: '5 años'
+        },
+        'DEGLP': {
+            alcance: 'Certificación de depósitos de cilindros de GLP.',
+            requisitos: 'Resolución 40248 de marzo de 2016 del Ministerio de Minas y Energía\nCapítulo I - Capítulo II Artículos 6, 7 y 8\nResolución 40869 de septiembre de 2016 del Ministerio de Minas y Energía',
+            vigencia: '3 años'
+        },
+        'PVGLP': {
+            alcance: 'Certificación de expendios y puntos de venta de cilindros de GLP.',
+            requisitos: 'Resolución 40248 de marzo de 2016 del Ministerio de Minas y Energía\nCapítulo I - Capítulo III Artículos 9, 10 y 11\nResolución 40869 de septiembre de 2016 del Ministerio de Minas y Energía',
+            vigencia: '3 años'
+        }
+    };
+    
     // Función para formatear fecha
     function formatearFecha(fecha) {
         if (!fecha) return 'No especificada';
@@ -794,6 +846,53 @@ jQuery(document).ready(function($) {
             month: 'long',
             day: 'numeric'
         });
+    }
+    
+    // Función para calcular fecha de vencimiento
+    function calcularFechaVencimiento(fechaAprobacion, tipoCertificado) {
+        if (!fechaAprobacion || !tipoCertificado) return 'Selecciona fecha y tipo';
+        
+        const fecha = new Date(fechaAprobacion);
+        const info = infoCertificados[tipoCertificado];
+        
+        if (!info) return 'Tipo no válido';
+        
+        // Calcular años según el tipo
+        const anos = info.vigencia === '5 años' ? 5 : 3;
+        fecha.setFullYear(fecha.getFullYear() + anos);
+        
+        return fecha.toLocaleDateString('es-ES');
+    }
+    
+    // Función para actualizar información del certificado
+    function actualizarInfoCertificado() {
+        const tipoCertificado = $('#tipo_certificado').val();
+        const fechaAprobacion = $('#fecha_aprobacion').val();
+        
+        if (tipoCertificado && infoCertificados[tipoCertificado]) {
+            const info = infoCertificados[tipoCertificado];
+            
+            // Actualizar alcance
+            $('#scope-text').text(info.alcance);
+            
+            // Actualizar requisitos (reemplazar \n con <br>)
+            const requisitosFormateados = info.requisitos.replace(/\n/g, '<br>');
+            $('#requirements-text').html(requisitosFormateados);
+            
+            // Actualizar vigencia
+            $('#validity-text').text(info.vigencia);
+            
+            // Calcular y actualizar fecha de vencimiento
+            const fechaVencimiento = calcularFechaVencimiento(fechaAprobacion, tipoCertificado);
+            $('#expiry-text').text(fechaVencimiento);
+            
+        } else {
+            // Resetear información
+            $('#scope-text').text('Selecciona un tipo de certificado para ver el alcance');
+            $('#requirements-text').text('Selecciona un tipo de certificado para ver los requisitos');
+            $('#validity-text').text('Selecciona un tipo de certificado para ver la vigencia');
+            $('#expiry-text').text('Selecciona fecha de aprobación para calcular vencimiento');
+        }
     }
     
     // Función para mostrar el modal
@@ -909,6 +1008,11 @@ jQuery(document).ready(function($) {
         verificarEstadoBoton();
     });
     
+    // Actualizar información del certificado cuando cambie el tipo o la fecha
+    $('#tipo_certificado, #fecha_aprobacion').on('change', function() {
+        actualizarInfoCertificado();
+    });
+    
     // Función para verificar estado del botón
     function verificarEstadoBoton() {
         const nombreInstalacion = $('#nombre_instalacion').val().trim();
@@ -938,5 +1042,8 @@ jQuery(document).ready(function($) {
         // Verificar estado inicial después de un pequeño delay para asegurar que los campos estén cargados
         setTimeout(verificarEstadoBoton, 100);
     }
+    
+    // Inicializar información del certificado
+    setTimeout(actualizarInfoCertificado, 100);
 });
 </script> 

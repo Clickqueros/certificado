@@ -164,27 +164,93 @@ class CertificadosPersonalizadosPDF {
             $html = self::generar_plantilla_por_defecto($certificado, $certificado->actividad);
         }
         
+        // Obtener información del tipo de certificado
+        $info_certificado = self::obtener_info_certificado($certificado->tipo_certificado);
+        
+        // Calcular fecha de vencimiento según el tipo
+        $fecha_vencimiento = self::calcular_fecha_vencimiento($certificado->fecha_aprobacion, $certificado->tipo_certificado);
+        
         // Reemplazar placeholders del certificado de GLP
-        $html = str_replace('[TIPO_CERTIFICADO]', htmlspecialchars($certificado->tipo_certificado), $html);
         $html = str_replace('[NOMBRE_INSTALACION]', htmlspecialchars($certificado->nombre_instalacion), $html);
         $html = str_replace('[DIRECCION_INSTALACION]', htmlspecialchars($certificado->direccion_instalacion), $html);
         $html = str_replace('[RAZON_SOCIAL]', htmlspecialchars($certificado->razon_social), $html);
         $html = str_replace('[NIT]', htmlspecialchars($certificado->nit), $html);
-        $html = str_replace('[NUMERO_CERTIFICADO]', str_pad($certificado->numero_certificado, 2, '0', STR_PAD_LEFT), $html);
+        $html = str_replace('[NUMERO_CERTIFICADO]', $certificado->tipo_certificado . '-' . str_pad($certificado->numero_certificado, 3, '0', STR_PAD_LEFT), $html);
         $html = str_replace('[FECHA_APROBACION]', date('d-m-Y', strtotime($certificado->fecha_aprobacion)), $html);
-        $html = str_replace('[FECHA_VENCIMIENTO]', date('d-m-Y', strtotime($certificado->fecha_aprobacion . ' +5 years')), $html);
+        $html = str_replace('[FECHA_VENCIMIENTO]', date('d-m-Y', strtotime($fecha_vencimiento)), $html);
+        
         // Formatear capacidad con puntos de miles automáticamente
         $capacidad_formateada = number_format($certificado->capacidad_almacenamiento, 0, ',', '.');
         $html = str_replace('[CAPACIDAD_ALMACENAMIENTO]', htmlspecialchars($capacidad_formateada), $html);
         $html = str_replace('[NUMERO_TANQUES]', htmlspecialchars($certificado->numero_tanques), $html);
         
-        // Reemplazar placeholders antiguos (para compatibilidad) - Solo mantener los necesarios
-        $html = str_replace('[CODIGO_UNICO]', htmlspecialchars($certificado->codigo_unico), $html);
+        // Reemplazar alcance y requisitos según el tipo de certificado
+        $html = str_replace('[ALCANCE_CERTIFICADO]', htmlspecialchars($info_certificado['alcance']), $html);
+        $html = str_replace('[REQUISITOS_CERTIFICADO]', htmlspecialchars($info_certificado['requisitos']), $html);
         
         // Debug: Log para verificar que se están reemplazando correctamente
         error_log('CertificadosPersonalizadosPDF: Reemplazando datos del certificado ID: ' . $certificado->id);
         
         return $html;
+    }
+    
+    /**
+     * Obtener información del tipo de certificado
+     */
+    private static function obtener_info_certificado($tipo_certificado) {
+        $info_certificados = array(
+            'PAGLP' => array(
+                'alcance' => 'Certificación de Planta de Almacenamiento de GLP para redes de distribución.',
+                'requisitos' => 'Resolución 40246 de marzo de 2016 del Ministerio de Minas y Energía' . "\n" . 
+                              'Capítulo I - Capítulo II Artículos 6, 7 y 8' . "\n" . 
+                              'Resolución 40867 de septiembre de 2016 del Ministerio de Minas y Energía'
+            ),
+            'TEGLP' => array(
+                'alcance' => 'Certificación de tanques estacionarios de GLP instalados en domicilio de usuarios finales.',
+                'requisitos' => 'Resolución 40246 de marzo de 2016 del Ministerio de Minas y Energía' . "\n" . 
+                              'Capítulo I - Capítulo III Artículos 9, 10 y 11' . "\n" . 
+                              'Resolución 40867 de septiembre de 2016 del Ministerio de Minas y Energía'
+            ),
+            'PEGLP' => array(
+                'alcance' => 'Certificación de plantas de envasado de GLP.',
+                'requisitos' => 'Resolución 40247 de marzo de 2016 del Ministerio de Minas y Energía' . "\n" . 
+                              'Resolución 40868 de septiembre de 2016 del Ministerio de Minas y Energía'
+            ),
+            'DEGLP' => array(
+                'alcance' => 'Certificación de depósitos de cilindros de GLP.',
+                'requisitos' => 'Resolución 40248 de marzo de 2016 del Ministerio de Minas y Energía' . "\n" . 
+                              'Capítulo I - Capítulo II Artículos 6, 7 y 8' . "\n" . 
+                              'Resolución 40869 de septiembre de 2016 del Ministerio de Minas y Energía'
+            ),
+            'PVGLP' => array(
+                'alcance' => 'Certificación de expendios y puntos de venta de cilindros de GLP.',
+                'requisitos' => 'Resolución 40248 de marzo de 2016 del Ministerio de Minas y Energía' . "\n" . 
+                              'Capítulo I - Capítulo III Artículos 9, 10 y 11' . "\n" . 
+                              'Resolución 40869 de septiembre de 2016 del Ministerio de Minas y Energía'
+            )
+        );
+        
+        return isset($info_certificados[$tipo_certificado]) ? $info_certificados[$tipo_certificado] : $info_certificados['PAGLP'];
+    }
+    
+    /**
+     * Calcular fecha de vencimiento según el tipo de certificado
+     */
+    private static function calcular_fecha_vencimiento($fecha_aprobacion, $tipo_certificado) {
+        // Certificados con vigencia de 5 años
+        $certificados_5_anos = array('PAGLP', 'TEGLP', 'PEGLP');
+        
+        // Certificados con vigencia de 3 años
+        $certificados_3_anos = array('DEGLP', 'PVGLP');
+        
+        if (in_array($tipo_certificado, $certificados_5_anos)) {
+            return date('Y-m-d', strtotime($fecha_aprobacion . ' +5 years'));
+        } elseif (in_array($tipo_certificado, $certificados_3_anos)) {
+            return date('Y-m-d', strtotime($fecha_aprobacion . ' +3 years'));
+        } else {
+            // Por defecto, 5 años
+            return date('Y-m-d', strtotime($fecha_aprobacion . ' +5 years'));
+        }
     }
     
     /**
