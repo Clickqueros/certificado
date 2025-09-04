@@ -4,43 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Certificado de Conformidad GLP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
             font-family: Arial, sans-serif;
             background: white;
-            width: 1080px;
-            height: 830px;
-            position: relative;
-            overflow: hidden;
             margin: 0;
-            padding: 0;
+            padding: 20px;
         }
         
         .certificate-container {
-            width: 1080px;
-            height: 830px;
-            position: relative;
+            max-width: 100%;
             background: white;
             border: 2px solid #8B4513;
             border-radius: 0 0 20px 0;
+            padding: 20px;
         }
         
         /* Header Section */
         .header {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            height: 80px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #8B4513;
+            padding-bottom: 20px;
         }
         
         .logo-section {
@@ -84,7 +72,7 @@
         
         .iso-info {
             font-size: 10px;
-            color: #666;
+            color: #fff;
             margin-top: 2px;
         }
         
@@ -95,50 +83,34 @@
         }
         
         .certificate-title h1 {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
             color: #333;
-            margin-bottom: 3px;
+            margin-bottom: 5px;
         }
         
         .certificate-title p {
-            font-size: 12px;
+            font-size: 14px;
             color: #333;
         }
         
-        /* Main Content */
+        /* Main Content - Two Columns */
         .main-content {
-            position: absolute;
-            top: 120px;
-            left: 40px;
-            right: 40px;
-            height: 400px;
-            display: flex;
-            gap: 40px;
-        }
-        
-        .left-column {
-            flex: 1;
-            padding-right: 20px;
-        }
-        
-        .right-column {
-            flex: 1;
-            padding-left: 20px;
+            margin-bottom: 30px;
         }
         
         .installation-name {
-            font-size: 14px;
+            font-size: 16px;
             font-weight: bold;
             color: #333;
-            margin-bottom: 8px;
-            line-height: 1.2;
+            margin-bottom: 10px;
+            line-height: 1.3;
         }
         
         .installation-address {
-            font-size: 11px;
+            font-size: 12px;
             color: #333;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         
         .company-section {
@@ -146,21 +118,21 @@
         }
         
         .company-label {
-            font-size: 11px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 3px;
-        }
-        
-        .company-name {
             font-size: 12px;
             font-weight: bold;
             color: #333;
-            margin-bottom: 3px;
+            margin-bottom: 5px;
+        }
+        
+        .company-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
         }
         
         .nit-number {
-            font-size: 14px;
+            font-size: 16px;
             font-weight: bold;
             color: #333;
         }
@@ -170,14 +142,14 @@
         }
         
         .cert-number-label {
-            font-size: 11px;
+            font-size: 12px;
             font-weight: bold;
             color: #333;
-            margin-bottom: 3px;
+            margin-bottom: 5px;
         }
         
         .cert-number {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
             color: #333;
         }
@@ -187,16 +159,16 @@
         }
         
         .date-item {
-            font-size: 11px;
+            font-size: 12px;
             color: #333;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
         }
         
         .certification-scope {
-            font-size: 11px;
+            font-size: 12px;
             color: #333;
-            margin-bottom: 12px;
-            line-height: 1.3;
+            margin-bottom: 15px;
+            line-height: 1.4;
         }
         
         .installation-characteristics {
@@ -204,44 +176,36 @@
         }
         
         .characteristics-label {
-            font-size: 11px;
+            font-size: 12px;
             font-weight: bold;
             color: #333;
-            margin-bottom: 3px;
+            margin-bottom: 5px;
         }
         
         .characteristic-item {
-            font-size: 11px;
+            font-size: 12px;
             color: #333;
-            margin-bottom: 1px;
+            margin-bottom: 2px;
         }
         
         /* Regulatory Section */
         .regulatory-section {
-            position: absolute;
-            top: 540px;
-            left: 40px;
-            right: 40px;
-            height: 80px;
+            margin-bottom: 30px;
         }
         
         .regulatory-text {
-            font-size: 10px;
+            font-size: 11px;
             color: #333;
-            line-height: 1.3;
-            margin-bottom: 3px;
+            line-height: 1.4;
+            margin-bottom: 5px;
         }
         
         /* Signature Section */
         .signature-section {
-            position: absolute;
-            top: 640px;
-            left: 40px;
-            right: 40px;
-            height: 60px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-bottom: 20px;
         }
         
         .signature-info {
@@ -249,14 +213,14 @@
         }
         
         .signature-name {
-            font-size: 12px;
+            font-size: 14px;
             font-weight: bold;
             color: #333;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
         }
         
         .signature-title {
-            font-size: 11px;
+            font-size: 12px;
             color: #333;
         }
         
@@ -269,22 +233,18 @@
         
         /* Footer */
         .footer {
-            position: absolute;
-            bottom: 20px;
-            left: 40px;
-            right: 40px;
-            height: 60px;
+            margin-top: 20px;
         }
         
         .footer-text {
-            font-size: 9px;
+            font-size: 10px;
             color: #333;
             text-align: center;
-            margin-bottom: 3px;
+            margin-bottom: 5px;
         }
         
         .contact-info {
-            font-size: 9px;
+            font-size: 10px;
             color: #333;
             text-align: center;
         }
@@ -295,19 +255,15 @@
         }
         
         .document-info {
-            position: absolute;
-            bottom: 10px;
-            left: 40px;
             font-size: 9px;
             color: #666;
+            margin-top: 10px;
         }
         
         .page-info {
-            position: absolute;
-            bottom: 10px;
-            right: 40px;
             font-size: 9px;
             color: #666;
+            text-align: right;
         }
         
         /* Decorative Border */
@@ -345,39 +301,41 @@
             </div>
         </div>
         
-        <!-- Main Content -->
+        <!-- Main Content - Two Columns using Bootstrap -->
         <div class="main-content">
-            <!-- Left Column -->
-            <div class="left-column">
-                <div class="installation-name">[NOMBRE_INSTALACION]</div>
-                <div class="installation-address">[DIRECCION_INSTALACION]</div>
-                
-                <div class="company-section">
-                    <div class="company-label">RAZÓN SOCIAL:</div>
-                    <div class="company-name">[RAZON_SOCIAL]</div>
-                    <div class="nit-number">NIT [NIT]</div>
-                </div>
-            </div>
-            
-            <!-- Right Column -->
-            <div class="right-column">
-                <div class="certificate-number-section">
-                    <div class="cert-number-label">Número de certificado:</div>
-                    <div class="cert-number">[NUMERO_CERTIFICADO]</div>
+            <div class="row">
+                <!-- Left Column -->
+                <div class="col-md-6">
+                    <div class="installation-name">[NOMBRE_INSTALACION]</div>
+                    <div class="installation-address">[DIRECCION_INSTALACION]</div>
+                    
+                    <div class="company-section">
+                        <div class="company-label">RAZÓN SOCIAL:</div>
+                        <div class="company-name">[RAZON_SOCIAL]</div>
+                        <div class="nit-number">NIT [NIT]</div>
+                    </div>
                 </div>
                 
-                <div class="dates-section">
-                    <div class="date-item">Fecha de aprobación: [FECHA_APROBACION]</div>
-                    <div class="date-item">Fecha de modificación: N/A</div>
-                    <div class="date-item">Fecha de vencimiento: [FECHA_VENCIMIENTO]</div>
-                </div>
-                
-                <div class="certification-scope">[ALCANCE_CERTIFICADO]</div>
-                
-                <div class="installation-characteristics">
-                    <div class="characteristics-label">Características de la instalación:</div>
-                    <div class="characteristic-item">Capacidad de almacenamiento: [CAPACIDAD_ALMACENAMIENTO] galones</div>
-                    <div class="characteristic-item">Número de tanques: [NUMERO_TANQUES]</div>
+                <!-- Right Column -->
+                <div class="col-md-6">
+                    <div class="certificate-number-section">
+                        <div class="cert-number-label">Número de certificado:</div>
+                        <div class="cert-number">[NUMERO_CERTIFICADO]</div>
+                    </div>
+                    
+                    <div class="dates-section">
+                        <div class="date-item">Fecha de aprobación: [FECHA_APROBACION]</div>
+                        <div class="date-item">Fecha de modificación: N/A</div>
+                        <div class="date-item">Fecha de vencimiento: [FECHA_VENCIMIENTO]</div>
+                    </div>
+                    
+                    <div class="certification-scope">[ALCANCE_CERTIFICADO]</div>
+                    
+                    <div class="installation-characteristics">
+                        <div class="characteristics-label">Características de la instalación:</div>
+                        <div class="characteristic-item">Capacidad de almacenamiento: [CAPACIDAD_ALMACENAMIENTO] galones</div>
+                        <div class="characteristic-item">Número de tanques: [NUMERO_TANQUES]</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -403,8 +361,14 @@
         </div>
         
         <!-- Document Info -->
-        <div class="document-info">ANT-GTE-FT-18-V2</div>
-        <div class="page-info">Página 1 de 1</div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="document-info">ANT-GTE-FT-18-V2</div>
+            </div>
+            <div class="col-md-6">
+                <div class="page-info">Página 1 de 1</div>
+            </div>
+        </div>
         
         <!-- Decorative Border -->
         <div class="decorative-border"></div>

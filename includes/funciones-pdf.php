@@ -426,8 +426,8 @@ class CertificadosPersonalizadosPDF {
             $pdf->SetSubject('Certificado para ' . $certificado->nombre);
             
             // Configurar márgenes
-            // Configurar página con dimensiones personalizadas para el certificado
-            $pdf->SetMargins(0, 0, 0); // Sin márgenes para usar todo el espacio
+            // Configurar página A4 horizontal
+            $pdf->SetMargins(15, 15, 15);
             $pdf->SetHeaderMargin(0);
             $pdf->SetFooterMargin(0);
             
@@ -437,8 +437,8 @@ class CertificadosPersonalizadosPDF {
             // Configurar fuente
             $pdf->SetFont('helvetica', '', 12);
             
-            // Agregar página con dimensiones exactas del certificado (1080x830)
-            $pdf->AddPage('P', array(1080, 830));
+            // Agregar página A4 horizontal
+            $pdf->AddPage('L', 'A4');
             
             // Generar contenido del PDF
             $html_content = self::generar_html_certificado($certificado);
@@ -515,8 +515,8 @@ class CertificadosPersonalizadosPDF {
                 return false;
             }
             
-            // Crear nueva instancia de FPDF con dimensiones personalizadas
-            $pdf = new FPDF('P', 'mm', array(1080, 830));
+            // Crear nueva instancia de FPDF A4 horizontal
+            $pdf = new FPDF('L', 'mm', 'A4');
             $pdf->AddPage();
             $pdf->SetFont('Arial', 'B', 16);
             
