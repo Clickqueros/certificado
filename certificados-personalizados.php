@@ -303,20 +303,28 @@ class CertificadosPersonalizados {
         $sql = "CREATE TABLE $tabla_certificados (
             id INT NOT NULL AUTO_INCREMENT,
             user_id INT NOT NULL,
-            nombre VARCHAR(255) NOT NULL,
             actividad VARCHAR(255) NOT NULL,
-            fecha DATE NOT NULL,
-            observaciones TEXT,
             estado VARCHAR(50) NOT NULL DEFAULT 'pendiente',
             pdf_path TEXT,
             codigo_unico VARCHAR(100) NOT NULL,
             notificado BOOLEAN NOT NULL DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            -- Campos para certificados de GLP
+            capacidad_almacenamiento VARCHAR(50),
+            numero_tanques INT,
+            nombre_instalacion VARCHAR(255),
+            direccion_instalacion TEXT,
+            razon_social VARCHAR(255),
+            nit VARCHAR(50),
+            tipo_certificado VARCHAR(10),
+            numero_certificado INT,
+            fecha_aprobacion DATE,
             PRIMARY KEY (id),
             KEY user_id (user_id),
             KEY estado (estado),
-            KEY codigo_unico (codigo_unico)
+            KEY codigo_unico (codigo_unico),
+            KEY tipo_certificado (tipo_certificado)
         ) $charset_collate;";
         
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -441,35 +449,70 @@ class CertificadosPersonalizados {
             wp_die('Certificado no encontrado, no tienes permisos o no es editable.');
         }
         
-        // Validar datos
-        $nombre = sanitize_text_field($_POST['nombre']);
-        $fecha_evento = sanitize_text_field($_POST['fecha_evento']);
-        $tipo_actividad = sanitize_text_field($_POST['tipo_actividad']);
-        $observaciones = sanitize_textarea_field($_POST['observaciones']);
+        // Validar nuevos campos
+        $capacidad_almacenamiento = sanitize_text_field($_POST['capacidad_almacenamiento']);
+        $numero_tanques = intval($_POST['numero_tanques']);
+        $nombre_instalacion = sanitize_text_field($_POST['nombre_instalacion']);
+        $direccion_instalacion = sanitize_textarea_field($_POST['direccion_instalacion']);
+        $razon_social = sanitize_text_field($_POST['razon_social']);
+        $nit = sanitize_text_field($_POST['nit']);
+        $tipo_certificado = sanitize_text_field($_POST['tipo_certificado']);
+        $numero_certificado = intval($_POST['numero_certificado']);
+        $fecha_aprobacion = sanitize_text_field($_POST['fecha_aprobacion']);
         
-        // Validaciones
-        if (empty($nombre) || empty($fecha_evento) || empty($tipo_actividad)) {
-            wp_die('Los campos Nombre, Fecha del evento y Tipo de actividad son obligatorios.');
+        // Validaciones obligatorias
+        $campos_obligatorios = array(
+            'capacidad_almacenamiento' => $capacidad_almacenamiento,
+            'numero_tanques' => $numero_tanques,
+            'nombre_instalacion' => $nombre_instalacion,
+            'direccion_instalacion' => $direccion_instalacion,
+            'razon_social' => $razon_social,
+            'nit' => $nit,
+            'tipo_certificado' => $tipo_certificado,
+            'numero_certificado' => $numero_certificado,
+            'fecha_aprobacion' => $fecha_aprobacion
+        );
+        
+        foreach ($campos_obligatorios as $campo => $valor) {
+            if (empty($valor)) {
+                wp_die('El campo ' . ucfirst(str_replace('_', ' ', $campo)) . ' es obligatorio.');
+            }
         }
         
-        // Validar fecha
+        // Validar fecha de aprobación
         $fecha_actual = date('Y-m-d');
-        if ($fecha_evento > $fecha_actual) {
-            wp_die('La fecha del evento no puede ser futura.');
+        if ($fecha_aprobacion > $fecha_actual) {
+            wp_die('La fecha de aprobación no puede ser futura.');
         }
         
-        // Validar tipo de actividad
-        $tipos_validos = array('curso', 'taller', 'seminario', 'conferencia', 'workshop', 'otro');
-        if (!in_array($tipo_actividad, $tipos_validos)) {
-            wp_die('Tipo de actividad no válido.');
+        // Validar tipo de certificado
+        $tipos_validos = array('PAGLP', 'TEGLP', 'PEGLP', 'DEGLP', 'PVGLP');
+        if (!in_array($tipo_certificado, $tipos_validos)) {
+            wp_die('Tipo de certificado no válido.');
+        }
+        
+        // Validar que el número de tanques sea positivo
+        if ($numero_tanques <= 0) {
+            wp_die('El número de tanques debe ser mayor a 0.');
+        }
+        
+        // Validar que el número de certificado sea positivo
+        if ($numero_certificado <= 0) {
+            wp_die('El número de certificado debe ser mayor a 0.');
         }
         
         // Preparar datos para actualización
         $datos_actualizados = array(
-            'nombre' => $nombre,
-            'actividad' => $tipo_actividad,
-            'fecha' => $fecha_evento,
-            'observaciones' => $observaciones,
+            'actividad' => $tipo_certificado, // Usamos tipo_certificado como actividad
+            'capacidad_almacenamiento' => $capacidad_almacenamiento,
+            'numero_tanques' => $numero_tanques,
+            'nombre_instalacion' => $nombre_instalacion,
+            'direccion_instalacion' => $direccion_instalacion,
+            'razon_social' => $razon_social,
+            'nit' => $nit,
+            'tipo_certificado' => $tipo_certificado,
+            'numero_certificado' => $numero_certificado,
+            'fecha_aprobacion' => $fecha_aprobacion,
             'updated_at' => current_time('mysql')
         );
         
@@ -530,28 +573,59 @@ class CertificadosPersonalizados {
             wp_die('Certificado no encontrado.');
         }
         
-        // Validar datos
-        $nombre = sanitize_text_field($_POST['nombre']);
-        $fecha_evento = sanitize_text_field($_POST['fecha_evento']);
-        $tipo_actividad = sanitize_text_field($_POST['tipo_actividad']);
-        $observaciones = sanitize_textarea_field($_POST['observaciones']);
+        // Validar datos básicos
         $estado = sanitize_text_field($_POST['estado']);
         
-        // Validaciones
-        if (empty($nombre) || empty($fecha_evento) || empty($tipo_actividad)) {
-            wp_die('Los campos Nombre, Fecha del evento y Tipo de actividad son obligatorios.');
+        // Validar nuevos campos
+        $capacidad_almacenamiento = sanitize_text_field($_POST['capacidad_almacenamiento']);
+        $numero_tanques = intval($_POST['numero_tanques']);
+        $nombre_instalacion = sanitize_text_field($_POST['nombre_instalacion']);
+        $direccion_instalacion = sanitize_textarea_field($_POST['direccion_instalacion']);
+        $razon_social = sanitize_text_field($_POST['razon_social']);
+        $nit = sanitize_text_field($_POST['nit']);
+        $tipo_certificado = sanitize_text_field($_POST['tipo_certificado']);
+        $numero_certificado = intval($_POST['numero_certificado']);
+        $fecha_aprobacion = sanitize_text_field($_POST['fecha_aprobacion']);
+        
+        // Validaciones obligatorias
+        $campos_obligatorios = array(
+            'capacidad_almacenamiento' => $capacidad_almacenamiento,
+            'numero_tanques' => $numero_tanques,
+            'nombre_instalacion' => $nombre_instalacion,
+            'direccion_instalacion' => $direccion_instalacion,
+            'razon_social' => $razon_social,
+            'nit' => $nit,
+            'tipo_certificado' => $tipo_certificado,
+            'numero_certificado' => $numero_certificado,
+            'fecha_aprobacion' => $fecha_aprobacion
+        );
+        
+        foreach ($campos_obligatorios as $campo => $valor) {
+            if (empty($valor)) {
+                wp_die('El campo ' . ucfirst(str_replace('_', ' ', $campo)) . ' es obligatorio.');
+            }
         }
         
-        // Validar fecha
+        // Validar fecha de aprobación
         $fecha_actual = date('Y-m-d');
-        if ($fecha_evento > $fecha_actual) {
-            wp_die('La fecha del evento no puede ser futura.');
+        if ($fecha_aprobacion > $fecha_actual) {
+            wp_die('La fecha de aprobación no puede ser futura.');
         }
         
-        // Validar tipo de actividad
-        $tipos_validos = array('curso', 'taller', 'seminario', 'conferencia', 'workshop', 'otro');
-        if (!in_array($tipo_actividad, $tipos_validos)) {
-            wp_die('Tipo de actividad no válido.');
+        // Validar tipo de certificado
+        $tipos_validos = array('PAGLP', 'TEGLP', 'PEGLP', 'DEGLP', 'PVGLP');
+        if (!in_array($tipo_certificado, $tipos_validos)) {
+            wp_die('Tipo de certificado no válido.');
+        }
+        
+        // Validar que el número de tanques sea positivo
+        if ($numero_tanques <= 0) {
+            wp_die('El número de tanques debe ser mayor a 0.');
+        }
+        
+        // Validar que el número de certificado sea positivo
+        if ($numero_certificado <= 0) {
+            wp_die('El número de certificado debe ser mayor a 0.');
         }
         
         // Validar estado
@@ -563,9 +637,18 @@ class CertificadosPersonalizados {
         // Preparar datos para actualización
         $datos_actualizados = array(
             'nombre' => $nombre,
-            'actividad' => $tipo_actividad,
+            'actividad' => $tipo_certificado, // Usamos tipo_certificado como actividad
             'fecha' => $fecha_evento,
             'observaciones' => $observaciones,
+            'capacidad_almacenamiento' => $capacidad_almacenamiento,
+            'numero_tanques' => $numero_tanques,
+            'nombre_instalacion' => $nombre_instalacion,
+            'direccion_instalacion' => $direccion_instalacion,
+            'razon_social' => $razon_social,
+            'nit' => $nit,
+            'tipo_certificado' => $tipo_certificado,
+            'numero_certificado' => $numero_certificado,
+            'fecha_aprobacion' => $fecha_aprobacion,
             'estado' => $estado,
             'updated_at' => current_time('mysql')
         );

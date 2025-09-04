@@ -164,23 +164,23 @@ class CertificadosPersonalizadosPDF {
             $html = self::generar_plantilla_por_defecto($certificado, $certificado->actividad);
         }
         
-        // Reemplazar placeholders - tanto los antiguos como los nuevos
-        $html = str_replace('[NOMBRE_COMPLETO]', htmlspecialchars($certificado->nombre), $html);
-        $html = str_replace('[ACTIVIDAD_CURSO]', htmlspecialchars($certificado->actividad), $html);
-        $html = str_replace('[FECHA_ACTIVIDAD]', htmlspecialchars($certificado->fecha), $html);
-        $html = str_replace('[CODIGO_UNICO]', htmlspecialchars($certificado->codigo_unico), $html);
-        $html = str_replace('[NOMBRE_DIRECTOR]', 'Director General', $html);
-        $html = str_replace('[NOMBRE_COORDINADOR]', 'Coordinador de Recursos Humanos', $html);
+        // Reemplazar placeholders del certificado de GLP
+        $html = str_replace('[TIPO_CERTIFICADO]', htmlspecialchars($certificado->tipo_certificado), $html);
+        $html = str_replace('[NOMBRE_INSTALACION]', htmlspecialchars($certificado->nombre_instalacion), $html);
+        $html = str_replace('[DIRECCION_INSTALACION]', htmlspecialchars($certificado->direccion_instalacion), $html);
+        $html = str_replace('[RAZON_SOCIAL]', htmlspecialchars($certificado->razon_social), $html);
+        $html = str_replace('[NIT]', htmlspecialchars($certificado->nit), $html);
+        $html = str_replace('[NUMERO_CERTIFICADO]', str_pad($certificado->numero_certificado, 2, '0', STR_PAD_LEFT), $html);
+        $html = str_replace('[FECHA_APROBACION]', date('d-m-Y', strtotime($certificado->fecha_aprobacion)), $html);
+        $html = str_replace('[FECHA_VENCIMIENTO]', date('d-m-Y', strtotime($certificado->fecha_aprobacion . ' +5 years')), $html);
+        $html = str_replace('[CAPACIDAD_ALMACENAMIENTO]', htmlspecialchars($certificado->capacidad_almacenamiento), $html);
+        $html = str_replace('[NUMERO_TANQUES]', htmlspecialchars($certificado->numero_tanques), $html);
         
-        // Reemplazar placeholders con formato {{variable}}
-        $html = str_replace('{{nombre}}', htmlspecialchars($certificado->nombre), $html);
-        $html = str_replace('{{actividad}}', htmlspecialchars($certificado->actividad), $html);
-        $html = str_replace('{{fecha}}', htmlspecialchars($certificado->fecha), $html);
-        $html = str_replace('{{codigo}}', htmlspecialchars($certificado->codigo_unico), $html);
-        $html = str_replace('{{observaciones}}', htmlspecialchars($certificado->observaciones), $html);
+        // Reemplazar placeholders antiguos (para compatibilidad) - Solo mantener los necesarios
+        $html = str_replace('[CODIGO_UNICO]', htmlspecialchars($certificado->codigo_unico), $html);
         
         // Debug: Log para verificar que se están reemplazando correctamente
-        error_log('CertificadosPersonalizadosPDF: Reemplazando nombre "' . $certificado->nombre . '" en HTML');
+        error_log('CertificadosPersonalizadosPDF: Reemplazando datos del certificado ID: ' . $certificado->id);
         
         return $html;
     }

@@ -66,35 +66,69 @@ function procesar_solicitud_certificado() {
         return array('tipo' => 'error', 'mensaje' => 'Error de seguridad.');
     }
     
-    // Validar datos
-    $nombre = sanitize_text_field($_POST['nombre']);
-    $fecha_evento = sanitize_text_field($_POST['fecha_evento']);
-    $tipo_actividad = sanitize_text_field($_POST['tipo_actividad']);
-    $observaciones = sanitize_textarea_field($_POST['observaciones']);
+    // Validar nuevos campos
+    $capacidad_almacenamiento = sanitize_text_field($_POST['capacidad_almacenamiento']);
+    $numero_tanques = intval($_POST['numero_tanques']);
+    $nombre_instalacion = sanitize_text_field($_POST['nombre_instalacion']);
+    $direccion_instalacion = sanitize_textarea_field($_POST['direccion_instalacion']);
+    $razon_social = sanitize_text_field($_POST['razon_social']);
+    $nit = sanitize_text_field($_POST['nit']);
+    $tipo_certificado = sanitize_text_field($_POST['tipo_certificado']);
+    $numero_certificado = intval($_POST['numero_certificado']);
+    $fecha_aprobacion = sanitize_text_field($_POST['fecha_aprobacion']);
     
-    // Validaciones
-    if (empty($nombre) || empty($fecha_evento) || empty($tipo_actividad)) {
-        return array('tipo' => 'error', 'mensaje' => 'Los campos Nombre, Fecha del evento y Tipo de actividad son obligatorios.');
+    // Validaciones obligatorias
+    $campos_obligatorios = array(
+        'capacidad_almacenamiento' => $capacidad_almacenamiento,
+        'numero_tanques' => $numero_tanques,
+        'nombre_instalacion' => $nombre_instalacion,
+        'direccion_instalacion' => $direccion_instalacion,
+        'razon_social' => $razon_social,
+        'nit' => $nit,
+        'tipo_certificado' => $tipo_certificado,
+        'numero_certificado' => $numero_certificado,
+        'fecha_aprobacion' => $fecha_aprobacion
+    );
+    
+    foreach ($campos_obligatorios as $campo => $valor) {
+        if (empty($valor)) {
+            return array('tipo' => 'error', 'mensaje' => 'El campo ' . ucfirst(str_replace('_', ' ', $campo)) . ' es obligatorio.');
+        }
     }
     
-    // Validar fecha
-    $fecha_actual = date('Y-m-d');
-    if ($fecha_evento > $fecha_actual) {
-        return array('tipo' => 'error', 'mensaje' => 'La fecha del evento no puede ser futura.');
+    // Validar fecha de aprobación
+    if ($fecha_aprobacion > $fecha_actual) {
+        return array('tipo' => 'error', 'mensaje' => 'La fecha de aprobación no puede ser futura.');
     }
     
-    // Validar tipo de actividad
-    $tipos_validos = array('curso', 'taller', 'seminario', 'conferencia', 'workshop', 'otro');
-    if (!in_array($tipo_actividad, $tipos_validos)) {
-        return array('tipo' => 'error', 'mensaje' => 'Tipo de actividad no válido.');
+    // Validar tipo de certificado
+    $tipos_validos = array('PAGLP', 'TEGLP', 'PEGLP', 'DEGLP', 'PVGLP');
+    if (!in_array($tipo_certificado, $tipos_validos)) {
+        return array('tipo' => 'error', 'mensaje' => 'Tipo de certificado no válido.');
+    }
+    
+    // Validar que el número de tanques sea positivo
+    if ($numero_tanques <= 0) {
+        return array('tipo' => 'error', 'mensaje' => 'El número de tanques debe ser mayor a 0.');
+    }
+    
+    // Validar que el número de certificado sea positivo
+    if ($numero_certificado <= 0) {
+        return array('tipo' => 'error', 'mensaje' => 'El número de certificado debe ser mayor a 0.');
     }
     
     // Crear certificado
     $datos = array(
-        'nombre' => $nombre,
-        'actividad' => $tipo_actividad,
-        'fecha' => $fecha_evento,
-        'observaciones' => $observaciones
+        'actividad' => $tipo_certificado, // Usamos tipo_certificado como actividad
+        'capacidad_almacenamiento' => $capacidad_almacenamiento,
+        'numero_tanques' => $numero_tanques,
+        'nombre_instalacion' => $nombre_instalacion,
+        'direccion_instalacion' => $direccion_instalacion,
+        'razon_social' => $razon_social,
+        'nit' => $nit,
+        'tipo_certificado' => $tipo_certificado,
+        'numero_certificado' => $numero_certificado,
+        'fecha_aprobacion' => $fecha_aprobacion
     );
     
     $certificado_id = CertificadosPersonalizadosBD::crear_certificado($datos);
@@ -124,14 +158,13 @@ function procesar_solicitud_certificado() {
 /**
  * Obtener tipos de actividad
  */
-function obtener_tipos_actividad() {
+function obtener_tipos_certificado() {
     return array(
-        'curso' => 'Curso de Capacitación',
-        'taller' => 'Taller Práctico',
-        'seminario' => 'Seminario',
-        'conferencia' => 'Conferencia',
-        'workshop' => 'Workshop',
-        'otro' => 'Otro'
+        'PAGLP' => 'PAGLP - Planta de Almacenamiento de GLP',
+        'TEGLP' => 'TEGLP - Tanque de Almacenamiento de GLP',
+        'PEGLP' => 'PEGLP - Planta de Envasado de GLP',
+        'DEGLP' => 'DEGLP - Distribuidora de GLP',
+        'PVGLP' => 'PVGLP - Punto de Venta de GLP'
     );
 }
 ?>
@@ -194,58 +227,120 @@ function obtener_tipos_actividad() {
                 <?php endif; ?>
                 
                 <table class="form-table">
+                    <!-- Información de la Instalación -->
                     <tr>
                         <th scope="row">
-                            <label for="nombre"><?php _e('Nombre Completo', 'certificados-personalizados'); ?> *</label>
+                            <label for="capacidad_almacenamiento"><?php _e('Capacidad de Almacenamiento', 'certificados-personalizados'); ?> *</label>
                         </th>
                         <td>
-                            <input type="text" id="nombre" name="nombre" class="regular-text" 
-                                   value="<?php echo $modo_edicion ? esc_attr($certificado_edicion->nombre) : esc_attr(wp_get_current_user()->display_name); ?>" required>
-                            <p class="description"><?php _e('Nombre completo de la persona que solicita el certificado.', 'certificados-personalizados'); ?></p>
+                            <input type="text" id="capacidad_almacenamiento" name="capacidad_almacenamiento" class="regular-text" 
+                                   value="<?php echo $modo_edicion ? esc_attr($certificado_edicion->capacidad_almacenamiento) : ''; ?>" 
+                                   placeholder="Ej: 4.000" required>
+                            <p class="description"><?php _e('Capacidad de almacenamiento en galones (solo números con puntos de miles).', 'certificados-personalizados'); ?></p>
                         </td>
                     </tr>
                     
                     <tr>
                         <th scope="row">
-                            <label for="fecha_evento"><?php _e('Fecha del Evento', 'certificados-personalizados'); ?> *</label>
+                            <label for="numero_tanques"><?php _e('Número de Tanques', 'certificados-personalizados'); ?> *</label>
                         </th>
                         <td>
-                            <input type="date" id="fecha_evento" name="fecha_evento" 
-                                   value="<?php echo $modo_edicion ? esc_attr($certificado_edicion->fecha) : ''; ?>" required>
-                            <p class="description"><?php _e('Fecha en que se realizó la actividad o evento.', 'certificados-personalizados'); ?></p>
+                            <input type="number" id="numero_tanques" name="numero_tanques" class="small-text" 
+                                   value="<?php echo $modo_edicion ? esc_attr($certificado_edicion->numero_tanques) : ''; ?>" 
+                                   min="1" required>
+                            <p class="description"><?php _e('Número total de tanques de la instalación.', 'certificados-personalizados'); ?></p>
                         </td>
                     </tr>
                     
                     <tr>
                         <th scope="row">
-                            <label for="tipo_actividad"><?php _e('Tipo de Actividad', 'certificados-personalizados'); ?> *</label>
+                            <label for="nombre_instalacion"><?php _e('Nombre del Lugar/Instalación', 'certificados-personalizados'); ?> *</label>
                         </th>
                         <td>
-                            <select id="tipo_actividad" name="tipo_actividad" required>
-                                <option value=""><?php _e('Seleccionar tipo de actividad', 'certificados-personalizados'); ?></option>
+                            <input type="text" id="nombre_instalacion" name="nombre_instalacion" class="regular-text" 
+                                   value="<?php echo $modo_edicion ? esc_attr($certificado_edicion->nombre_instalacion) : ''; ?>" required>
+                            <p class="description"><?php _e('Nombre oficial de la instalación o lugar.', 'certificados-personalizados'); ?></p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="direccion_instalacion"><?php _e('Dirección del Lugar', 'certificados-personalizados'); ?> *</label>
+                        </th>
+                        <td>
+                            <textarea id="direccion_instalacion" name="direccion_instalacion" rows="3" cols="50" class="large-text" required><?php echo $modo_edicion ? esc_textarea($certificado_edicion->direccion_instalacion) : ''; ?></textarea>
+                            <p class="description"><?php _e('Dirección completa de la instalación.', 'certificados-personalizados'); ?></p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Información de la Empresa -->
+                    <tr>
+                        <th scope="row">
+                            <label for="razon_social"><?php _e('Razón Social', 'certificados-personalizados'); ?> *</label>
+                        </th>
+                        <td>
+                            <input type="text" id="razon_social" name="razon_social" class="regular-text" 
+                                   value="<?php echo $modo_edicion ? esc_attr($certificado_edicion->razon_social) : ''; ?>" required>
+                            <p class="description"><?php _e('Razón social de la empresa.', 'certificados-personalizados'); ?></p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="nit"><?php _e('NIT', 'certificados-personalizados'); ?> *</label>
+                        </th>
+                        <td>
+                            <input type="text" id="nit" name="nit" class="regular-text" 
+                                   value="<?php echo $modo_edicion ? esc_attr($certificado_edicion->nit) : ''; ?>" required>
+                            <p class="description"><?php _e('Número de identificación tributaria.', 'certificados-personalizados'); ?></p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Información del Certificado -->
+                    <tr>
+                        <th scope="row">
+                            <label for="tipo_certificado"><?php _e('Tipo de Certificado', 'certificados-personalizados'); ?> *</label>
+                        </th>
+                        <td>
+                            <select id="tipo_certificado" name="tipo_certificado" required>
+                                <option value=""><?php _e('Seleccionar tipo de certificado', 'certificados-personalizados'); ?></option>
                                 <?php 
-                                $tipos = obtener_tipos_actividad();
+                                $tipos = obtener_tipos_certificado();
                                 foreach ($tipos as $valor => $etiqueta): 
                                 ?>
                                     <option value="<?php echo esc_attr($valor); ?>" 
-                                            <?php echo ($modo_edicion && $certificado_edicion->actividad === $valor) ? 'selected' : ''; ?>>
+                                            <?php echo ($modo_edicion && $certificado_edicion->tipo_certificado === $valor) ? 'selected' : ''; ?>>
                                         <?php echo esc_html($etiqueta); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
-                            <p class="description"><?php _e('Selecciona el tipo de actividad o evento.', 'certificados-personalizados'); ?></p>
+                            <p class="description"><?php _e('Selecciona el tipo de certificado GLP.', 'certificados-personalizados'); ?></p>
                         </td>
                     </tr>
                     
                     <tr>
                         <th scope="row">
-                            <label for="observaciones"><?php _e('Observaciones', 'certificados-personalizados'); ?></label>
+                            <label for="numero_certificado"><?php _e('Número del Certificado', 'certificados-personalizados'); ?> *</label>
                         </th>
                         <td>
-                            <textarea id="observaciones" name="observaciones" rows="4" cols="50" class="large-text"><?php echo $modo_edicion ? esc_textarea($certificado_edicion->observaciones) : ''; ?></textarea>
-                            <p class="description"><?php _e('Información adicional sobre la actividad, curso o evento (opcional).', 'certificados-personalizados'); ?></p>
+                            <input type="number" id="numero_certificado" name="numero_certificado" class="small-text" 
+                                   value="<?php echo $modo_edicion ? esc_attr($certificado_edicion->numero_certificado) : ''; ?>" 
+                                   min="1" required>
+                            <p class="description"><?php _e('Número del certificado (solo números). Se mostrará como TIPO-NÚMERO en el PDF.', 'certificados-personalizados'); ?></p>
                         </td>
                     </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="fecha_aprobacion"><?php _e('Fecha de Aprobación del Certificado', 'certificados-personalizados'); ?> *</label>
+                        </th>
+                        <td>
+                            <input type="date" id="fecha_aprobacion" name="fecha_aprobacion" 
+                                   value="<?php echo $modo_edicion ? esc_attr($certificado_edicion->fecha_aprobacion) : ''; ?>" required>
+                            <p class="description"><?php _e('Fecha de aprobación del certificado.', 'certificados-personalizados'); ?></p>
+                        </td>
+                    </tr>
+                    
                 </table>
                 
                 <p class="submit">
@@ -271,9 +366,11 @@ function obtener_tipos_actividad() {
                     <thead>
                         <tr>
                             <th><?php _e('Código', 'certificados-personalizados'); ?></th>
-                            <th><?php _e('Nombre', 'certificados-personalizados'); ?></th>
-                            <th><?php _e('Tipo de Actividad', 'certificados-personalizados'); ?></th>
-                            <th><?php _e('Fecha', 'certificados-personalizados'); ?></th>
+                            <th><?php _e('Tipo Certificado', 'certificados-personalizados'); ?></th>
+                            <th><?php _e('Número', 'certificados-personalizados'); ?></th>
+                            <th><?php _e('Instalación', 'certificados-personalizados'); ?></th>
+                            <th><?php _e('Capacidad', 'certificados-personalizados'); ?></th>
+                            <th><?php _e('Tanques', 'certificados-personalizados'); ?></th>
                             <th><?php _e('Estado', 'certificados-personalizados'); ?></th>
                             <th><?php _e('PDF', 'certificados-personalizados'); ?></th>
                             <th><?php _e('Fecha Solicitud', 'certificados-personalizados'); ?></th>
@@ -286,15 +383,26 @@ function obtener_tipos_actividad() {
                                 <td>
                                     <strong><?php echo esc_html($certificado->codigo_unico); ?></strong>
                                 </td>
-                                <td><?php echo esc_html($certificado->nombre); ?></td>
                                 <td>
                                     <?php 
-                                    $tipos = obtener_tipos_actividad();
-                                    $tipo_mostrar = isset($tipos[$certificado->actividad]) ? $tipos[$certificado->actividad] : $certificado->actividad;
+                                    $tipos = obtener_tipos_certificado();
+                                    $tipo_mostrar = isset($tipos[$certificado->tipo_certificado]) ? $tipos[$certificado->tipo_certificado] : $certificado->tipo_certificado;
                                     echo esc_html($tipo_mostrar);
                                     ?>
                                 </td>
-                                <td><?php echo esc_html(date('d/m/Y', strtotime($certificado->fecha))); ?></td>
+                                <td>
+                                    <strong><?php echo esc_html($certificado->tipo_certificado . '-' . str_pad($certificado->numero_certificado, 2, '0', STR_PAD_LEFT)); ?></strong>
+                                </td>
+                                <td>
+                                    <strong><?php echo esc_html($certificado->nombre_instalacion); ?></strong><br>
+                                    <small><?php echo esc_html($certificado->razon_social); ?></small>
+                                </td>
+                                <td>
+                                    <?php echo esc_html($certificado->capacidad_almacenamiento); ?> galones
+                                </td>
+                                <td>
+                                    <?php echo esc_html($certificado->numero_tanques); ?>
+                                </td>
                                 <td>
                                     <?php
                                     $estado_clase = '';

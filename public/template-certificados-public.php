@@ -76,18 +76,33 @@ if (!defined('ABSPATH')) {
                         
                         <div class="certificado-contenido">
                             <h3 class="certificado-nombre">
-                                <?php echo esc_html($certificado->nombre); ?>
+                                <?php echo esc_html($certificado->nombre_instalacion); ?>
                             </h3>
                             
-                            <div class="certificado-actividad">
-                                <strong>Actividad:</strong> <?php echo esc_html($certificado->actividad); ?>
+                            <div class="certificado-empresa">
+                                <strong>Empresa:</strong> <?php echo esc_html($certificado->razon_social); ?>
                             </div>
                             
-                            <?php if (!empty($certificado->observaciones)): ?>
-                                <div class="certificado-observaciones">
-                                    <strong>Observaciones:</strong> <?php echo esc_html($certificado->observaciones); ?>
-                                </div>
-                            <?php endif; ?>
+                            <div class="certificado-tipo">
+                                <strong>Tipo:</strong> <?php echo esc_html($certificado->tipo_certificado . '-' . str_pad($certificado->numero_certificado, 2, '0', STR_PAD_LEFT)); ?>
+                            </div>
+                            
+                            <div class="certificado-capacidad">
+                                <strong>Capacidad:</strong> <?php echo esc_html($certificado->capacidad_almacenamiento); ?> galones
+                            </div>
+                            
+                            <div class="certificado-tanques">
+                                <strong>Tanques:</strong> <?php echo esc_html($certificado->numero_tanques); ?>
+                            </div>
+                            
+                            <div class="certificado-direccion">
+                                <strong>Dirección:</strong> <?php echo esc_html($certificado->direccion_instalacion); ?>
+                            </div>
+                            
+                            <div class="certificado-numero-certificado">
+                                <strong>NIT:</strong> <?php echo esc_html($certificado->nit); ?>
+                            </div>
+                            
                             
                             <div class="certificado-codigo">
                                 <strong>Código:</strong> 

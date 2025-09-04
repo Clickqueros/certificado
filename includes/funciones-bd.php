@@ -42,7 +42,15 @@ class CertificadosPersonalizadosBD {
             'codigo_unico' => self::generar_codigo_unico(),
             'estado' => 'pendiente',
             'notificado' => 0,
-            'observaciones' => ''
+            'capacidad_almacenamiento' => '',
+            'numero_tanques' => 0,
+            'nombre_instalacion' => '',
+            'direccion_instalacion' => '',
+            'razon_social' => '',
+            'nit' => '',
+            'tipo_certificado' => '',
+            'numero_certificado' => 0,
+            'fecha_aprobacion' => ''
         );
         
         $datos = wp_parse_args($datos, $datos_default);
