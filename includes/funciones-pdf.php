@@ -412,18 +412,19 @@ class CertificadosPersonalizadosPDF {
             $pdf->SetSubject('Certificado para ' . $certificado->nombre);
             
             // Configurar márgenes
-            $pdf->SetMargins(20, 20, 20);
+            // Configurar página con dimensiones personalizadas para el certificado
+            $pdf->SetMargins(0, 0, 0); // Sin márgenes para usar todo el espacio
             $pdf->SetHeaderMargin(0);
             $pdf->SetFooterMargin(0);
             
-            // Configurar saltos de página automáticos
-            $pdf->SetAutoPageBreak(TRUE, 25);
+            // Desactivar saltos de página automáticos para mantener en una sola página
+            $pdf->SetAutoPageBreak(false);
             
             // Configurar fuente
             $pdf->SetFont('helvetica', '', 12);
             
-            // Agregar página
-            $pdf->AddPage();
+            // Agregar página con dimensiones exactas del certificado (1080x830)
+            $pdf->AddPage('P', array(1080, 830));
             
             // Generar contenido del PDF
             $html_content = self::generar_html_certificado($certificado);
@@ -500,8 +501,8 @@ class CertificadosPersonalizadosPDF {
                 return false;
             }
             
-            // Crear nueva instancia de FPDF
-            $pdf = new FPDF();
+            // Crear nueva instancia de FPDF con dimensiones personalizadas
+            $pdf = new FPDF('P', 'mm', array(1080, 830));
             $pdf->AddPage();
             $pdf->SetFont('Arial', 'B', 16);
             
