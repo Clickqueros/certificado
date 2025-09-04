@@ -123,6 +123,9 @@ class CertificadosPersonalizados {
             false,
             dirname(plugin_basename(__FILE__)) . '/languages/'
         );
+        
+        // Verificar y actualizar base de datos si es necesario
+        $this->verificar_y_actualizar_bd();
     }
     
     /**
@@ -145,6 +148,28 @@ class CertificadosPersonalizados {
     public function forzar_actualizacion_tabla() {
         $this->crear_tabla_certificados();
         $this->actualizar_tabla_existente();
+    }
+    
+    /**
+     * Verificar y actualizar base de datos si es necesario
+     */
+    private function verificar_y_actualizar_bd() {
+        global $wpdb;
+        $tabla = $wpdb->prefix . 'certificados_personalizados';
+        
+        // Verificar si la tabla existe
+        $tabla_existe = $wpdb->get_var("SHOW TABLES LIKE '$tabla'");
+        
+        if ($tabla_existe) {
+            // Verificar si falta alguna columna nueva
+            $columna_capacidad = $wpdb->get_var("SHOW COLUMNS FROM $tabla LIKE 'capacidad_almacenamiento'");
+            
+            if (!$columna_capacidad) {
+                // Si falta la columna capacidad_almacenamiento, actualizar toda la tabla
+                $this->actualizar_tabla_existente();
+                error_log("CertificadosPersonalizados: Base de datos actualizada automáticamente.");
+            }
+        }
     }
     
     /**
