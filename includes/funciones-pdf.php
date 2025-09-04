@@ -173,7 +173,9 @@ class CertificadosPersonalizadosPDF {
         $html = str_replace('[NUMERO_CERTIFICADO]', str_pad($certificado->numero_certificado, 2, '0', STR_PAD_LEFT), $html);
         $html = str_replace('[FECHA_APROBACION]', date('d-m-Y', strtotime($certificado->fecha_aprobacion)), $html);
         $html = str_replace('[FECHA_VENCIMIENTO]', date('d-m-Y', strtotime($certificado->fecha_aprobacion . ' +5 years')), $html);
-        $html = str_replace('[CAPACIDAD_ALMACENAMIENTO]', htmlspecialchars($certificado->capacidad_almacenamiento), $html);
+        // Formatear capacidad con puntos de miles automáticamente
+        $capacidad_formateada = number_format($certificado->capacidad_almacenamiento, 0, ',', '.');
+        $html = str_replace('[CAPACIDAD_ALMACENAMIENTO]', htmlspecialchars($capacidad_formateada), $html);
         $html = str_replace('[NUMERO_TANQUES]', htmlspecialchars($certificado->numero_tanques), $html);
         
         // Reemplazar placeholders antiguos (para compatibilidad) - Solo mantener los necesarios

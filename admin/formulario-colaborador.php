@@ -230,30 +230,6 @@ function obtener_tipos_certificado() {
                     <!-- Información de la Instalación -->
                     <tr>
                         <th scope="row">
-                            <label for="capacidad_almacenamiento"><?php _e('Capacidad de Almacenamiento', 'certificados-personalizados'); ?> *</label>
-                        </th>
-                        <td>
-                            <input type="text" id="capacidad_almacenamiento" name="capacidad_almacenamiento" class="regular-text" 
-                                   value="<?php echo $modo_edicion ? esc_attr($certificado_edicion->capacidad_almacenamiento) : ''; ?>" 
-                                   placeholder="Ej: 4.000" required>
-                            <p class="description"><?php _e('Capacidad de almacenamiento en galones (solo números con puntos de miles).', 'certificados-personalizados'); ?></p>
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <th scope="row">
-                            <label for="numero_tanques"><?php _e('Número de Tanques', 'certificados-personalizados'); ?> *</label>
-                        </th>
-                        <td>
-                            <input type="number" id="numero_tanques" name="numero_tanques" class="small-text" 
-                                   value="<?php echo $modo_edicion ? esc_attr($certificado_edicion->numero_tanques) : ''; ?>" 
-                                   min="1" required>
-                            <p class="description"><?php _e('Número total de tanques de la instalación.', 'certificados-personalizados'); ?></p>
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <th scope="row">
                             <label for="nombre_instalacion"><?php _e('Nombre del Lugar/Instalación', 'certificados-personalizados'); ?> *</label>
                         </th>
                         <td>
@@ -338,6 +314,31 @@ function obtener_tipos_certificado() {
                             <input type="date" id="fecha_aprobacion" name="fecha_aprobacion" 
                                    value="<?php echo $modo_edicion ? esc_attr($certificado_edicion->fecha_aprobacion) : ''; ?>" required>
                             <p class="description"><?php _e('Fecha de aprobación del certificado.', 'certificados-personalizados'); ?></p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Información Técnica -->
+                    <tr>
+                        <th scope="row">
+                            <label for="capacidad_almacenamiento"><?php _e('Capacidad de Almacenamiento', 'certificados-personalizados'); ?> *</label>
+                        </th>
+                        <td>
+                            <input type="number" id="capacidad_almacenamiento" name="capacidad_almacenamiento" class="regular-text" 
+                                   value="<?php echo $modo_edicion ? esc_attr($certificado_edicion->capacidad_almacenamiento) : ''; ?>" 
+                                   placeholder="Ej: 4000" min="1" required>
+                            <p class="description"><?php _e('Capacidad de almacenamiento en galones (solo números). Los puntos de miles se agregarán automáticamente en el PDF.', 'certificados-personalizados'); ?></p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="numero_tanques"><?php _e('Número de Tanques', 'certificados-personalizados'); ?> *</label>
+                        </th>
+                        <td>
+                            <input type="number" id="numero_tanques" name="numero_tanques" class="small-text" 
+                                   value="<?php echo $modo_edicion ? esc_attr($certificado_edicion->numero_tanques) : ''; ?>" 
+                                   min="1" required>
+                            <p class="description"><?php _e('Número total de tanques de la instalación.', 'certificados-personalizados'); ?></p>
                         </td>
                     </tr>
                     
@@ -714,23 +715,48 @@ function obtener_tipos_certificado() {
             </div>
             
             <div class="confirmacion-item">
-                <span class="confirmacion-label">Nombre Completo</span>
-                <div class="confirmacion-valor" id="confirm-nombre"></div>
+                <span class="confirmacion-label">Nombre de la Instalación</span>
+                <div class="confirmacion-valor" id="confirm-nombre-instalacion"></div>
             </div>
             
             <div class="confirmacion-item">
-                <span class="confirmacion-label">Fecha del Evento</span>
-                <div class="confirmacion-valor" id="confirm-fecha"></div>
+                <span class="confirmacion-label">Dirección</span>
+                <div class="confirmacion-valor" id="confirm-direccion"></div>
             </div>
             
             <div class="confirmacion-item">
-                <span class="confirmacion-label">Tipo de Actividad</span>
-                <div class="confirmacion-valor" id="confirm-actividad"></div>
+                <span class="confirmacion-label">Razón Social</span>
+                <div class="confirmacion-valor" id="confirm-razon-social"></div>
             </div>
             
-            <div class="confirmacion-item" id="confirm-observaciones-container" style="display: none;">
-                <span class="confirmacion-label">Observaciones</span>
-                <div class="confirmacion-valor" id="confirm-observaciones"></div>
+            <div class="confirmacion-item">
+                <span class="confirmacion-label">NIT</span>
+                <div class="confirmacion-valor" id="confirm-nit"></div>
+            </div>
+            
+            <div class="confirmacion-item">
+                <span class="confirmacion-label">Tipo de Certificado</span>
+                <div class="confirmacion-valor" id="confirm-tipo-certificado"></div>
+            </div>
+            
+            <div class="confirmacion-item">
+                <span class="confirmacion-label">Número de Certificado</span>
+                <div class="confirmacion-valor" id="confirm-numero-certificado"></div>
+            </div>
+            
+            <div class="confirmacion-item">
+                <span class="confirmacion-label">Fecha de Aprobación</span>
+                <div class="confirmacion-valor" id="confirm-fecha-aprobacion"></div>
+            </div>
+            
+            <div class="confirmacion-item">
+                <span class="confirmacion-label">Capacidad de Almacenamiento</span>
+                <div class="confirmacion-valor" id="confirm-capacidad"></div>
+            </div>
+            
+            <div class="confirmacion-item">
+                <span class="confirmacion-label">Número de Tanques</span>
+                <div class="confirmacion-valor" id="confirm-numero-tanques"></div>
             </div>
         </div>
         <div class="modal-footer">
@@ -746,14 +772,13 @@ function obtener_tipos_certificado() {
 
 <script>
 jQuery(document).ready(function($) {
-    // Mapeo de tipos de actividad
-    const tiposActividad = {
-        'curso': 'Curso de Capacitación',
-        'taller': 'Taller Práctico',
-        'seminario': 'Seminario',
-        'conferencia': 'Conferencia',
-        'workshop': 'Workshop',
-        'otro': 'Otro'
+    // Mapeo de tipos de certificado
+    const tiposCertificado = {
+        'PAGLP': 'PAGLP - Planta de Almacenamiento de GLP',
+        'TEGLP': 'TEGLP - Tanque de Almacenamiento de GLP',
+        'PEGLP': 'PEGLP - Planta de Envasado de GLP',
+        'DEGLP': 'DEGLP - Distribuidora de GLP',
+        'PVGLP': 'PVGLP - Punto de Venta de GLP'
     };
     
     // Función para formatear fecha
@@ -771,21 +796,26 @@ jQuery(document).ready(function($) {
     // Función para mostrar el modal
     function mostrarModal() {
         // Obtener valores del formulario
-        const nombre = $('#nombre').val().trim();
-        const fecha = $('#fecha_evento').val();
-        const tipoActividad = $('#tipo_actividad').val();
-        const observaciones = $('#observaciones').val().trim();
+        const nombreInstalacion = $('#nombre_instalacion').val().trim();
+        const direccion = $('#direccion_instalacion').val().trim();
+        const razonSocial = $('#razon_social').val().trim();
+        const nit = $('#nit').val().trim();
+        const tipoCertificado = $('#tipo_certificado').val();
+        const numeroCertificado = $('#numero_certificado').val();
+        const fechaAprobacion = $('#fecha_aprobacion').val();
+        const capacidad = $('#capacidad_almacenamiento').val();
+        const numeroTanques = $('#numero_tanques').val();
         
         // Validar campos obligatorios
-        if (!nombre || !fecha || !tipoActividad) {
+        if (!nombreInstalacion || !direccion || !razonSocial || !nit || !tipoCertificado || !numeroCertificado || !fechaAprobacion || !capacidad || !numeroTanques) {
             alert('Por favor, completa todos los campos obligatorios antes de continuar.');
             return false;
         }
         
         // Validar fecha futura
         const fechaActual = new Date().toISOString().split('T')[0];
-        if (fecha > fechaActual) {
-            alert('La fecha del evento no puede ser futura.');
+        if (fechaAprobacion > fechaActual) {
+            alert('La fecha de aprobación no puede ser futura.');
             return false;
         }
         
@@ -801,17 +831,15 @@ jQuery(document).ready(function($) {
         }
         
         // Llenar información en el modal
-        $('#confirm-nombre').text(nombre);
-        $('#confirm-fecha').text(formatearFecha(fecha));
-        $('#confirm-actividad').text(tiposActividad[tipoActividad] || tipoActividad);
-        
-        // Mostrar observaciones solo si hay contenido
-        if (observaciones) {
-            $('#confirm-observaciones').text(observaciones);
-            $('#confirm-observaciones-container').show();
-        } else {
-            $('#confirm-observaciones-container').hide();
-        }
+        $('#confirm-nombre-instalacion').text(nombreInstalacion);
+        $('#confirm-direccion').text(direccion);
+        $('#confirm-razon-social').text(razonSocial);
+        $('#confirm-nit').text(nit);
+        $('#confirm-tipo-certificado').text(tiposCertificado[tipoCertificado] || tipoCertificado);
+        $('#confirm-numero-certificado').text(tipoCertificado + '-' + numeroCertificado.toString().padStart(2, '0'));
+        $('#confirm-fecha-aprobacion').text(formatearFecha(fechaAprobacion));
+        $('#confirm-capacidad').text(capacidad + ' galones');
+        $('#confirm-numero-tanques').text(numeroTanques);
         
         // Mostrar modal
         $('#modal-confirmacion').fadeIn(300).css('display', 'flex');

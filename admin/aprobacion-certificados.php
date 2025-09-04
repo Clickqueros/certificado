@@ -303,26 +303,6 @@ function obtener_tipos_certificado_admin() {
                     <!-- Información de la Instalación -->
                     <tr>
                         <th scope="row">
-                            <label for="capacidad_almacenamiento"><?php _e('Capacidad de Almacenamiento', 'certificados-personalizados'); ?></label>
-                        </th>
-                        <td>
-                            <input type="text" id="capacidad_almacenamiento" name="capacidad_almacenamiento" class="regular-text" 
-                                   value="<?php echo esc_attr($certificado_edicion->capacidad_almacenamiento); ?>" required>
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <th scope="row">
-                            <label for="numero_tanques"><?php _e('Número de Tanques', 'certificados-personalizados'); ?></label>
-                        </th>
-                        <td>
-                            <input type="number" id="numero_tanques" name="numero_tanques" class="small-text" 
-                                   value="<?php echo esc_attr($certificado_edicion->numero_tanques); ?>" min="1" required>
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <th scope="row">
                             <label for="nombre_instalacion"><?php _e('Nombre del Lugar/Instalación', 'certificados-personalizados'); ?></label>
                         </th>
                         <td>
@@ -398,6 +378,27 @@ function obtener_tipos_certificado_admin() {
                         <td>
                             <input type="date" id="fecha_aprobacion" name="fecha_aprobacion" 
                                    value="<?php echo esc_attr($certificado_edicion->fecha_aprobacion); ?>" required>
+                        </td>
+                    </tr>
+                    
+                    <!-- Información Técnica -->
+                    <tr>
+                        <th scope="row">
+                            <label for="capacidad_almacenamiento"><?php _e('Capacidad de Almacenamiento', 'certificados-personalizados'); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" id="capacidad_almacenamiento" name="capacidad_almacenamiento" class="regular-text" 
+                                   value="<?php echo esc_attr($certificado_edicion->capacidad_almacenamiento); ?>" min="1" required>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="numero_tanques"><?php _e('Número de Tanques', 'certificados-personalizados'); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" id="numero_tanques" name="numero_tanques" class="small-text" 
+                                   value="<?php echo esc_attr($certificado_edicion->numero_tanques); ?>" min="1" required>
                         </td>
                     </tr>
                     
