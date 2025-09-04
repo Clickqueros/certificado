@@ -132,6 +132,9 @@ class CertificadosPersonalizados {
         // Crear tabla de certificados
         $this->crear_tabla_certificados();
         
+        // Actualizar tabla existente si es necesario
+        $this->actualizar_tabla_existente();
+        
         // Flush rewrite rules
         flush_rewrite_rules();
     }
@@ -141,6 +144,57 @@ class CertificadosPersonalizados {
      */
     public function forzar_actualizacion_tabla() {
         $this->crear_tabla_certificados();
+        $this->actualizar_tabla_existente();
+    }
+    
+    /**
+     * Actualizar tabla existente con nuevas columnas
+     */
+    private function actualizar_tabla_existente() {
+        global $wpdb;
+        $tabla = $wpdb->prefix . 'certificados_personalizados';
+        
+        // Verificar si la tabla existe
+        $tabla_existe = $wpdb->get_var("SHOW TABLES LIKE '$tabla'");
+        
+        if ($tabla_existe) {
+            // Lista de columnas nuevas a agregar
+            $columnas_nuevas = array(
+                'capacidad_almacenamiento' => 'VARCHAR(50)',
+                'numero_tanques' => 'INT',
+                'nombre_instalacion' => 'VARCHAR(255)',
+                'direccion_instalacion' => 'TEXT',
+                'razon_social' => 'VARCHAR(255)',
+                'nit' => 'VARCHAR(50)',
+                'tipo_certificado' => 'VARCHAR(10)',
+                'numero_certificado' => 'INT',
+                'fecha_aprobacion' => 'DATE'
+            );
+            
+            // Agregar columnas que no existen
+            foreach ($columnas_nuevas as $columna => $tipo) {
+                $columna_existe = $wpdb->get_var("SHOW COLUMNS FROM $tabla LIKE '$columna'");
+                
+                if (!$columna_existe) {
+                    $sql = "ALTER TABLE $tabla ADD COLUMN $columna $tipo";
+                    $wpdb->query($sql);
+                    error_log("CertificadosPersonalizados: Columna '$columna' agregada a la tabla.");
+                }
+            }
+            
+            // Eliminar columnas antiguas si existen
+            $columnas_antiguas = array('nombre', 'fecha', 'observaciones');
+            
+            foreach ($columnas_antiguas as $columna) {
+                $columna_existe = $wpdb->get_var("SHOW COLUMNS FROM $tabla LIKE '$columna'");
+                
+                if ($columna_existe) {
+                    $sql = "ALTER TABLE $tabla DROP COLUMN $columna";
+                    $wpdb->query($sql);
+                    error_log("CertificadosPersonalizados: Columna antigua '$columna' eliminada de la tabla.");
+                }
+            }
+        }
     }
     
     /**
