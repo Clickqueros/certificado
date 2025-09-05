@@ -546,11 +546,13 @@ class CertificadosAntecore {
         // Obtener certificados aprobados
         $certificados = CertificadosAntecoreBD::obtener_certificados_aprobados($busqueda);
         
-        // Incluir estilos CSS
-        wp_enqueue_style('certificados-public', plugin_dir_url(__FILE__) . 'public/css/certificados-public.css', array(), '1.0.0');
+        // Incluir estilos CSS con versión dinámica para evitar cache
+        $css_version = filemtime(CERTIFICADOS_ANTECORE_PLUGIN_PATH . 'public/css/certificados-public.css');
+        wp_enqueue_style('certificados-public', plugin_dir_url(__FILE__) . 'public/css/certificados-public.css', array(), $css_version);
         
-        // Incluir JavaScript
-        wp_enqueue_script('certificados-public', plugin_dir_url(__FILE__) . 'public/js/certificados-public.js', array('jquery'), '1.0.0', true);
+        // Incluir JavaScript con versión dinámica para evitar cache
+        $js_version = filemtime(CERTIFICADOS_ANTECORE_PLUGIN_PATH . 'public/js/certificados-public.js');
+        wp_enqueue_script('certificados-public', plugin_dir_url(__FILE__) . 'public/js/certificados-public.js', array('jquery'), $js_version, true);
         
         // Iniciar buffer de salida
         ob_start();
