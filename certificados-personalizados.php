@@ -1020,17 +1020,27 @@ class CertificadosPersonalizados {
             // Obtener el certificado
             $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
             
+            // Debug: Log para verificar el certificado
+            error_log('CertificadosPersonalizados: Certificado ID: ' . $certificado_id);
+            error_log('CertificadosPersonalizados: ¿Certificado existe? ' . ($certificado ? 'SÍ' : 'NO'));
+            
             if (!$certificado) {
                 wp_die('Certificado no encontrado.');
             }
             
+            // Debug: Log del estado del certificado
+            error_log('CertificadosPersonalizados: Estado del certificado: ' . $certificado->estado);
+            
             // Verificar que el certificado esté aprobado
             if ($certificado->estado !== 'aprobado') {
-                wp_die('Este certificado no está aprobado.');
+                wp_die('Este certificado no está aprobado. Estado actual: ' . $certificado->estado);
             }
             
             // Generar o obtener el PDF
             $pdf_path = CertificadosPersonalizadosPDF::generar_certificado_pdf($certificado_id);
+            
+            // Debug: Log para verificar la generación del PDF
+            error_log('CertificadosPersonalizados: PDF generado - Ruta: ' . $pdf_path);
             
             if (!$pdf_path) {
                 wp_die('Error al generar el PDF.');
@@ -1040,8 +1050,12 @@ class CertificadosPersonalizados {
             $upload_dir = wp_upload_dir();
             $file_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $pdf_path);
             
+            // Debug: Log para verificar la ruta del archivo
+            error_log('CertificadosPersonalizados: Ruta física del archivo: ' . $file_path);
+            error_log('CertificadosPersonalizados: ¿Archivo existe? ' . (file_exists($file_path) ? 'SÍ' : 'NO'));
+            
             if (!file_exists($file_path)) {
-                wp_die('Archivo PDF no encontrado.');
+                wp_die('Archivo PDF no encontrado. Ruta: ' . $file_path);
             }
             
             // Enviar el PDF directamente
