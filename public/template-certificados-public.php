@@ -167,9 +167,9 @@ jQuery(document).ready(function($) {
     
     // Función para realizar búsqueda AJAX
     function buscarCertificados(termino) {
+        // Si no hay término o es muy corto, mostrar mensaje inicial
         if (termino.length < 2) {
-            // Si no hay término, mostrar todos los certificados
-            buscarCertificados('');
+            mostrarMensajeInicial();
             return;
         }
         
@@ -252,7 +252,39 @@ jQuery(document).ready(function($) {
     }
     
     // Cargar todos los certificados al inicio
-    buscarCertificados('');
+    function cargarTodosLosCertificados() {
+        $('#busqueda-loading').show();
+        
+        $.ajax({
+            url: '<?php echo admin_url('admin-ajax.php'); ?>',
+            type: 'POST',
+            data: {
+                action: 'buscar_certificados',
+                busqueda: '',
+                nonce: '<?php echo wp_create_nonce('buscar_certificados_nonce'); ?>'
+            },
+            success: function(response) {
+                $('#busqueda-loading').hide();
+                
+                if (response.success) {
+                    if (response.data.encontrados) {
+                        mostrarResultados(response.data.resultados);
+                    } else {
+                        mostrarNoResultados(response.data.mensaje);
+                    }
+                } else {
+                    mostrarError('Error en la búsqueda: ' + response.data);
+                }
+            },
+            error: function() {
+                $('#busqueda-loading').hide();
+                mostrarError('Error de conexión. Intenta nuevamente.');
+            }
+        });
+    }
+    
+    // Cargar todos los certificados al inicio
+    cargarTodosLosCertificados();
     
     // Evento de búsqueda en tiempo real
     $('#busqueda-certificados').on('input', function() {
