@@ -768,10 +768,7 @@ class CertificadosPersonalizados {
         
         // Preparar datos para actualización
         $datos_actualizados = array(
-            'nombre' => $nombre,
             'actividad' => $tipo_certificado, // Usamos tipo_certificado como actividad
-            'fecha' => $fecha_evento,
-            'observaciones' => $observaciones,
             'capacidad_almacenamiento' => $capacidad_almacenamiento,
             'numero_tanques' => $numero_tanques,
             'nombre_instalacion' => $nombre_instalacion,
