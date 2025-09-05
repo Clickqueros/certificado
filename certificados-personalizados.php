@@ -83,6 +83,9 @@ class CertificadosPersonalizados {
         add_action('wp_ajax_buscar_certificados', array($this, 'buscar_certificados_ajax'));
         add_action('wp_ajax_nopriv_buscar_certificados', array($this, 'buscar_certificados_ajax'));
         
+        // Hook para manejar ver_pdf en el frontend
+        add_action('init', array($this, 'manejar_ver_pdf'));
+        
         // Cargar archivos necesarios
         $this->cargar_archivos();
     }
@@ -1005,6 +1008,38 @@ class CertificadosPersonalizados {
             'resultados' => $resultados,
             'total' => count($resultados)
         ));
+    }
+    
+    /**
+     * Manejar ver_pdf en el frontend
+     */
+    public function manejar_ver_pdf() {
+        if (isset($_GET['ver_pdf']) && is_numeric($_GET['ver_pdf'])) {
+            $certificado_id = intval($_GET['ver_pdf']);
+            
+            // Obtener el certificado
+            $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+            
+            if (!$certificado) {
+                wp_die('Certificado no encontrado.');
+            }
+            
+            // Verificar que el certificado esté aprobado
+            if ($certificado->estado !== 'aprobado') {
+                wp_die('Este certificado no está aprobado.');
+            }
+            
+            // Generar o obtener el PDF
+            $pdf_path = CertificadosPersonalizadosPDF::generar_pdf($certificado_id);
+            
+            if (!$pdf_path) {
+                wp_die('Error al generar el PDF.');
+            }
+            
+            // Redirigir al PDF
+            wp_redirect($pdf_path);
+            exit;
+        }
     }
 }
 
