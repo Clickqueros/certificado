@@ -107,18 +107,31 @@ if (!defined('ABSPATH')) {
     padding: 40px 20px;
 }
 
+.certificados-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 20px;
+}
+
 .certificado-item {
     background: #fff;
     border: 1px solid #ddd;
     border-radius: 8px;
     padding: 20px;
-    margin-bottom: 15px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: box-shadow 0.3s ease;
 }
 
 .certificado-item:hover {
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Responsive: una columna en móviles */
+@media (max-width: 768px) {
+    .certificados-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .certificado-nombre {
@@ -205,7 +218,7 @@ jQuery(document).ready(function($) {
     
     // Función para mostrar resultados
     function mostrarResultados(resultados) {
-        let html = '';
+        let html = '<div class="certificados-grid">';
         
         resultados.forEach(function(certificado) {
             html += `
@@ -221,6 +234,7 @@ jQuery(document).ready(function($) {
             `;
         });
         
+        html += '</div>';
         $('#certificados-resultados').html(html);
     }
     
