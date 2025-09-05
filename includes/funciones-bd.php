@@ -464,12 +464,12 @@ class CertificadosAntecoreBD {
         }
         
         // Debug: Log de la consulta SQL
-        error_log('CertificadosPersonalizadosBD: SQL: ' . $sql);
+        error_log('CertificadosAntecoreBD: SQL: ' . $sql);
         
         $resultados = $wpdb->get_results($sql);
         
         // Debug: Log de resultados
-        error_log('CertificadosPersonalizadosBD: Resultados encontrados: ' . count($resultados));
+        error_log('CertificadosAntecoreBD: Resultados encontrados: ' . count($resultados));
         
         return $resultados;
     }
