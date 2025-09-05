@@ -1,6 +1,6 @@
 <?php
 /**
- * Funciones para generación de PDF - Plugin Certificados Personalizados
+ * Funciones para generación de PDF - Plugin Certificados Antecore
  * VERSIÓN CON TCPDF - Librería principal para generación de PDF
  */
 
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 /**
  * Clase para manejo de PDF
  */
-class CertificadosPersonalizadosPDF {
+class CertificadosAntecorePDF {
     
     /**
      * Generar certificado en PDF

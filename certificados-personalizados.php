@@ -1,14 +1,14 @@
 <?php
 /**
- * Plugin Name: Certificados Personalizados
- * Plugin URI: https://github.com/Clickqueros/certificados-personalizados
+ * Plugin Name: Certificados Antecore
+ * Plugin URI: https://github.com/Anetcore/certificados-antecore
  * Description: Plugin para gestión y aprobación de certificados internos para empleados
  * Version: 1.0.0
- * Author: Clickqueros
- * Author URI: https://github.com/Clickqueros
+ * Author: Anetcore
+ * Author URI: https://github.com/Anetcore
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: certificados-personalizados
+ * Text Domain: certificados-antecore
  * Domain Path: /languages
  * Requires at least: 5.0
  * Tested up to: 6.4
@@ -34,15 +34,15 @@ if (!defined('ABSPATH')) {
 }
 
 // Definir constantes del plugin
-define('CERTIFICADOS_PERSONALIZADOS_VERSION', '1.0.0');
-define('CERTIFICADOS_PERSONALIZADOS_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('CERTIFICADOS_PERSONALIZADOS_PLUGIN_PATH', plugin_dir_path(__FILE__));
-define('CERTIFICADOS_PERSONALIZADOS_PLUGIN_BASENAME', plugin_basename(__FILE__));
+define('CERTIFICADOS_ANTECORE_VERSION', '1.0.0');
+define('CERTIFICADOS_ANTECORE_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('CERTIFICADOS_ANTECORE_PLUGIN_PATH', plugin_dir_path(__FILE__));
+define('CERTIFICADOS_ANTECORE_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
 /**
  * Clase principal del plugin
  */
-class CertificadosPersonalizados {
+class CertificadosAntecore {
     
     /**
      * Constructor
@@ -96,8 +96,8 @@ class CertificadosPersonalizados {
     private function cargar_archivos() {
         try {
             // Verificar que los archivos existen antes de cargarlos
-            $archivo_bd = CERTIFICADOS_PERSONALIZADOS_PLUGIN_PATH . 'includes/funciones-bd.php';
-            $archivo_pdf = CERTIFICADOS_PERSONALIZADOS_PLUGIN_PATH . 'includes/funciones-pdf.php';
+            $archivo_bd = CERTIFICADOS_ANTECORE_PLUGIN_PATH . 'includes/funciones-bd.php';
+            $archivo_pdf = CERTIFICADOS_ANTECORE_PLUGIN_PATH . 'includes/funciones-pdf.php';
             
             if (!file_exists($archivo_bd)) {
                 error_log('CertificadosPersonalizados: Archivo funciones-bd.php no encontrado en: ' . $archivo_bd);
@@ -162,7 +162,7 @@ class CertificadosPersonalizados {
      */
     private function verificar_y_actualizar_bd() {
         global $wpdb;
-        $tabla = $wpdb->prefix . 'certificados_personalizados';
+        $tabla = $wpdb->prefix . 'certificados_antecore';
         
         // Verificar si la tabla existe
         $tabla_existe = $wpdb->get_var("SHOW TABLES LIKE '$tabla'");
@@ -184,7 +184,7 @@ class CertificadosPersonalizados {
      */
     private function actualizar_tabla_existente() {
         global $wpdb;
-        $tabla = $wpdb->prefix . 'certificados_personalizados';
+        $tabla = $wpdb->prefix . 'certificados_antecore';
         
         // Verificar si la tabla existe
         $tabla_existe = $wpdb->get_var("SHOW TABLES LIKE '$tabla'");
@@ -248,7 +248,7 @@ class CertificadosPersonalizados {
         $user_id = get_current_user_id();
         
         // Verificar que el certificado existe y pertenece al usuario
-        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        $certificado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
         
         if (!$certificado || $certificado->user_id != $user_id) {
             wp_die('Certificado no encontrado o no tienes permisos.');
@@ -260,10 +260,10 @@ class CertificadosPersonalizados {
         }
         
         // Enviar notificación por correo
-        $correo_enviado = CertificadosPersonalizadosBD::enviar_notificacion_aprobacion($certificado_id);
+        $correo_enviado = CertificadosAntecoreBD::enviar_notificacion_aprobacion($certificado_id);
         
         // Marcar como notificado
-        $marcado = CertificadosPersonalizadosBD::marcar_como_notificado($certificado_id);
+        $marcado = CertificadosAntecoreBD::marcar_como_notificado($certificado_id);
         
         if ($correo_enviado && $marcado) {
             $mensaje = 'exito';
@@ -297,7 +297,7 @@ class CertificadosPersonalizados {
         $certificado_id = intval($_POST['certificado_id']);
         
         // Verificar que el certificado existe y está pendiente
-        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        $certificado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
         
         if (!$certificado) {
             wp_die('Certificado no encontrado.');
@@ -308,7 +308,7 @@ class CertificadosPersonalizados {
         }
         
         // Aprobar certificado
-        $resultado = CertificadosPersonalizadosBD::cambiar_estado_certificado($certificado_id, 'aprobado');
+        $resultado = CertificadosAntecoreBD::cambiar_estado_certificado($certificado_id, 'aprobado');
         
         if ($resultado) {
             $mensaje = 'exito';
@@ -342,7 +342,7 @@ class CertificadosPersonalizados {
         $certificado_id = intval($_POST['certificado_id']);
         
         // Verificar que el certificado existe y está pendiente
-        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        $certificado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
         
         if (!$certificado) {
             wp_die('Certificado no encontrado.');
@@ -353,7 +353,7 @@ class CertificadosPersonalizados {
         }
         
         // Rechazar certificado
-        $resultado = CertificadosPersonalizadosBD::cambiar_estado_certificado($certificado_id, 'rechazado');
+        $resultado = CertificadosAntecoreBD::cambiar_estado_certificado($certificado_id, 'rechazado');
         
         if ($resultado) {
             $mensaje = 'exito';
@@ -384,7 +384,7 @@ class CertificadosPersonalizados {
         global $wpdb;
         
         $charset_collate = $wpdb->get_charset_collate();
-        $tabla_certificados = $wpdb->prefix . 'certificados_personalizados';
+        $tabla_certificados = $wpdb->prefix . 'certificados_antecore';
         
         $sql = "CREATE TABLE $tabla_certificados (
             id INT NOT NULL AUTO_INCREMENT,
@@ -482,7 +482,7 @@ class CertificadosPersonalizados {
         }
         
         // Cargar vista
-        include CERTIFICADOS_PERSONALIZADOS_PLUGIN_PATH . 'admin/formulario-colaborador.php';
+        include CERTIFICADOS_ANTECORE_PLUGIN_PATH . 'admin/formulario-colaborador.php';
     }
     
     /**
@@ -495,7 +495,7 @@ class CertificadosPersonalizados {
         }
         
         // Cargar vista
-        include CERTIFICADOS_PERSONALIZADOS_PLUGIN_PATH . 'admin/aprobacion-certificados.php';
+        include CERTIFICADOS_ANTECORE_PLUGIN_PATH . 'admin/aprobacion-certificados.php';
     }
     
     /**
@@ -508,7 +508,7 @@ class CertificadosPersonalizados {
         }
         
         // Cargar vista
-        include CERTIFICADOS_PERSONALIZADOS_PLUGIN_PATH . 'admin/limpiar-certificados.php';
+        include CERTIFICADOS_ANTECORE_PLUGIN_PATH . 'admin/limpiar-certificados.php';
     }
     
     /**
@@ -521,7 +521,7 @@ class CertificadosPersonalizados {
         }
         
         // Cargar vista
-        include CERTIFICADOS_PERSONALIZADOS_PLUGIN_PATH . 'admin/actualizar-base-datos.php';
+        include CERTIFICADOS_ANTECORE_PLUGIN_PATH . 'admin/actualizar-base-datos.php';
     }
     
     /**
@@ -539,7 +539,7 @@ class CertificadosPersonalizados {
         $busqueda = isset($_GET['buscar_certificado']) ? sanitize_text_field($_GET['buscar_certificado']) : '';
         
         // Obtener certificados aprobados
-        $certificados = CertificadosPersonalizadosBD::obtener_certificados_aprobados($busqueda);
+        $certificados = CertificadosAntecoreBD::obtener_certificados_aprobados($busqueda);
         
         // Incluir estilos CSS
         wp_enqueue_style('certificados-public', plugin_dir_url(__FILE__) . 'public/css/certificados-public.css', array(), '1.0.0');
@@ -551,7 +551,7 @@ class CertificadosPersonalizados {
         ob_start();
         
         // Incluir template
-        include CERTIFICADOS_PERSONALIZADOS_PLUGIN_PATH . 'public/template-certificados-public.php';
+        include CERTIFICADOS_ANTECORE_PLUGIN_PATH . 'public/template-certificados-public.php';
         
         // Retornar contenido
         return ob_get_clean();
@@ -575,7 +575,7 @@ class CertificadosPersonalizados {
         $certificado_id = intval($_POST['certificado_id']);
         
         // Obtener certificado verificando permisos y editabilidad
-        $certificado = CertificadosPersonalizadosBD::obtener_certificado_para_edicion($certificado_id);
+        $certificado = CertificadosAntecoreBD::obtener_certificado_para_edicion($certificado_id);
         
         if (!$certificado) {
             wp_die('Certificado no encontrado, no tienes permisos o no es editable.');
@@ -649,20 +649,20 @@ class CertificadosPersonalizados {
         );
         
         // Actualizar certificado
-        $resultado = CertificadosPersonalizadosBD::actualizar_certificado($certificado_id, $datos_actualizados);
+        $resultado = CertificadosAntecoreBD::actualizar_certificado($certificado_id, $datos_actualizados);
         
         if ($resultado) {
             // Debug: Verificar datos actualizados
-            CertificadosPersonalizadosBD::debug_certificado($certificado_id);
+            CertificadosAntecoreBD::debug_certificado($certificado_id);
             
             // Verificar que la actualización fue exitosa obteniendo los datos actualizados
-            $certificado_actualizado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+            $certificado_actualizado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
             
             // Forzar regeneración completa del PDF
-            $pdf_regenerado = CertificadosPersonalizadosPDF::forzar_regeneracion_pdf($certificado_id);
+            $pdf_regenerado = CertificadosAntecorePDF::forzar_regeneracion_pdf($certificado_id);
             
             // Verificar que el PDF se actualizó correctamente
-            $pdf_verificado = CertificadosPersonalizadosPDF::verificar_pdf_actualizado($certificado_id);
+            $pdf_verificado = CertificadosAntecorePDF::verificar_pdf_actualizado($certificado_id);
             
             if ($pdf_regenerado && $pdf_verificado) {
                 $mensaje_texto = 'Certificado actualizado correctamente. PDF regenerado y verificado.';
@@ -705,7 +705,7 @@ class CertificadosPersonalizados {
         error_log('CertificadosPersonalizados: Certificado ID: ' . $certificado_id);
         
         // Obtener certificado para administrador (sin restricciones)
-        $certificado = CertificadosPersonalizadosBD::obtener_certificado_para_edicion_admin($certificado_id);
+        $certificado = CertificadosAntecoreBD::obtener_certificado_para_edicion_admin($certificado_id);
         
         if (!$certificado) {
             error_log('CertificadosPersonalizados: Error - Certificado no encontrado para ID: ' . $certificado_id);
@@ -793,16 +793,16 @@ class CertificadosPersonalizados {
         
         // Actualizar certificado
         error_log('CertificadosPersonalizados: Intentando actualizar certificado con datos: ' . print_r($datos_actualizados, true));
-        $resultado = CertificadosPersonalizadosBD::actualizar_certificado($certificado_id, $datos_actualizados);
+        $resultado = CertificadosAntecoreBD::actualizar_certificado($certificado_id, $datos_actualizados);
         
         error_log('CertificadosPersonalizados: Resultado de actualización: ' . ($resultado ? 'ÉXITO' : 'FALLO'));
         
         if ($resultado) {
             // Debug: Verificar datos actualizados
-            CertificadosPersonalizadosBD::debug_certificado($certificado_id);
+            CertificadosAntecoreBD::debug_certificado($certificado_id);
             
             // Obtener certificado actualizado para regeneración
-            $certificado_actualizado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+            $certificado_actualizado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
             
             // Eliminar archivos PDF existentes antes de regenerar
             if ($certificado_actualizado && $certificado_actualizado->pdf_path) {
@@ -824,10 +824,10 @@ class CertificadosPersonalizados {
             }
             
             // Forzar regeneración completa del PDF
-            $pdf_regenerado = CertificadosPersonalizadosPDF::forzar_regeneracion_pdf($certificado_id);
+            $pdf_regenerado = CertificadosAntecorePDF::forzar_regeneracion_pdf($certificado_id);
             
             // Verificar que el PDF se actualizó correctamente
-            $pdf_verificado = CertificadosPersonalizadosPDF::verificar_pdf_actualizado($certificado_id);
+            $pdf_verificado = CertificadosAntecorePDF::verificar_pdf_actualizado($certificado_id);
             
             // Limpiar caché adicional para el panel de administración
             if (function_exists('wp_cache_flush')) {
@@ -841,7 +841,7 @@ class CertificadosPersonalizados {
             }
             
             // Forzar actualización de la URL del PDF en la base de datos con timestamp completamente nuevo
-            $certificado_final = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+            $certificado_final = CertificadosAntecoreBD::obtener_certificado($certificado_id);
             if ($certificado_final && $certificado_final->pdf_path) {
                 $timestamp = time();
                 $random_suffix = substr(md5(uniqid()), 0, 8);
@@ -850,7 +850,7 @@ class CertificadosPersonalizados {
                 $url_base = preg_replace('/\?v=\d+.*/', '', $certificado_final->pdf_path);
                 $url_actualizada = $url_base . '?v=' . $timestamp . '&r=' . $random_suffix;
                 
-                CertificadosPersonalizadosBD::actualizar_certificado($certificado_id, array(
+                CertificadosAntecoreBD::actualizar_certificado($certificado_id, array(
                     'pdf_path' => $url_actualizada
                 ));
                 
@@ -892,17 +892,17 @@ class CertificadosPersonalizados {
         $certificado_id = intval($_POST['certificado_id']);
         
         // Verificar que el certificado existe
-        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        $certificado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
         
         if (!$certificado) {
             wp_die('Certificado no encontrado.');
         }
         
         // Forzar regeneración completa del PDF
-        $pdf_regenerado = CertificadosPersonalizadosPDF::forzar_regeneracion_pdf($certificado_id);
+        $pdf_regenerado = CertificadosAntecorePDF::forzar_regeneracion_pdf($certificado_id);
         
         // Verificar que el PDF se actualizó correctamente
-        $pdf_verificado = CertificadosPersonalizadosPDF::verificar_pdf_actualizado($certificado_id);
+        $pdf_verificado = CertificadosAntecorePDF::verificar_pdf_actualizado($certificado_id);
         
         // Limpiar caché adicional
         if (function_exists('wp_cache_flush')) {
@@ -916,12 +916,12 @@ class CertificadosPersonalizados {
         }
         
         // Forzar actualización de la URL del PDF en la base de datos
-        $certificado_actualizado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        $certificado_actualizado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
         if ($certificado_actualizado && $certificado_actualizado->pdf_path) {
             $timestamp = time();
             $url_actualizada = preg_replace('/\?v=\d+/', '?v=' . $timestamp, $certificado_actualizado->pdf_path);
             if ($url_actualizada !== $certificado_actualizado->pdf_path) {
-                CertificadosPersonalizadosBD::actualizar_certificado($certificado_id, array(
+                CertificadosAntecoreBD::actualizar_certificado($certificado_id, array(
                     'pdf_path' => $url_actualizada
                 ));
             }
@@ -986,7 +986,7 @@ class CertificadosPersonalizados {
         $busqueda = sanitize_text_field($_POST['busqueda']);
         
         // Buscar certificados aprobados (con o sin búsqueda)
-        $certificados = CertificadosPersonalizadosBD::obtener_certificados_aprobados($busqueda);
+        $certificados = CertificadosAntecoreBD::obtener_certificados_aprobados($busqueda);
         
         // Debug: Log para verificar qué se está obteniendo
         error_log('CertificadosPersonalizados: Búsqueda: "' . $busqueda . '", Resultados: ' . count($certificados));
@@ -1027,7 +1027,7 @@ class CertificadosPersonalizados {
             $certificado_id = intval($_GET['ver_pdf']);
             
             // Obtener el certificado
-            $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+            $certificado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
             
             // Debug: Log para verificar el certificado
             error_log('CertificadosPersonalizados: Certificado ID: ' . $certificado_id);
@@ -1046,7 +1046,7 @@ class CertificadosPersonalizados {
             }
             
             // Generar o obtener el PDF
-            $pdf_path = CertificadosPersonalizadosPDF::generar_certificado_pdf($certificado_id);
+            $pdf_path = CertificadosAntecorePDF::generar_certificado_pdf($certificado_id);
             
             // Debug: Log para verificar la generación del PDF
             error_log('CertificadosPersonalizados: PDF generado - Ruta: ' . $pdf_path);
@@ -1083,4 +1083,4 @@ class CertificadosPersonalizados {
 }
 
 // Inicializar plugin
-new CertificadosPersonalizados(); 
+new CertificadosAntecore(); 

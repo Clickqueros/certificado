@@ -1,6 +1,6 @@
 <?php
 /**
- * Funciones de base de datos para el plugin Certificados Personalizados
+ * Funciones de base de datos para el plugin Certificados Antecore
  */
 
 // Prevenir acceso directo
@@ -11,14 +11,14 @@ if (!defined('ABSPATH')) {
 /**
  * Clase para manejo de base de datos
  */
-class CertificadosPersonalizadosBD {
+class CertificadosAntecoreBD {
     
     /**
      * Obtener tabla de certificados
      */
     private static function obtener_tabla() {
         global $wpdb;
-        return $wpdb->prefix . 'certificados_personalizados';
+        return $wpdb->prefix . 'certificados_antecore';
     }
     
     /**

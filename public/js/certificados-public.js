@@ -1,6 +1,6 @@
 /**
  * JavaScript para el frontend de certificados aprobados
- * Plugin: Certificados Personalizados
+ * Plugin: Certificados Antecore
  */
 
 jQuery(document).ready(function($) {
