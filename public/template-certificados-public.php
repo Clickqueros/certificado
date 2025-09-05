@@ -147,6 +147,15 @@ if (!defined('ABSPATH')) {
     margin: 0 0 15px 0;
 }
 
+/* Forzar colores marrones para títulos h3 y otros elementos */
+.certificado-item h3,
+.certificado-item .certificado-nombre,
+.certificados-grid h3,
+h3.certificado-nombre {
+    color: #542a1a !important;
+    font-weight: bold !important;
+}
+
 .certificado-acciones {
     text-align: right;
 }
