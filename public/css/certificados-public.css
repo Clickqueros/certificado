@@ -173,7 +173,7 @@
 }
 
 .certificado-card {
-    background: white;
+    background: #fef7d4;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     overflow: hidden;
@@ -191,7 +191,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: #f5f0e8;
     border-bottom: 1px solid #e1e8ed;
 }
 
@@ -265,7 +265,7 @@
 
 .certificado-footer {
     padding: 20px 25px;
-    background: #f8f9fa;
+    background: #f5f0e8;
     border-top: 1px solid #e1e8ed;
     display: flex;
     justify-content: space-between;
