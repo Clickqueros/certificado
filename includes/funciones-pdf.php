@@ -427,7 +427,7 @@ class CertificadosPersonalizadosPDF {
             $pdf->SetCreator('Certificados Personalizados');
             $pdf->SetAuthor('Sistema de Certificados');
             $pdf->SetTitle('Certificado de Participación');
-            $pdf->SetSubject('Certificado para ' . $certificado->nombre);
+            $pdf->SetSubject('Certificado para ' . $certificado->nombre_instalacion);
             
             // Configurar márgenes
             // Configurar página A4 horizontal
@@ -656,7 +656,7 @@ class CertificadosPersonalizadosPDF {
     </div>
     
     <div class="content">
-        <div class="name">' . htmlspecialchars($certificado->nombre) . '</div>
+        <div class="name">' . htmlspecialchars($certificado->nombre_instalacion) . '</div>
         
         <div class="activity">
             Por su participación destacada en la actividad:<br>
@@ -670,7 +670,7 @@ class CertificadosPersonalizadosPDF {
         ' . (!empty($certificado->observaciones) ? '<div class="activity">Observaciones: ' . htmlspecialchars($certificado->observaciones) . '</div>' : '') . '
         
         <div class="date">
-            Fecha: ' . htmlspecialchars($certificado->fecha) . '
+            Fecha: ' . htmlspecialchars($certificado->fecha_aprobacion) . '
         </div>
     </div>
 </body>
