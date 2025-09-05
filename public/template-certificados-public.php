@@ -115,7 +115,7 @@ if (!defined('ABSPATH')) {
 }
 
 .certificado-item {
-    background: #fff;
+    background: #fef7d4;
     border: 1px solid #ddd;
     border-radius: 8px;
     padding: 20px;
@@ -135,14 +135,14 @@ if (!defined('ABSPATH')) {
 }
 
 .certificado-nombre {
-    color: #333;
+    color: #542a1a;
     font-size: 18px;
     font-weight: bold;
     margin: 0 0 10px 0;
 }
 
 .certificado-nit {
-    color: #666;
+    color: #542a1a;
     font-size: 14px;
     margin: 0 0 15px 0;
 }
@@ -152,8 +152,8 @@ if (!defined('ABSPATH')) {
 }
 
 .btn-ver-pdf {
-    background: #0073aa;
-    color: white;
+    background: #542a1a;
+    color: #fef7d4;
     padding: 10px 20px;
     text-decoration: none;
     border-radius: 5px;
@@ -162,8 +162,8 @@ if (!defined('ABSPATH')) {
 }
 
 .btn-ver-pdf:hover {
-    background: #005a87;
-    color: white;
+    background: #6b3420;
+    color: #fef7d4;
 }
 
 .no-resultados {
