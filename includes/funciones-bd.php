@@ -395,9 +395,9 @@ class CertificadosPersonalizadosBD {
         <h2>Nuevo Certificado Pendiente de Aprobación</h2>
         
         <p><strong>Colaborador:</strong> {$certificado->nombre_usuario}</p>
-        <p><strong>Nombre del Certificado:</strong> {$certificado->nombre}</p>
+        <p><strong>Nombre del Certificado:</strong> {$certificado->nombre_instalacion}</p>
         <p><strong>Tipo de Actividad:</strong> {$tipo_mostrar}</p>
-        <p><strong>Fecha de Actividad:</strong> " . date('d/m/Y', strtotime($certificado->fecha)) . "</p>
+        <p><strong>Fecha de Actividad:</strong> " . date('d/m/Y', strtotime($certificado->fecha_aprobacion)) . "</p>
         <p><strong>Código del Certificado:</strong> {$certificado->codigo_unico}</p>
         
         " . (!empty($certificado->observaciones) ? "<p><strong>Observaciones:</strong> {$certificado->observaciones}</p>" : "") . "
