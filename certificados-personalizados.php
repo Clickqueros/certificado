@@ -1046,9 +1046,10 @@ class CertificadosPersonalizados {
                 wp_die('Error al generar el PDF.');
             }
             
-            // Obtener la ruta física del archivo
+            // Obtener la ruta física del archivo (sin parámetros de query)
             $upload_dir = wp_upload_dir();
-            $file_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $pdf_path);
+            $pdf_path_clean = strtok($pdf_path, '?'); // Remover parámetros de query
+            $file_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $pdf_path_clean);
             
             // Debug: Log para verificar la ruta del archivo
             error_log('CertificadosPersonalizados: Ruta física del archivo: ' . $file_path);
