@@ -1036,8 +1036,23 @@ class CertificadosPersonalizados {
                 wp_die('Error al generar el PDF.');
             }
             
-            // Redirigir al PDF
-            wp_redirect($pdf_path);
+            // Obtener la ruta física del archivo
+            $upload_dir = wp_upload_dir();
+            $file_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $pdf_path);
+            
+            if (!file_exists($file_path)) {
+                wp_die('Archivo PDF no encontrado.');
+            }
+            
+            // Enviar el PDF directamente
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: inline; filename="certificado-' . $certificado_id . '.pdf"');
+            header('Content-Length: ' . filesize($file_path));
+            header('Cache-Control: no-cache, no-store, must-revalidate');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+            
+            readfile($file_path);
             exit;
         }
     }
