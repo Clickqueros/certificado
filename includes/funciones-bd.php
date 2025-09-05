@@ -463,6 +463,14 @@ class CertificadosPersonalizadosBD {
             $sql = $wpdb->prepare($sql, $where_values);
         }
         
-        return $wpdb->get_results($sql);
+        // Debug: Log de la consulta SQL
+        error_log('CertificadosPersonalizadosBD: SQL: ' . $sql);
+        
+        $resultados = $wpdb->get_results($sql);
+        
+        // Debug: Log de resultados
+        error_log('CertificadosPersonalizadosBD: Resultados encontrados: ' . count($resultados));
+        
+        return $resultados;
     }
 } 

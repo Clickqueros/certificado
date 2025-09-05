@@ -976,10 +976,14 @@ class CertificadosPersonalizados {
         // Buscar certificados aprobados (con o sin búsqueda)
         $certificados = CertificadosPersonalizadosBD::obtener_certificados_aprobados($busqueda);
         
+        // Debug: Log para verificar qué se está obteniendo
+        error_log('CertificadosPersonalizados: Búsqueda: "' . $busqueda . '", Resultados: ' . count($certificados));
+        
         if (empty($certificados)) {
             wp_send_json_success(array(
                 'encontrados' => false,
-                'mensaje' => 'No se encontraron certificados con ese criterio de búsqueda.'
+                'mensaje' => 'No se encontraron certificados con ese criterio de búsqueda.',
+                'debug' => 'Búsqueda: "' . $busqueda . '", Total encontrados: 0'
             ));
             return;
         }
