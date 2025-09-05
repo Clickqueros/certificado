@@ -22,7 +22,7 @@ $certificado_edicion = null;
 
 if (isset($_GET['editar']) && !empty($_GET['editar'])) {
     $certificado_id = intval($_GET['editar']);
-    $certificado_edicion = CertificadosPersonalizadosBD::obtener_certificado_para_edicion_admin($certificado_id);
+    $certificado_edicion = CertificadosAntecoreBD::obtener_certificado_para_edicion_admin($certificado_id);
     
     if ($certificado_edicion) {
         $modo_edicion = true;
@@ -38,16 +38,16 @@ if (isset($_GET['mensaje']) && isset($_GET['texto'])) {
 }
 
 // Get pending certificates
-$certificados_pendientes = CertificadosPersonalizadosBD::obtener_todos_certificados('pendiente');
+$certificados_pendientes = CertificadosAntecoreBD::obtener_todos_certificados('pendiente');
 
 // Get filter parameter
 $estado_filtro = isset($_GET['estado']) ? sanitize_text_field($_GET['estado']) : 'pendiente';
 
 // Get certificates based on filter
-$certificados = CertificadosPersonalizadosBD::obtener_todos_certificados($estado_filtro);
+$certificados = CertificadosAntecoreBD::obtener_todos_certificados($estado_filtro);
 
 // Get statistics
-$estadisticas = CertificadosPersonalizadosBD::obtener_estadisticas();
+$estadisticas = CertificadosAntecoreBD::obtener_estadisticas();
 
 /**
  * Obtener tipos de actividad para mostrar
@@ -213,9 +213,9 @@ function obtener_tipos_certificado_admin() {
                             <td>
                                 <?php 
                                 // Verificar si existe el PDF, si no, intentar generarlo automáticamente
-                                if (!CertificadosPersonalizadosPDF::existe_pdf($certificado->id)) {
+                                if (!CertificadosAntecorePDF::existe_pdf($certificado->id)) {
                                     // Intentar generar el PDF automáticamente
-                                    $pdf_generado = CertificadosPersonalizadosPDF::generar_certificado_pdf($certificado->id);
+                                    $pdf_generado = CertificadosAntecorePDF::generar_certificado_pdf($certificado->id);
                                     if ($pdf_generado) {
                                         error_log('CertificadosPersonalizados: PDF generado automáticamente para certificado ID: ' . $certificado->id);
                                     } else {
@@ -224,9 +224,9 @@ function obtener_tipos_certificado_admin() {
                                 }
                                 
                                 // Verificar nuevamente si existe el PDF
-                                if (CertificadosPersonalizadosPDF::existe_pdf($certificado->id)): 
+                                if (CertificadosAntecorePDF::existe_pdf($certificado->id)): 
                                 ?>
-                                    <a href="<?php echo esc_url(CertificadosPersonalizadosPDF::obtener_url_pdf_admin_forzada($certificado->id)); ?>" 
+                                    <a href="<?php echo esc_url(CertificadosAntecorePDF::obtener_url_pdf_admin_forzada($certificado->id)); ?>" 
                                        target="_blank" class="button button-small">
                                          <?php _e('📄 Ver PDF', 'certificados-personalizados'); ?>
                                      </a>

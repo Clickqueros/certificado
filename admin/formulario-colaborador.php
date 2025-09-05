@@ -35,7 +35,7 @@ $certificado_edicion = null;
 
 if (isset($_GET['editar']) && !empty($_GET['editar'])) {
     $certificado_id = intval($_GET['editar']);
-    $certificado_edicion = CertificadosPersonalizadosBD::obtener_certificado_para_edicion($certificado_id);
+    $certificado_edicion = CertificadosAntecoreBD::obtener_certificado_para_edicion($certificado_id);
     
     if ($certificado_edicion) {
         $modo_edicion = true;
@@ -55,7 +55,7 @@ if (isset($_GET['editar']) && !empty($_GET['editar'])) {
 }
 
 // Get current user's certificates
-$certificados = CertificadosPersonalizadosBD::obtener_certificados_usuario();
+$certificados = CertificadosAntecoreBD::obtener_certificados_usuario();
 
 /**
  * Procesar solicitud de certificado
@@ -132,13 +132,13 @@ function procesar_solicitud_certificado() {
         'fecha_aprobacion' => $fecha_aprobacion
     );
     
-    $certificado_id = CertificadosPersonalizadosBD::crear_certificado($datos);
+    $certificado_id = CertificadosAntecoreBD::crear_certificado($datos);
     
     if ($certificado_id) {
         // Generar PDF automáticamente
-        $pdf_generado = CertificadosPersonalizadosPDF::generar_certificado_pdf($certificado_id);
+        $pdf_generado = CertificadosAntecorePDF::generar_certificado_pdf($certificado_id);
         
-        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        $certificado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
         return array(
             'tipo' => 'exito', 
             'mensaje' => 'Certificado solicitado correctamente. Código: ' . $certificado->codigo_unico,
@@ -466,7 +466,7 @@ function obtener_tipos_certificado() {
                                 <td><?php echo esc_html(date('d/m/Y H:i', strtotime($certificado->created_at))); ?></td>
                                 <td>
                                     <?php 
-                                    $es_editable = CertificadosPersonalizadosBD::certificado_es_editable($certificado);
+                                    $es_editable = CertificadosAntecoreBD::certificado_es_editable($certificado);
                                     ?>
                                     
                                     <?php if ($es_editable): ?>
