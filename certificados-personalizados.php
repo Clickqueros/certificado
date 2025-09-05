@@ -79,6 +79,10 @@ class CertificadosPersonalizados {
         // Hook para interceptar acceso a PDFs y agregar headers de no-caché
         add_action('init', array($this, 'interceptar_acceso_pdf'));
         
+        // Hook para búsqueda AJAX de certificados
+        add_action('wp_ajax_buscar_certificados', array($this, 'buscar_certificados_ajax'));
+        add_action('wp_ajax_nopriv_buscar_certificados', array($this, 'buscar_certificados_ajax'));
+        
         // Cargar archivos necesarios
         $this->cargar_archivos();
     }
@@ -956,6 +960,52 @@ class CertificadosPersonalizados {
         } catch (Exception $e) {
             error_log('CertificadosPersonalizados: Error en interceptar_acceso_pdf: ' . $e->getMessage());
         }
+    }
+    
+    /**
+     * Búsqueda AJAX de certificados
+     */
+    public function buscar_certificados_ajax() {
+        // Verificar nonce para seguridad
+        if (!wp_verify_nonce($_POST['nonce'], 'buscar_certificados_nonce')) {
+            wp_die('Error de seguridad');
+        }
+        
+        $busqueda = sanitize_text_field($_POST['busqueda']);
+        
+        if (empty($busqueda)) {
+            wp_send_json_error('Búsqueda vacía');
+            return;
+        }
+        
+        // Buscar certificados aprobados
+        $certificados = CertificadosPersonalizadosBD::obtener_certificados_aprobados($busqueda);
+        
+        if (empty($certificados)) {
+            wp_send_json_success(array(
+                'encontrados' => false,
+                'mensaje' => 'No se encontraron certificados con ese criterio de búsqueda.'
+            ));
+            return;
+        }
+        
+        // Preparar resultados
+        $resultados = array();
+        foreach ($certificados as $certificado) {
+            $resultados[] = array(
+                'id' => $certificado->id,
+                'nombre_instalacion' => $certificado->nombre_instalacion,
+                'nit' => $certificado->nit,
+                'codigo_unico' => $certificado->codigo_unico,
+                'fecha_aprobacion' => date('d/m/Y', strtotime($certificado->fecha_aprobacion))
+            );
+        }
+        
+        wp_send_json_success(array(
+            'encontrados' => true,
+            'resultados' => $resultados,
+            'total' => count($resultados)
+        ));
     }
 }
 

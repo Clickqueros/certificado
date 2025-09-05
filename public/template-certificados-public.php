@@ -13,137 +13,261 @@ if (!defined('ABSPATH')) {
 <div class="certificados-public-container">
     <div class="certificados-header">
         <h2 class="certificados-titulo">Certificados Aprobados</h2>
-        <p class="certificados-subtitulo">Busca y visualiza los certificados aprobados por nombre o código</p>
+        <p class="certificados-subtitulo">Busca por nombre de instalación o NIT</p>
     </div>
 
-    <!-- Formulario de búsqueda -->
+    <!-- Campo de búsqueda AJAX -->
     <div class="certificados-busqueda">
-        <form method="GET" class="busqueda-form">
-            <div class="busqueda-input-group">
-                <input 
-                    type="text" 
-                    name="buscar_certificado" 
-                    value="<?php echo esc_attr($busqueda); ?>" 
-                    placeholder="Buscar por nombre o código de certificado..."
-                    class="busqueda-input"
-                >
-                <button type="submit" class="busqueda-boton">
-                    <span class="busqueda-icono">🔍</span>
-                    Buscar
-                </button>
+        <div class="busqueda-input-group">
+            <input 
+                type="text" 
+                id="busqueda-certificados" 
+                placeholder="Escribe el nombre de la instalación o NIT..."
+                class="busqueda-input"
+            >
+            <div class="busqueda-loading" id="busqueda-loading" style="display: none;">
+                <span>Buscando...</span>
             </div>
-            <?php if (!empty($busqueda)): ?>
-                <div class="busqueda-resultados">
-                    <p>Resultados para: <strong><?php echo esc_html($busqueda); ?></strong></p>
-                    <a href="<?php echo esc_url(remove_query_arg('buscar_certificado')); ?>" class="limpiar-busqueda">
-                        Limpiar búsqueda
-                    </a>
-                </div>
-            <?php endif; ?>
-        </form>
+        </div>
     </div>
 
-    <!-- Lista de certificados -->
-    <div class="certificados-lista">
-        <?php if (empty($certificados)): ?>
-            <div class="certificados-vacio">
-                <?php if (!empty($busqueda)): ?>
-                    <div class="vacio-icono">🔍</div>
-                    <h3>No se encontraron certificados</h3>
-                    <p>No hay certificados aprobados que coincidan con tu búsqueda.</p>
-                    <a href="<?php echo esc_url(remove_query_arg('buscar_certificado')); ?>" class="ver-todos-boton">
-                        Ver todos los certificados
-                    </a>
-                <?php else: ?>
-                    <div class="vacio-icono">📋</div>
-                    <h3>No hay certificados aprobados</h3>
-                    <p>Aún no hay certificados aprobados disponibles para mostrar.</p>
-                <?php endif; ?>
-            </div>
-        <?php else: ?>
-            <div class="certificados-grid">
-                <?php foreach ($certificados as $certificado): ?>
-                    <div class="certificado-card">
-                        <div class="certificado-header">
-                            <div class="certificado-estado aprobado">
-                                <span class="estado-icono">✅</span>
-                                Aprobado
-                            </div>
-                            <div class="certificado-fecha">
-                                <?php echo date('d/m/Y', strtotime($certificado->fecha)); ?>
-                            </div>
-                        </div>
-                        
-                        <div class="certificado-contenido">
-                            <h3 class="certificado-nombre">
-                                <?php echo esc_html($certificado->nombre_instalacion); ?>
-                            </h3>
-                            
-                            <div class="certificado-empresa">
-                                <strong>Empresa:</strong> <?php echo esc_html($certificado->razon_social); ?>
-                            </div>
-                            
-                            <div class="certificado-tipo">
-                                <strong>Tipo:</strong> <?php echo esc_html($certificado->tipo_certificado . '-' . str_pad($certificado->numero_certificado, 2, '0', STR_PAD_LEFT)); ?>
-                            </div>
-                            
-                            <div class="certificado-capacidad">
-                                <strong>Capacidad:</strong> <?php echo esc_html($certificado->capacidad_almacenamiento); ?> galones
-                            </div>
-                            
-                            <div class="certificado-tanques">
-                                <strong>Tanques:</strong> <?php echo esc_html($certificado->numero_tanques); ?>
-                            </div>
-                            
-                            <div class="certificado-direccion">
-                                <strong>Dirección:</strong> <?php echo esc_html($certificado->direccion_instalacion); ?>
-                            </div>
-                            
-                            <div class="certificado-numero-certificado">
-                                <strong>NIT:</strong> <?php echo esc_html($certificado->nit); ?>
-                            </div>
-                            
-                            
-                            <div class="certificado-codigo">
-                                <strong>Código:</strong> 
-                                <span class="codigo-valor"><?php echo esc_html($certificado->codigo_unico); ?></span>
-                            </div>
-                        </div>
-                        
-                        <div class="certificado-footer">
-                            <?php 
-                            $pdf_url = CertificadosPersonalizadosPDF::obtener_url_pdf($certificado->id);
-                            if ($pdf_url): 
-                            ?>
-                                <a href="<?php echo esc_url($pdf_url); ?>" 
-                                   target="_blank" 
-                                   class="ver-pdf-boton">
-                                    <span class="pdf-icono">📄</span>
-                                    Ver PDF
-                                </a>
-                            <?php else: ?>
-                                <span class="pdf-no-disponible">
-                                    <span class="pdf-icono">❌</span>
-                                    PDF no disponible
-                                </span>
-                            <?php endif; ?>
-                            
-                            <div class="certificado-fecha-creacion">
-                                Creado: <?php echo date('d/m/Y', strtotime($certificado->created_at)); ?>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-            
-            <div class="certificados-info">
-                <p class="certificados-contador">
-                    Mostrando <?php echo count($certificados); ?> certificado<?php echo count($certificados) !== 1 ? 's' : ''; ?>
-                    <?php if (!empty($busqueda)): ?>
-                        que coinciden con tu búsqueda
-                    <?php endif; ?>
-                </p>
-            </div>
-        <?php endif; ?>
+    <!-- Contenedor de resultados -->
+    <div class="certificados-resultados" id="certificados-resultados">
+        <div class="resultados-mensaje" id="resultados-mensaje">
+            <p>Escribe en el campo de búsqueda para encontrar certificados</p>
+        </div>
     </div>
-</div> 
+</div>
+
+<style>
+.certificados-public-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.certificados-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.certificados-titulo {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 28px;
+}
+
+.certificados-subtitulo {
+    color: #666;
+    font-size: 16px;
+    margin: 0;
+}
+
+.certificados-busqueda {
+    margin-bottom: 30px;
+}
+
+.busqueda-input-group {
+    position: relative;
+}
+
+.busqueda-input {
+    width: 100%;
+    padding: 15px 20px;
+    font-size: 16px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+.busqueda-input:focus {
+    outline: none;
+    border-color: #0073aa;
+}
+
+.busqueda-loading {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    font-size: 14px;
+}
+
+.certificados-resultados {
+    min-height: 200px;
+}
+
+.resultados-mensaje {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    padding: 40px 20px;
+}
+
+.certificado-item {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: box-shadow 0.3s ease;
+}
+
+.certificado-item:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.certificado-nombre {
+    color: #333;
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0 0 10px 0;
+}
+
+.certificado-nit {
+    color: #666;
+    font-size: 14px;
+    margin: 0 0 15px 0;
+}
+
+.certificado-acciones {
+    text-align: right;
+}
+
+.btn-ver-pdf {
+    background: #0073aa;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-ver-pdf:hover {
+    background: #005a87;
+    color: white;
+}
+
+.no-resultados {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    padding: 40px 20px;
+}
+</style>
+
+<script>
+jQuery(document).ready(function($) {
+    let timeoutId;
+    
+    // Función para realizar búsqueda AJAX
+    function buscarCertificados(termino) {
+        if (termino.length < 2) {
+            mostrarMensajeInicial();
+            return;
+        }
+        
+        $('#busqueda-loading').show();
+        
+        $.ajax({
+            url: '<?php echo admin_url('admin-ajax.php'); ?>',
+            type: 'POST',
+            data: {
+                action: 'buscar_certificados',
+                busqueda: termino,
+                nonce: '<?php echo wp_create_nonce('buscar_certificados_nonce'); ?>'
+            },
+            success: function(response) {
+                $('#busqueda-loading').hide();
+                
+                if (response.success) {
+                    if (response.data.encontrados) {
+                        mostrarResultados(response.data.resultados);
+                    } else {
+                        mostrarNoResultados(response.data.mensaje);
+                    }
+                } else {
+                    mostrarError('Error en la búsqueda: ' + response.data);
+                }
+            },
+            error: function() {
+                $('#busqueda-loading').hide();
+                mostrarError('Error de conexión. Intenta nuevamente.');
+            }
+        });
+    }
+    
+    // Función para mostrar resultados
+    function mostrarResultados(resultados) {
+        let html = '';
+        
+        resultados.forEach(function(certificado) {
+            html += `
+                <div class="certificado-item">
+                    <h3 class="certificado-nombre">${certificado.nombre_instalacion}</h3>
+                    <p class="certificado-nit">NIT: ${certificado.nit}</p>
+                    <div class="certificado-acciones">
+                        <a href="?ver_pdf=${certificado.id}" class="btn-ver-pdf" target="_blank">
+                            📄 Ver PDF
+                        </a>
+                    </div>
+                </div>
+            `;
+        });
+        
+        $('#certificados-resultados').html(html);
+    }
+    
+    // Función para mostrar mensaje de no resultados
+    function mostrarNoResultados(mensaje) {
+        $('#certificados-resultados').html(`
+            <div class="no-resultados">
+                <p>${mensaje}</p>
+            </div>
+        `);
+    }
+    
+    // Función para mostrar mensaje inicial
+    function mostrarMensajeInicial() {
+        $('#certificados-resultados').html(`
+            <div class="resultados-mensaje">
+                <p>Escribe en el campo de búsqueda para encontrar certificados</p>
+            </div>
+        `);
+    }
+    
+    // Función para mostrar error
+    function mostrarError(mensaje) {
+        $('#certificados-resultados').html(`
+            <div class="no-resultados">
+                <p style="color: #d63638;">${mensaje}</p>
+            </div>
+        `);
+    }
+    
+    // Evento de búsqueda en tiempo real
+    $('#busqueda-certificados').on('input', function() {
+        const termino = $(this).val().trim();
+        
+        // Limpiar timeout anterior
+        clearTimeout(timeoutId);
+        
+        // Establecer nuevo timeout para evitar muchas peticiones
+        timeoutId = setTimeout(function() {
+            buscarCertificados(termino);
+        }, 300);
+    });
+    
+    // Manejar clic en botón Ver PDF
+    $(document).on('click', '.btn-ver-pdf', function(e) {
+        e.preventDefault();
+        const url = $(this).attr('href');
+        window.open(url, '_blank');
+    });
+});
+</script>
