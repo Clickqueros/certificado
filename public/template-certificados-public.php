@@ -168,7 +168,8 @@ jQuery(document).ready(function($) {
     // Función para realizar búsqueda AJAX
     function buscarCertificados(termino) {
         if (termino.length < 2) {
-            mostrarMensajeInicial();
+            // Si no hay término, mostrar todos los certificados
+            buscarCertificados('');
             return;
         }
         
@@ -249,6 +250,9 @@ jQuery(document).ready(function($) {
             </div>
         `);
     }
+    
+    // Cargar todos los certificados al inicio
+    buscarCertificados('');
     
     // Evento de búsqueda en tiempo real
     $('#busqueda-certificados').on('input', function() {

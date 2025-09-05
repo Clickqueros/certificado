@@ -973,12 +973,7 @@ class CertificadosPersonalizados {
         
         $busqueda = sanitize_text_field($_POST['busqueda']);
         
-        if (empty($busqueda)) {
-            wp_send_json_error('Búsqueda vacía');
-            return;
-        }
-        
-        // Buscar certificados aprobados
+        // Buscar certificados aprobados (con o sin búsqueda)
         $certificados = CertificadosPersonalizadosBD::obtener_certificados_aprobados($busqueda);
         
         if (empty($certificados)) {

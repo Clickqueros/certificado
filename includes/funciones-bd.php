@@ -449,7 +449,7 @@ class CertificadosPersonalizadosBD {
         
         // Agregar búsqueda si se proporciona
         if (!empty($busqueda)) {
-            $where_conditions[] = "(nombre LIKE %s OR codigo_unico LIKE %s)";
+            $where_conditions[] = "(nombre_instalacion LIKE %s OR nit LIKE %s)";
             $busqueda_like = '%' . $wpdb->esc_like($busqueda) . '%';
             $where_values[] = $busqueda_like;
             $where_values[] = $busqueda_like;
