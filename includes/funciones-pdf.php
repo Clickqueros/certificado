@@ -109,7 +109,7 @@ class CertificadosPersonalizadosPDF {
                 error_log('CertificadosPersonalizadosPDF: Error actualizando BD para ID: ' . $certificado_id);
             }
             
-            return $actualizado;
+            return $url_con_timestamp;
         } else {
             error_log('CertificadosPersonalizadosPDF: Error generando archivo para ID: ' . $certificado_id);
         }
