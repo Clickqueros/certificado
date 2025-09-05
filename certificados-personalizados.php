@@ -685,25 +685,34 @@ class CertificadosPersonalizados {
      * Procesar edición de certificado por administrador
      */
     public function procesar_edicion_certificado_admin() {
+        // Debug: Log para verificar que se está ejecutando
+        error_log('CertificadosPersonalizados: Iniciando procesar_edicion_certificado_admin');
+        
         // Verificar permisos de administrador
         if (!current_user_can('administrator')) {
+            error_log('CertificadosPersonalizados: Error - Usuario no es administrador');
             wp_die('No tienes permisos para realizar esta acción.');
         }
         
         // Verificar nonce
         if (!isset($_POST['editar_certificado_admin_nonce']) || 
             !wp_verify_nonce($_POST['editar_certificado_admin_nonce'], 'editar_certificado_admin')) {
+            error_log('CertificadosPersonalizados: Error - Nonce inválido');
             wp_die('Error de seguridad.');
         }
         
         $certificado_id = intval($_POST['certificado_id']);
+        error_log('CertificadosPersonalizados: Certificado ID: ' . $certificado_id);
         
         // Obtener certificado para administrador (sin restricciones)
         $certificado = CertificadosPersonalizadosBD::obtener_certificado_para_edicion_admin($certificado_id);
         
         if (!$certificado) {
+            error_log('CertificadosPersonalizados: Error - Certificado no encontrado para ID: ' . $certificado_id);
             wp_die('Certificado no encontrado.');
         }
+        
+        error_log('CertificadosPersonalizados: Certificado encontrado, continuando con validación');
         
         // Validar datos básicos
         $estado = sanitize_text_field($_POST['estado']);
@@ -783,7 +792,10 @@ class CertificadosPersonalizados {
         );
         
         // Actualizar certificado
+        error_log('CertificadosPersonalizados: Intentando actualizar certificado con datos: ' . print_r($datos_actualizados, true));
         $resultado = CertificadosPersonalizadosBD::actualizar_certificado($certificado_id, $datos_actualizados);
+        
+        error_log('CertificadosPersonalizados: Resultado de actualización: ' . ($resultado ? 'ÉXITO' : 'FALLO'));
         
         if ($resultado) {
             // Debug: Verificar datos actualizados
