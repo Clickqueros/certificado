@@ -460,15 +460,6 @@ class CertificadosAntecore {
                 array($this, 'mostrar_limpiar_certificados')
             );
             
-            // Submenú para actualizar base de datos
-            add_submenu_page(
-                'aprobacion-certificados',
-                __('Actualizar Base de Datos', 'certificados-personalizados'),
-                __('Actualizar BD', 'certificados-personalizados'),
-                'manage_options',
-                'actualizar-base-datos',
-                array($this, 'mostrar_actualizar_base_datos')
-            );
         }
     }
     
@@ -511,18 +502,6 @@ class CertificadosAntecore {
         include CERTIFICADOS_ANTECORE_PLUGIN_PATH . 'admin/limpiar-certificados.php';
     }
     
-    /**
-     * Mostrar página de actualización de base de datos
-     */
-    public function mostrar_actualizar_base_datos() {
-        // Verificar permisos
-        if (!current_user_can('manage_options')) {
-            wp_die(__('No tienes permisos para acceder a esta página.', 'certificados-personalizados'));
-        }
-        
-        // Cargar vista
-        include CERTIFICADOS_ANTECORE_PLUGIN_PATH . 'admin/actualizar-base-datos.php';
-    }
     
     /**
      * Registrar shortcode para mostrar certificados aprobados

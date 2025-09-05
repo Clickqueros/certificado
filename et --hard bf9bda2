@@ -1,5 +1,0 @@
-[33m4eaf64c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m Modificaciones en plantilla-certificado.html
-[33meddd742[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m Eliminar líneas delgadas del footer: modificar convertir_html_para_tcpdf para evitar líneas automáticas
-[33me873771[m Eliminar borde grueso: agregar border: 0 a tabla principal y celda contenedora
-[33m40966b3[m Eliminar líneas no deseadas: agregar border: 0 y border-collapse: collapse a todas las tablas
-[33mbf9bda2[m Revertir márgenes TCPDF a 15px para volver al estado de dos líneas
