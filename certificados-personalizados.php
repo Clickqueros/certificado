@@ -162,19 +162,31 @@ class CertificadosAntecore {
      */
     private function verificar_y_actualizar_bd() {
         global $wpdb;
-        $tabla = $wpdb->prefix . 'certificados_antecore';
+        $tabla_nueva = $wpdb->prefix . 'certificados_antecore';
+        $tabla_antigua = $wpdb->prefix . 'certificados_personalizados';
         
-        // Verificar si la tabla existe
-        $tabla_existe = $wpdb->get_var("SHOW TABLES LIKE '$tabla'");
+        // Verificar si la tabla nueva existe
+        $tabla_nueva_existe = $wpdb->get_var("SHOW TABLES LIKE '$tabla_nueva'");
         
-        if ($tabla_existe) {
+        // Verificar si la tabla antigua existe
+        $tabla_antigua_existe = $wpdb->get_var("SHOW TABLES LIKE '$tabla_antigua'");
+        
+        // Si la tabla antigua existe pero la nueva no, renombrar
+        if ($tabla_antigua_existe && !$tabla_nueva_existe) {
+            $sql = "RENAME TABLE $tabla_antigua TO $tabla_nueva";
+            $wpdb->query($sql);
+            error_log("CertificadosAntecore: Tabla renombrada de '$tabla_antigua' a '$tabla_nueva'");
+            $tabla_nueva_existe = true; // Actualizar flag
+        }
+        
+        if ($tabla_nueva_existe) {
             // Verificar si falta alguna columna nueva
-            $columna_capacidad = $wpdb->get_var("SHOW COLUMNS FROM $tabla LIKE 'capacidad_almacenamiento'");
+            $columna_capacidad = $wpdb->get_var("SHOW COLUMNS FROM $tabla_nueva LIKE 'capacidad_almacenamiento'");
             
             if (!$columna_capacidad) {
                 // Si falta la columna capacidad_almacenamiento, actualizar toda la tabla
                 $this->actualizar_tabla_existente();
-                error_log("CertificadosPersonalizados: Base de datos actualizada automáticamente.");
+                error_log("CertificadosAntecore: Base de datos actualizada automáticamente.");
             }
         }
     }
@@ -184,10 +196,24 @@ class CertificadosAntecore {
      */
     private function actualizar_tabla_existente() {
         global $wpdb;
-        $tabla = $wpdb->prefix . 'certificados_antecore';
+        $tabla_nueva = $wpdb->prefix . 'certificados_antecore';
+        $tabla_antigua = $wpdb->prefix . 'certificados_personalizados';
         
-        // Verificar si la tabla existe
-        $tabla_existe = $wpdb->get_var("SHOW TABLES LIKE '$tabla'");
+        // Verificar si la tabla nueva existe
+        $tabla_nueva_existe = $wpdb->get_var("SHOW TABLES LIKE '$tabla_nueva'");
+        
+        // Verificar si la tabla antigua existe
+        $tabla_antigua_existe = $wpdb->get_var("SHOW TABLES LIKE '$tabla_antigua'");
+        
+        // Si la tabla antigua existe pero la nueva no, renombrar
+        if ($tabla_antigua_existe && !$tabla_nueva_existe) {
+            $sql = "RENAME TABLE $tabla_antigua TO $tabla_nueva";
+            $wpdb->query($sql);
+            error_log("CertificadosAntecore: Tabla renombrada de '$tabla_antigua' a '$tabla_nueva'");
+        }
+        
+        // Verificar si la tabla nueva existe (después del renombrado)
+        $tabla_existe = $wpdb->get_var("SHOW TABLES LIKE '$tabla_nueva'");
         
         if ($tabla_existe) {
             // Lista de columnas nuevas a agregar
@@ -205,12 +231,12 @@ class CertificadosAntecore {
             
             // Agregar columnas que no existen
             foreach ($columnas_nuevas as $columna => $tipo) {
-                $columna_existe = $wpdb->get_var("SHOW COLUMNS FROM $tabla LIKE '$columna'");
+                $columna_existe = $wpdb->get_var("SHOW COLUMNS FROM $tabla_nueva LIKE '$columna'");
                 
                 if (!$columna_existe) {
-                    $sql = "ALTER TABLE $tabla ADD COLUMN $columna $tipo";
+                    $sql = "ALTER TABLE $tabla_nueva ADD COLUMN $columna $tipo";
                     $wpdb->query($sql);
-                    error_log("CertificadosPersonalizados: Columna '$columna' agregada a la tabla.");
+                    error_log("CertificadosAntecore: Columna '$columna' agregada a la tabla.");
                 }
             }
             
@@ -218,12 +244,12 @@ class CertificadosAntecore {
             $columnas_antiguas = array('nombre', 'fecha', 'observaciones');
             
             foreach ($columnas_antiguas as $columna) {
-                $columna_existe = $wpdb->get_var("SHOW COLUMNS FROM $tabla LIKE '$columna'");
+                $columna_existe = $wpdb->get_var("SHOW COLUMNS FROM $tabla_nueva LIKE '$columna'");
                 
                 if ($columna_existe) {
-                    $sql = "ALTER TABLE $tabla DROP COLUMN $columna";
+                    $sql = "ALTER TABLE $tabla_nueva DROP COLUMN $columna";
                     $wpdb->query($sql);
-                    error_log("CertificadosPersonalizados: Columna antigua '$columna' eliminada de la tabla.");
+                    error_log("CertificadosAntecore: Columna antigua '$columna' eliminada de la tabla.");
                 }
             }
         }
