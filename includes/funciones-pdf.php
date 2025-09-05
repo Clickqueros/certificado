@@ -427,7 +427,7 @@ class CertificadosPersonalizadosPDF {
             
             // Configurar márgenes
             // Configurar página A4 horizontal
-            $pdf->SetMargins(0, 0, 0);
+            $pdf->SetMargins(15, 15, 15);
             $pdf->SetHeaderMargin(0);
             $pdf->SetFooterMargin(0);
             
