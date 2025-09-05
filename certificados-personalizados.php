@@ -1030,7 +1030,7 @@ class CertificadosPersonalizados {
             }
             
             // Generar o obtener el PDF
-            $pdf_path = CertificadosPersonalizadosPDF::generar_pdf($certificado_id);
+            $pdf_path = CertificadosPersonalizadosPDF::generar_certificado_pdf($certificado_id);
             
             if (!$pdf_path) {
                 wp_die('Error al generar el PDF.');
