@@ -169,6 +169,15 @@ class CertificadosAntecorePDF {
             $html = self::generar_plantilla_por_defecto($certificado, $certificado->actividad);
             error_log('DEBUG PDF: Usando plantilla por defecto - Tamaño: ' . strlen($html) . ' caracteres');
         }
+
+        // Convertir ruta relativa de imagen a ruta absoluta para TCPDF
+        $imagen_path = plugin_dir_path(__FILE__) . '../images/bg-pdf-antecore.jpg';
+        if (file_exists($imagen_path)) {
+            $html = str_replace("url('images/bg-pdf-antecore.jpg')", "url('" . $imagen_path . "')", $html);
+            error_log('DEBUG PDF: Imagen de fondo encontrada y ruta convertida: ' . $imagen_path);
+        } else {
+            error_log('DEBUG PDF: Imagen de fondo NO encontrada en: ' . $imagen_path);
+        }
         
         // Obtener información del tipo de certificado
         $info_certificado = self::obtener_info_certificado($certificado->tipo_certificado);
