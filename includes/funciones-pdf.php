@@ -452,6 +452,52 @@ class CertificadosAntecorePDF {
             
             // Agregar página A4 horizontal
             $pdf->AddPage('L', 'A4');
+
+                        /**
+             * DIBUJAR IMAGEN DE FONDO
+             * - Usa ruta absoluta (WP)
+             * - Cubre toda la página
+             * - Debe ir ANTES de escribir el HTML
+             */
+            $bg_path = plugin_dir_path(__FILE__) . '../images/bg-pdf-antecore.jpg';
+            
+            if (file_exists($bg_path) && is_readable($bg_path)) {
+                // Opcional: calidad JPEG (si fuese JPG)
+                if (function_exists('imagecreatefromjpeg')) {
+                    $pdf->setJPEGQuality(95);
+                }
+                
+                // Coordenadas y tamaño: cubrir página completa
+                $pageW = $pdf->getPageWidth();
+                $pageH = $pdf->getPageHeight();
+                
+                // Si quieres mantener márgenes pero que la imagen igual sea full-bleed, deja (0,0)
+                $pdf->Image(
+                    $bg_path,          // archivo
+                    0,                 // x
+                    0,                 // y
+                    $pageW,            // ancho
+                    $pageH,            // alto
+                    '',                // type (auto)
+                    '',                // link
+                    '',                // align
+                    false,             // resize
+                    300,               // dpi
+                    '',                // palign
+                    false,             // ismask
+                    false,             // imgmask
+                    0,                 // border
+                    false,             // fitbox
+                    false,             // hidden
+                    false              // fitonpage
+                );
+                
+                // Asegura que el contenido HTML quede POR ENCIMA del fondo
+                $pdf->setPageMark();
+                error_log('TCPDF: Imagen de fondo aplicada correctamente: ' . $bg_path);
+            } else {
+                error_log('TCPDF: No se pudo leer la imagen de fondo en: ' . $bg_path);
+            }
             
             // Generar contenido del PDF
             $html_content = self::generar_html_certificado($certificado);

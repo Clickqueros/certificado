@@ -1,6 +1,6 @@
 <?php
 /**
- * Funciones para generación de PDF - Plugin Certificados Personalizados
+ * Funciones para generación de PDF - Plugin Certificados Antecore
  * VERSIÓN CON TCPDF - Librería principal para generación de PDF
  */
 
@@ -12,17 +12,17 @@ if (!defined('ABSPATH')) {
 /**
  * Clase para manejo de PDF
  */
-class CertificadosPersonalizadosPDF {
+class CertificadosAntecorePDF {
     
     /**
      * Generar certificado en PDF
      */
     public static function generar_certificado_pdf($certificado_id) {
         // Obtener datos del certificado
-        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        $certificado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
         
         if (!$certificado) {
-            error_log('CertificadosPersonalizadosPDF: No se pudo obtener certificado ID: ' . $certificado_id);
+            error_log('CertificadosAntecorePDF: No se pudo obtener certificado ID: ' . $certificado_id);
             return false;
         }
         
@@ -33,7 +33,7 @@ class CertificadosPersonalizadosPDF {
         if (!file_exists($certificados_dir)) {
             $creado = wp_mkdir_p($certificados_dir);
             if (!$creado) {
-                error_log('CertificadosPersonalizadosPDF: No se pudo crear directorio: ' . $certificados_dir);
+                error_log('CertificadosAntecorePDF: No se pudo crear directorio: ' . $certificados_dir);
                 return false;
             }
         }
@@ -45,14 +45,14 @@ class CertificadosPersonalizadosPDF {
         // Eliminar archivo anterior si existe para forzar regeneración
         if (file_exists($ruta_pdf)) {
             unlink($ruta_pdf);
-            error_log('CertificadosPersonalizadosPDF: Archivo anterior eliminado: ' . $ruta_pdf);
+            error_log('CertificadosAntecorePDF: Archivo anterior eliminado: ' . $ruta_pdf);
         }
         
         // También eliminar archivo HTML si existe
         $ruta_html = $certificados_dir . $nombre_base . '.html';
         if (file_exists($ruta_html)) {
             unlink($ruta_html);
-            error_log('CertificadosPersonalizadosPDF: Archivo HTML anterior eliminado: ' . $ruta_html);
+            error_log('CertificadosAntecorePDF: Archivo HTML anterior eliminado: ' . $ruta_html);
         }
         
         // Intentar generar PDF real
@@ -99,19 +99,19 @@ class CertificadosPersonalizadosPDF {
                 delete_transient('certificado_pdf_' . $certificado_id);
             }
             
-            $actualizado = CertificadosPersonalizadosBD::actualizar_certificado($certificado_id, array(
+            $actualizado = CertificadosAntecoreBD::actualizar_certificado($certificado_id, array(
                 'pdf_path' => $url_con_timestamp
             ));
             
             if ($actualizado) {
-                error_log('CertificadosPersonalizadosPDF: Archivo generado exitosamente para ID: ' . $certificado_id . ' - Extensión: ' . $extension . ' - Timestamp: ' . $timestamp);
+                error_log('CertificadosAntecorePDF: Archivo generado exitosamente para ID: ' . $certificado_id . ' - Extensión: ' . $extension . ' - Timestamp: ' . $timestamp);
             } else {
-                error_log('CertificadosPersonalizadosPDF: Error actualizando BD para ID: ' . $certificado_id);
+                error_log('CertificadosAntecorePDF: Error actualizando BD para ID: ' . $certificado_id);
             }
             
-            return $actualizado;
+            return $url_con_timestamp;
         } else {
-            error_log('CertificadosPersonalizadosPDF: Error generando archivo para ID: ' . $certificado_id);
+            error_log('CertificadosAntecorePDF: Error generando archivo para ID: ' . $certificado_id);
         }
         
         return false;
@@ -121,7 +121,7 @@ class CertificadosPersonalizadosPDF {
      * Verificar si el PDF está actualizado
      */
     public static function verificar_pdf_actualizado($certificado_id) {
-        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        $certificado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
         
         if (!$certificado || !$certificado->pdf_path) {
             return false;
@@ -140,14 +140,14 @@ class CertificadosPersonalizadosPDF {
             // Verificar que el contenido contiene el nombre actualizado
             $contenido_archivo = file_get_contents($ruta_completa);
             if (strpos($contenido_archivo, $certificado->nombre) !== false) {
-                error_log('CertificadosPersonalizadosPDF: PDF verificado correctamente para ID: ' . $certificado_id . ' - Tamaño: ' . filesize($ruta_completa) . ' bytes - Nombre encontrado: ' . $certificado->nombre);
+                error_log('CertificadosAntecorePDF: PDF verificado correctamente para ID: ' . $certificado_id . ' - Tamaño: ' . filesize($ruta_completa) . ' bytes - Nombre encontrado: ' . $certificado->nombre);
                 return true;
             } else {
-                error_log('CertificadosPersonalizadosPDF: PDF no contiene el nombre actualizado para ID: ' . $certificado_id . ' - Nombre esperado: ' . $certificado->nombre);
+                error_log('CertificadosAntecorePDF: PDF no contiene el nombre actualizado para ID: ' . $certificado_id . ' - Nombre esperado: ' . $certificado->nombre);
                 return false;
             }
         } else {
-            error_log('CertificadosPersonalizadosPDF: PDF no encontrado o vacío para ID: ' . $certificado_id . ' - Ruta: ' . $ruta_completa);
+            error_log('CertificadosAntecorePDF: PDF no encontrado o vacío para ID: ' . $certificado_id . ' - Ruta: ' . $ruta_completa);
             return false;
         }
     }
@@ -403,7 +403,7 @@ class CertificadosPersonalizadosPDF {
             $tcpdf_path = plugin_dir_path(__FILE__) . 'libs/tcpdf/tcpdf.php';
             
             if (!file_exists($tcpdf_path)) {
-                error_log('CertificadosPersonalizadosPDF: TCPDF no encontrado en: ' . $tcpdf_path);
+                error_log('CertificadosAntecorePDF: TCPDF no encontrado en: ' . $tcpdf_path);
                 return false;
             }
             
@@ -412,18 +412,22 @@ class CertificadosPersonalizadosPDF {
             
             // Verificar que la clase esté disponible
             if (!class_exists('TCPDF')) {
-                error_log('CertificadosPersonalizadosPDF: Clase TCPDF no encontrada después de incluir archivos');
+                error_log('CertificadosAntecorePDF: Clase TCPDF no encontrada después de incluir archivos');
                 return false;
             }
             
             // Crear nueva instancia de TCPDF
             $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
             
+            // Desactivar header y footer automáticos
+            $pdf->setPrintHeader(false);
+            $pdf->setPrintFooter(false);
+            
             // Configurar información del documento
             $pdf->SetCreator('Certificados Personalizados');
             $pdf->SetAuthor('Sistema de Certificados');
             $pdf->SetTitle('Certificado de Participación');
-            $pdf->SetSubject('Certificado para ' . $certificado->nombre);
+            $pdf->SetSubject('Certificado para ' . $certificado->nombre_instalacion);
             
             // Configurar márgenes
             // Configurar página A4 horizontal
@@ -451,16 +455,16 @@ class CertificadosPersonalizadosPDF {
             
             // Guardar PDF
             if ($pdf->Output($ruta_archivo, 'F')) {
-                error_log('CertificadosPersonalizadosPDF: PDF generado exitosamente con TCPDF para: ' . basename($ruta_archivo));
+                error_log('CertificadosAntecorePDF: PDF generado exitosamente con TCPDF para: ' . basename($ruta_archivo));
                 return true;
             } else {
-                error_log('CertificadosPersonalizadosPDF: Error guardando PDF con TCPDF: ' . $ruta_archivo);
+                error_log('CertificadosAntecorePDF: Error guardando PDF con TCPDF: ' . $ruta_archivo);
                 return false;
             }
             
         } catch (Exception $e) {
-            error_log('CertificadosPersonalizadosPDF: Error con TCPDF: ' . $e->getMessage());
-            error_log('CertificadosPersonalizadosPDF: Stack trace: ' . $e->getTraceAsString());
+            error_log('CertificadosAntecorePDF: Error con TCPDF: ' . $e->getMessage());
+            error_log('CertificadosAntecorePDF: Stack trace: ' . $e->getTraceAsString());
             return false;
         }
     }
@@ -474,24 +478,6 @@ class CertificadosPersonalizadosPDF {
         $html = preg_replace('/<script[^>]*>.*?<\/script>/is', '', $html);
         
         // Reemplazar estilos complejos con estilos básicos para el template de certificado
-        $html = str_replace('<div class="certificado-container">', '<div style="text-align: center; padding: 40px; border: 2px solid #2c3e50; background: white;">', $html);
-        $html = str_replace('<div class="certificado-header">', '<div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #3498db; padding-bottom: 15px;">', $html);
-        $html = str_replace('<div class="certificado-titulo">', '<div style="font-size: 28px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; text-transform: uppercase;">', $html);
-        $html = str_replace('<div class="certificado-subtitulo">', '<div style="font-size: 16px; color: #7f8c8d; font-style: italic;">', $html);
-        $html = str_replace('<div class="certificado-contenido">', '<div style="text-align: center; margin: 30px 0; line-height: 1.6;">', $html);
-        $html = str_replace('<div class="certificado-texto">', '<div style="font-size: 14px; color: #2c3e50; margin-bottom: 20px;">', $html);
-        $html = str_replace('<div class="certificado-nombre">', '<div style="font-size: 20px; font-weight: bold; color: #2c3e50; margin: 15px 0; text-transform: uppercase; border-bottom: 1px solid #bdc3c7; padding-bottom: 8px;">', $html);
-        $html = str_replace('<div class="certificado-actividad">', '<div style="font-size: 16px; color: #34495e; margin: 12px 0;">', $html);
-        $html = str_replace('<div class="certificado-fecha">', '<div style="font-size: 14px; color: #7f8c8d; margin: 12px 0;">', $html);
-        $html = str_replace('<div class="certificado-codigo">', '<div style="font-size: 12px; color: #95a5a6; margin-top: 25px; font-family: monospace;">', $html);
-        $html = str_replace('<div class="certificado-footer">', '<div style="margin-top: 40px; display: flex; justify-content: space-between; align-items: center;">', $html);
-        $html = str_replace('<div class="certificado-firma">', '<div style="text-align: center; flex: 1;">', $html);
-        $html = str_replace('<div class="firma-linea">', '<div style="width: 150px; height: 1px; background-color: #2c3e50; margin: 8px auto;">', $html);
-        $html = str_replace('<div class="firma-nombre">', '<div style="font-size: 12px; font-weight: bold; color: #2c3e50;">', $html);
-        $html = str_replace('<div class="firma-cargo">', '<div style="font-size: 10px; color: #7f8c8d;">', $html);
-        $html = str_replace('<div class="certificado-sello">', '<div style="position: absolute; top: 15px; right: 15px; width: 60px; height: 60px; border: 2px solid #e74c3c; border-radius: 50%; background: rgba(231, 76, 60, 0.1);">', $html);
-        $html = str_replace('<div class="sello-texto">', '<div style="font-size: 8px; font-weight: bold; color: #e74c3c; text-align: center; text-transform: uppercase;">', $html);
-        
         return $html;
     }
     
@@ -504,14 +490,14 @@ class CertificadosPersonalizadosPDF {
             $fpdf_path = plugin_dir_path(__FILE__) . 'libs/fpdf/fpdf.php';
             
             if (!file_exists($fpdf_path)) {
-                error_log('CertificadosPersonalizadosPDF: FPDF no encontrado en: ' . $fpdf_path);
+                error_log('CertificadosAntecorePDF: FPDF no encontrado en: ' . $fpdf_path);
                 return false;
             }
             
             require_once $fpdf_path;
             
             if (!class_exists('FPDF')) {
-                error_log('CertificadosPersonalizadosPDF: Clase FPDF no encontrada');
+                error_log('CertificadosAntecorePDF: Clase FPDF no encontrada');
                 return false;
             }
             
@@ -554,15 +540,15 @@ class CertificadosPersonalizadosPDF {
             
             // Guardar PDF
             if ($pdf->Output('F', $ruta_archivo)) {
-                error_log('CertificadosPersonalizadosPDF: PDF generado exitosamente con FPDF para: ' . basename($ruta_archivo));
+                error_log('CertificadosAntecorePDF: PDF generado exitosamente con FPDF para: ' . basename($ruta_archivo));
                 return true;
             } else {
-                error_log('CertificadosPersonalizadosPDF: Error guardando PDF con FPDF: ' . $ruta_archivo);
+                error_log('CertificadosAntecorePDF: Error guardando PDF con FPDF: ' . $ruta_archivo);
                 return false;
             }
             
         } catch (Exception $e) {
-            error_log('CertificadosPersonalizadosPDF: Error con FPDF: ' . $e->getMessage());
+            error_log('CertificadosAntecorePDF: Error con FPDF: ' . $e->getMessage());
             return false;
         }
     }
@@ -586,7 +572,7 @@ class CertificadosPersonalizadosPDF {
                 unlink($temp_html);
                 
                 if (file_exists($ruta_archivo) && filesize($ruta_archivo) > 0) {
-                    error_log('CertificadosPersonalizadosPDF: PDF generado exitosamente con wkhtmltopdf para: ' . basename($ruta_archivo));
+                    error_log('CertificadosAntecorePDF: PDF generado exitosamente con wkhtmltopdf para: ' . basename($ruta_archivo));
                     return true;
                 }
             }
@@ -594,14 +580,14 @@ class CertificadosPersonalizadosPDF {
             // Si wkhtmltopdf no está disponible, generar HTML
             $ruta_html = str_replace('.pdf', '.html', $ruta_archivo);
             if (file_put_contents($ruta_html, $contenido)) {
-                error_log('CertificadosPersonalizadosPDF: HTML generado como fallback para: ' . basename($ruta_html));
+                error_log('CertificadosAntecorePDF: HTML generado como fallback para: ' . basename($ruta_html));
                 return true;
             }
             
             return false;
             
         } catch (Exception $e) {
-            error_log('CertificadosPersonalizadosPDF: Error con método simple: ' . $e->getMessage());
+            error_log('CertificadosAntecorePDF: Error con método simple: ' . $e->getMessage());
             return false;
         }
     }
@@ -670,7 +656,7 @@ class CertificadosPersonalizadosPDF {
     </div>
     
     <div class="content">
-        <div class="name">' . htmlspecialchars($certificado->nombre) . '</div>
+        <div class="name">' . htmlspecialchars($certificado->nombre_instalacion) . '</div>
         
         <div class="activity">
             Por su participación destacada en la actividad:<br>
@@ -684,7 +670,7 @@ class CertificadosPersonalizadosPDF {
         ' . (!empty($certificado->observaciones) ? '<div class="activity">Observaciones: ' . htmlspecialchars($certificado->observaciones) . '</div>' : '') . '
         
         <div class="date">
-            Fecha: ' . htmlspecialchars($certificado->fecha) . '
+            Fecha: ' . htmlspecialchars($certificado->fecha_aprobacion) . '
         </div>
     </div>
 </body>
@@ -697,7 +683,7 @@ class CertificadosPersonalizadosPDF {
      * Obtener URL del PDF con timestamp para evitar caché
      */
     public static function obtener_url_pdf($certificado_id) {
-        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        $certificado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
         
         if (!$certificado || empty($certificado->pdf_path)) {
             return false;
@@ -743,7 +729,7 @@ class CertificadosPersonalizadosPDF {
      * Obtener URL del PDF para administradores (sin caché)
      */
     public static function obtener_url_pdf_admin($certificado_id) {
-        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        $certificado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
         
         if (!$certificado || empty($certificado->pdf_path)) {
             return false;
@@ -790,7 +776,7 @@ class CertificadosPersonalizadosPDF {
      * Obtener URL del PDF para administradores con parámetros adicionales para forzar recarga
      */
     public static function obtener_url_pdf_admin_forzada($certificado_id) {
-        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        $certificado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
         
         if (!$certificado || empty($certificado->pdf_path)) {
             return false;
@@ -838,7 +824,7 @@ class CertificadosPersonalizadosPDF {
      * Verificar si existe el PDF
      */
     public static function existe_pdf($certificado_id) {
-        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        $certificado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
         
         if (!$certificado) {
             error_log('CertificadosPersonalizados: Certificado no encontrado para verificar PDF - ID: ' . $certificado_id);
@@ -887,7 +873,7 @@ class CertificadosPersonalizadosPDF {
      * Forzar regeneración completa del PDF
      */
     public static function forzar_regeneracion_pdf($certificado_id) {
-        $certificado = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+        $certificado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
         
         if (!$certificado) {
             error_log('CertificadosPersonalizados: Certificado no encontrado para regeneración - ID: ' . $certificado_id);
@@ -936,7 +922,7 @@ class CertificadosPersonalizadosPDF {
             error_log('CertificadosPersonalizados: PDF regenerado exitosamente - ID: ' . $certificado_id);
             
             // Verificar que el archivo se creó correctamente
-            $nuevo_pdf = CertificadosPersonalizadosBD::obtener_certificado($certificado_id);
+            $nuevo_pdf = CertificadosAntecoreBD::obtener_certificado($certificado_id);
             if ($nuevo_pdf && $nuevo_pdf->pdf_path) {
                 $local_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $nuevo_pdf->pdf_path);
                 if (file_exists($local_path)) {
@@ -966,7 +952,7 @@ class CertificadosPersonalizadosPDF {
             $pdf_equivalente = str_replace('.html', '.pdf', $archivo);
             if (file_exists($pdf_equivalente)) {
                 unlink($archivo);
-                error_log('CertificadosPersonalizadosPDF: Archivo HTML eliminado: ' . basename($archivo));
+                error_log('CertificadosAntecorePDF: Archivo HTML eliminado: ' . basename($archivo));
             }
         }
     }
