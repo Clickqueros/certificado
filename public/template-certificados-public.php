@@ -274,40 +274,13 @@ jQuery(document).ready(function($) {
         `);
     }
     
-    // Cargar todos los certificados al inicio
-    function cargarTodosLosCertificados() {
-        $('#busqueda-loading').show();
-        
-        $.ajax({
-            url: '<?php echo admin_url('admin-ajax.php'); ?>',
-            type: 'POST',
-            data: {
-                action: 'buscar_certificados',
-                busqueda: '',
-                nonce: '<?php echo wp_create_nonce('buscar_certificados_nonce'); ?>'
-            },
-            success: function(response) {
-                $('#busqueda-loading').hide();
-                
-                if (response.success) {
-                    if (response.data.encontrados) {
-                        mostrarResultados(response.data.resultados);
-                    } else {
-                        mostrarNoResultados(response.data.mensaje);
-                    }
-                } else {
-                    mostrarError('Error en la búsqueda: ' + response.data);
-                }
-            },
-            error: function() {
-                $('#busqueda-loading').hide();
-                mostrarError('Error de conexión. Intenta nuevamente.');
-            }
-        });
+    // Mostrar mensaje inicial al cargar la página
+    function inicializarPagina() {
+        mostrarMensajeInicial();
     }
     
-    // Cargar todos los certificados al inicio
-    cargarTodosLosCertificados();
+    // Inicializar página sin cargar certificados
+    inicializarPagina();
     
     // Evento de búsqueda en tiempo real
     $('#busqueda-certificados').on('input', function() {
