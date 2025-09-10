@@ -1,0 +1,3 @@
+[33me28b02c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m Actualizar imagen de fondo y ajustar márgenes de la tabla del certificado
+[33m767e88d[m Agregar imagen de firma al certificado
+[33m8d7f2dd[m Implementar imagen de fondo con TCPDF Image() - solución correcta
