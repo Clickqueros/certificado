@@ -285,18 +285,15 @@ class CertificadosAntecore {
             wp_die('Este certificado ya fue enviado para aprobación.');
         }
         
-        // Enviar notificación por correo
-        $correo_enviado = CertificadosAntecoreBD::enviar_notificacion_aprobacion($certificado_id);
-        
-        // Marcar como notificado
+        // Marcar como notificado (las notificaciones se envían automáticamente al crear el certificado)
         $marcado = CertificadosAntecoreBD::marcar_como_notificado($certificado_id);
         
-        if ($correo_enviado && $marcado) {
+        if ($marcado) {
             $mensaje = 'exito';
             $texto = 'Tu solicitud ha sido enviada al administrador.';
         } else {
             $mensaje = 'error';
-            $texto = 'Error al enviar la notificación. Inténtalo de nuevo.';
+            $texto = 'Error al procesar la solicitud. Inténtalo de nuevo.';
         }
         
         // Redirigir de vuelta al formulario
