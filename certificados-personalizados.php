@@ -476,6 +476,16 @@ class CertificadosAntecore {
                 31
             );
             
+            // Submenú de configuración de notificaciones
+            add_submenu_page(
+                'aprobacion-certificados',
+                __('Configuración de Notificaciones', 'certificados-personalizados'),
+                __('Configurar Notificaciones', 'certificados-personalizados'),
+                'manage_options',
+                'configuracion-notificaciones',
+                array($this, 'mostrar_configuracion_notificaciones')
+            );
+            
         }
     }
     
@@ -503,6 +513,20 @@ class CertificadosAntecore {
         
         // Cargar vista
         include CERTIFICADOS_ANTECORE_PLUGIN_PATH . 'admin/aprobacion-certificados.php';
+    }
+    
+    /**
+     * Mostrar configuración de notificaciones
+     */
+    public function mostrar_configuracion_notificaciones() {
+        // Verificar permisos
+        if (!current_user_can('manage_options')) {
+            wp_die(__('No tienes permisos para acceder a esta página.', 'certificados-personalizados'));
+        }
+        
+        // Cargar vista
+        include CERTIFICADOS_ANTECORE_PLUGIN_PATH . 'admin/configuracion-notificaciones.php';
+        ConfiguracionNotificaciones::mostrar_pagina_configuracion();
     }
     
     /**

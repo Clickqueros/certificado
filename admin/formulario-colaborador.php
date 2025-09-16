@@ -138,6 +138,9 @@ function procesar_solicitud_certificado() {
         // Generar PDF automáticamente
         $pdf_generado = CertificadosAntecorePDF::generar_certificado_pdf($certificado_id);
         
+        // Enviar notificaciones a los emails configurados
+        enviar_notificaciones_nueva_solicitud($certificado_id);
+        
         $certificado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
         return array(
             'tipo' => 'exito', 
@@ -1046,4 +1049,164 @@ jQuery(document).ready(function($) {
     // Inicializar información del certificado
     setTimeout(actualizarInfoCertificado, 100);
 });
-</script> 
+</script>
+
+<?php
+/**
+ * Enviar notificaciones de nueva solicitud de certificado
+ */
+function enviar_notificaciones_nueva_solicitud($certificado_id) {
+    // Obtener configuración de emails
+    $emails_personalizados = get_option('certificados_emails_notificacion', []);
+    $usuarios_seleccionados = get_option('certificados_usuarios_notificacion', []);
+    
+    // Obtener emails de usuarios seleccionados
+    $emails_usuarios = [];
+    if (!empty($usuarios_seleccionados)) {
+        $usuarios = get_users(['include' => $usuarios_seleccionados]);
+        foreach ($usuarios as $usuario) {
+            if (is_email($usuario->user_email)) {
+                $emails_usuarios[] = $usuario->user_email;
+            }
+        }
+    }
+    
+    // Combinar todos los emails y eliminar duplicados
+    $todos_emails = array_merge($emails_personalizados, $emails_usuarios);
+    $todos_emails = array_unique($todos_emails);
+    
+    // Si no hay emails configurados, no enviar notificaciones
+    if (empty($todos_emails)) {
+        error_log('CertificadosAntecore: No hay emails configurados para notificaciones. Certificado ID: ' . $certificado_id);
+        return false;
+    }
+    
+    // Obtener datos del certificado
+    $certificado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
+    if (!$certificado) {
+        error_log('CertificadosAntecore: No se pudo obtener el certificado para notificación. ID: ' . $certificado_id);
+        return false;
+    }
+    
+    // Obtener datos del usuario que envió la solicitud
+    $usuario_solicitante = get_userdata($certificado->user_id);
+    $nombre_usuario = $usuario_solicitante ? $usuario_solicitante->display_name : 'Usuario desconocido';
+    $email_usuario = $usuario_solicitante ? $usuario_solicitante->user_email : 'Email no disponible';
+    
+    // Preparar contenido del email
+    $asunto = '🔔 Nueva solicitud de certificado - ' . esc_html($certificado->nombre_instalacion);
+    
+    $mensaje = '
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .header { background-color: #542a1a; color: #fef7d4; padding: 20px; text-align: center; }
+            .content { padding: 20px; background-color: #f9f9f9; }
+            .info-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+            .info-table th, .info-table td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+            .info-table th { background-color: #542a1a; color: #fef7d4; }
+            .button { display: inline-block; background-color: #542a1a; color: #fef7d4; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 15px 0; }
+            .footer { background-color: #f5f0e8; padding: 15px; text-align: center; font-size: 12px; color: #666; }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>🔔 Nueva Solicitud de Certificado</h1>
+            <p>Sistema de Certificados Antecore</p>
+        </div>
+        
+        <div class="content">
+            <h2>📋 Información de la Solicitud</h2>
+            
+            <table class="info-table">
+                <tr>
+                    <th>🏢 Instalación</th>
+                    <td>' . esc_html($certificado->nombre_instalacion) . '</td>
+                </tr>
+                <tr>
+                    <th>🏷️ Código Único</th>
+                    <td><strong>' . esc_html($certificado->codigo_unico) . '</strong></td>
+                </tr>
+                <tr>
+                    <th>📄 Tipo de Certificado</th>
+                    <td>' . esc_html($certificado->tipo_certificado) . '</td>
+                </tr>
+                <tr>
+                    <th>🔢 Número de Certificado</th>
+                    <td>' . esc_html($certificado->numero_certificado) . '</td>
+                </tr>
+                <tr>
+                    <th>🏭 Razón Social</th>
+                    <td>' . esc_html($certificado->razon_social) . '</td>
+                </tr>
+                <tr>
+                    <th>🆔 NIT</th>
+                    <td>' . esc_html($certificado->nit) . '</td>
+                </tr>
+                <tr>
+                    <th>📍 Dirección</th>
+                    <td>' . esc_html($certificado->direccion_instalacion) . '</td>
+                </tr>
+                <tr>
+                    <th>⛽ Capacidad de Almacenamiento</th>
+                    <td>' . esc_html($certificado->capacidad_almacenamiento) . '</td>
+                </tr>
+                <tr>
+                    <th>🛢️ Número de Tanques</th>
+                    <td>' . esc_html($certificado->numero_tanques) . '</td>
+                </tr>
+                <tr>
+                    <th>📅 Fecha de Aprobación</th>
+                    <td>' . esc_html($certificado->fecha_aprobacion) . '</td>
+                </tr>
+                <tr>
+                    <th>👤 Solicitante</th>
+                    <td>' . esc_html($nombre_usuario) . ' (' . esc_html($email_usuario) . ')</td>
+                </tr>
+                <tr>
+                    <th>⏰ Fecha de Solicitud</th>
+                    <td>' . date('d/m/Y H:i:s', strtotime($certificado->created_at)) . '</td>
+                </tr>
+            </table>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="' . admin_url('admin.php?page=aprobacion-certificados') . '" class="button">
+                    🔍 Revisar en Panel de Administración
+                </a>
+            </div>
+            
+            <p><strong>📝 Nota:</strong> Esta solicitud está pendiente de revisión. Por favor, accede al panel de administración para aprobar o rechazar el certificado.</p>
+        </div>
+        
+        <div class="footer">
+            <p>Este es un mensaje automático del Sistema de Certificados Antecore.</p>
+            <p>No responda a este email. Para consultas, contacte al administrador del sistema.</p>
+        </div>
+    </body>
+    </html>';
+    
+    // Configurar headers del email
+    $headers = array(
+        'Content-Type: text/html; charset=UTF-8',
+        'From: Sistema Certificados Antecore <noreply@' . parse_url(home_url(), PHP_URL_HOST) . '>',
+        'Reply-To: ' . get_option('admin_email')
+    );
+    
+    // Enviar email a cada destinatario
+    $emails_enviados = 0;
+    foreach ($todos_emails as $email) {
+        if (wp_mail($email, $asunto, $mensaje, $headers)) {
+            $emails_enviados++;
+        } else {
+            error_log('CertificadosAntecore: Error al enviar notificación a: ' . $email);
+        }
+    }
+    
+    // Log del resultado
+    error_log('CertificadosAntecore: Notificaciones enviadas. Certificado ID: ' . $certificado_id . ' | Emails enviados: ' . $emails_enviados . '/' . count($todos_emails));
+    
+    return $emails_enviados > 0;
+}
+?> 
