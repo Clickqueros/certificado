@@ -681,13 +681,7 @@ class CertificadosAntecore {
             // Verificar que el PDF se actualizó correctamente
             $pdf_verificado = CertificadosAntecorePDF::verificar_pdf_actualizado($certificado_id);
             
-            if ($pdf_regenerado && $pdf_verificado) {
-                $mensaje_texto = 'Certificado actualizado correctamente. PDF regenerado y verificado.';
-            } elseif ($pdf_regenerado) {
-                $mensaje_texto = 'Certificado actualizado correctamente. PDF regenerado (verificación pendiente).';
-            } else {
-                $mensaje_texto = 'Certificado actualizado correctamente. Error al regenerar PDF.';
-            }
+            $mensaje_texto = 'Certificado actualizado correctamente.';
             
             // Redirigir con mensaje de éxito
             $url_redirect = admin_url('admin.php?page=mis-certificados&mensaje=exito&texto=' . urlencode($mensaje_texto));
@@ -874,13 +868,7 @@ class CertificadosAntecore {
                 error_log('CertificadosPersonalizados: URL del PDF actualizada para admin - ID: ' . $certificado_id . ' - Nueva URL: ' . $url_actualizada);
             }
             
-            if ($pdf_regenerado && $pdf_verificado) {
-                $mensaje_texto = 'Certificado actualizado correctamente. PDF regenerado y verificado.';
-            } elseif ($pdf_regenerado) {
-                $mensaje_texto = 'Certificado actualizado correctamente. PDF regenerado (verificación pendiente).';
-            } else {
-                $mensaje_texto = 'Certificado actualizado correctamente. Error al regenerar PDF.';
-            }
+            $mensaje_texto = 'Certificado actualizado correctamente.';
             
             // Redirigir con mensaje de éxito
             $url_redirect = admin_url('admin.php?page=certificados&mensaje=exito&texto=' . urlencode($mensaje_texto));
