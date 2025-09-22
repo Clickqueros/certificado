@@ -460,18 +460,20 @@ function obtener_tipos_certificado() {
                 <div class="notice notice-info">
                     <p><strong><?php _e('Instrucciones:', 'certificados-personalizados'); ?></strong></p>
                     <ol>
-                        <li><?php _e('Descarga la plantilla Excel/CSV', 'certificados-personalizados'); ?></li>
+                        <li><?php _e('Descarga la plantilla CSV (recomendado)', 'certificados-personalizados'); ?></li>
                         <li><?php _e('Llena la plantilla con los datos de los certificados', 'certificados-personalizados'); ?></li>
-                        <li><?php _e('Sube el archivo completado', 'certificados-personalizados'); ?></li>
+                        <li><?php _e('Guarda el archivo como CSV (no Excel)', 'certificados-personalizados'); ?></li>
+                        <li><?php _e('Sube el archivo CSV completado', 'certificados-personalizados'); ?></li>
                         <li><?php _e('Revisa los resultados del procesamiento', 'certificados-personalizados'); ?></li>
                     </ol>
+                    <p><strong><?php _e('Nota:', 'certificados-personalizados'); ?></strong> <?php _e('Para archivos Excel (.xlsx/.xls), se recomienda convertirlos a CSV primero para mejor compatibilidad.', 'certificados-personalizados'); ?></p>
                 </div>
                 
                 <div class="upload-section">
                     <h3><?php _e('1. Descargar Plantilla', 'certificados-personalizados'); ?></h3>
                     <p><?php _e('Descarga la plantilla Excel/CSV con el formato correcto:', 'certificados-personalizados'); ?></p>
                     <a href="<?php echo admin_url('admin-post.php?action=descargar_plantilla_excel'); ?>" class="button button-primary">
-                        📥 <?php _e('Descargar Plantilla Excel/CSV', 'certificados-personalizados'); ?>
+                        📥 <?php _e('Descargar Plantilla CSV', 'certificados-personalizados'); ?>
                     </a>
                 </div>
                 
@@ -488,7 +490,7 @@ function obtener_tipos_certificado() {
                                 <td>
                                     <input type="file" id="archivo_excel" name="archivo_excel" accept=".csv,.xlsx,.xls" required>
                                     <p class="description">
-                                        <?php _e('Formatos permitidos: CSV, XLSX, XLS. Máximo 5MB.', 'certificados-personalizados'); ?>
+                                        <?php _e('Formatos permitidos: CSV (recomendado), XLSX, XLS. Máximo 5MB.', 'certificados-personalizados'); ?>
                                     </p>
                                 </td>
                             </tr>

@@ -35,7 +35,13 @@ class CertificadosAntecoreExcel {
             $datos_excel = self::leer_archivo_excel_simple($archivo_path);
             
             if (empty($datos_excel)) {
-                $resultados['errores'][] = "No se pudieron leer los datos del archivo Excel.";
+                $extension = strtolower(pathinfo($archivo_path, PATHINFO_EXTENSION));
+                
+                if ($extension === 'csv') {
+                    $resultados['errores'][] = "No se pudieron leer los datos del archivo CSV. Verifique que el archivo tenga el formato correcto y las columnas esperadas.";
+                } else {
+                    $resultados['errores'][] = "No se pudieron leer los datos del archivo Excel. Para archivos .xlsx/.xls, se recomienda convertirlos a CSV primero. Descargue la plantilla CSV y úsela como base.";
+                }
                 return $resultados;
             }
             
@@ -74,14 +80,20 @@ class CertificadosAntecoreExcel {
      */
     private static function leer_archivo_excel_simple($archivo_path) {
         $datos = [];
+        $extension = strtolower(pathinfo($archivo_path, PATHINFO_EXTENSION));
         
-        // Para archivos CSV (convertir Excel a CSV primero)
-        if (pathinfo($archivo_path, PATHINFO_EXTENSION) === 'csv') {
+        // Para archivos CSV
+        if ($extension === 'csv') {
             return self::leer_archivo_csv($archivo_path);
         }
         
-        // Para archivos Excel, usar método básico
-        return self::leer_archivo_excel_basico($archivo_path);
+        // Para archivos Excel, intentar convertir a CSV primero
+        if (in_array($extension, ['xlsx', 'xls'])) {
+            // Intentar usar PHP para leer Excel básico
+            return self::leer_archivo_excel_basico($archivo_path);
+        }
+        
+        return [];
     }
     
     /**
@@ -89,26 +101,60 @@ class CertificadosAntecoreExcel {
      */
     private static function leer_archivo_csv($archivo_path) {
         $datos = [];
+        $separadores = [',', ';', '\t']; // Probar diferentes separadores
         
-        if (($handle = fopen($archivo_path, "r")) !== FALSE) {
-            $encabezados = fgetcsv($handle, 1000, ","); // Leer encabezados
-            
-            while (($fila = fgetcsv($handle, 1000, ",")) !== FALSE) {
-                if (count($fila) >= 9) { // Verificar que tenga al menos 9 columnas
-                    $datos[] = [
-                        'nombre_instalacion' => trim($fila[0]),
-                        'direccion_instalacion' => trim($fila[1]),
-                        'razon_social' => trim($fila[2]),
-                        'nit' => trim($fila[3]),
-                        'capacidad_almacenamiento' => trim($fila[4]),
-                        'numero_tanques' => trim($fila[5]),
-                        'tipo_certificado' => trim($fila[6]),
-                        'numero_certificado' => trim($fila[7]),
-                        'fecha_aprobacion' => trim($fila[8])
-                    ];
+        foreach ($separadores as $separador) {
+            if (($handle = fopen($archivo_path, "r")) !== FALSE) {
+                // Leer encabezados
+                $encabezados = fgetcsv($handle, 1000, $separador);
+                
+                if (!$encabezados) {
+                    fclose($handle);
+                    continue;
                 }
+                
+                // Verificar si los encabezados coinciden con lo esperado
+                $encabezados_limpios = array_map('trim', $encabezados);
+                $encabezados_lower = array_map('strtolower', $encabezados_limpios);
+                
+                $columnas_esperadas = ['nombre_instalacion', 'direccion_instalacion', 'razon_social', 'nit', 'capacidad_almacenamiento', 'numero_tanques', 'tipo_certificado', 'numero_certificado', 'fecha_aprobacion'];
+                $columnas_esperadas_lower = array_map('strtolower', $columnas_esperadas);
+                
+                $match_count = 0;
+                foreach ($columnas_esperadas_lower as $columna) {
+                    if (in_array($columna, $encabezados_lower)) {
+                        $match_count++;
+                    }
+                }
+                
+                // Si al menos 7 de 9 columnas coinciden, procesar
+                if ($match_count >= 7) {
+                    while (($fila = fgetcsv($handle, 1000, $separador)) !== FALSE) {
+                        if (count($fila) >= 9) { // Verificar que tenga al menos 9 columnas
+                            // Limpiar datos y asegurar que no estén vacíos
+                            $fila_limpia = array_map('trim', $fila);
+                            
+                            // Solo agregar si no es una fila completamente vacía
+                            if (!empty(array_filter($fila_limpia))) {
+                                $datos[] = [
+                                    'nombre_instalacion' => isset($fila_limpia[0]) ? $fila_limpia[0] : '',
+                                    'direccion_instalacion' => isset($fila_limpia[1]) ? $fila_limpia[1] : '',
+                                    'razon_social' => isset($fila_limpia[2]) ? $fila_limpia[2] : '',
+                                    'nit' => isset($fila_limpia[3]) ? $fila_limpia[3] : '',
+                                    'capacidad_almacenamiento' => isset($fila_limpia[4]) ? $fila_limpia[4] : '',
+                                    'numero_tanques' => isset($fila_limpia[5]) ? $fila_limpia[5] : '',
+                                    'tipo_certificado' => isset($fila_limpia[6]) ? $fila_limpia[6] : '',
+                                    'numero_certificado' => isset($fila_limpia[7]) ? $fila_limpia[7] : '',
+                                    'fecha_aprobacion' => isset($fila_limpia[8]) ? $fila_limpia[8] : ''
+                                ];
+                            }
+                        }
+                    }
+                    fclose($handle);
+                    break; // Salir del bucle si encontramos datos
+                }
+                fclose($handle);
             }
-            fclose($handle);
         }
         
         return $datos;
@@ -118,9 +164,57 @@ class CertificadosAntecoreExcel {
      * Leer archivo Excel básico (solo para archivos simples)
      */
     private static function leer_archivo_excel_basico($archivo_path) {
-        // Por ahora, solo soportamos CSV
-        // En una implementación completa, aquí se usaría PhpSpreadsheet
-        return [];
+        $datos = [];
+        
+        // Intentar leer como CSV con diferentes separadores
+        $separadores = [',', ';', '\t'];
+        
+        foreach ($separadores as $separador) {
+            if (($handle = fopen($archivo_path, "r")) !== FALSE) {
+                $encabezados = fgetcsv($handle, 1000, $separador);
+                
+                // Verificar si los encabezados tienen el formato esperado
+                if ($encabezados && count($encabezados) >= 9) {
+                    // Verificar si contiene las columnas esperadas
+                    $columnas_esperadas = ['NOMBRE_INSTALACION', 'DIRECCION_INSTALACION', 'RAZON_SOCIAL', 'NIT', 'CAPACIDAD_ALMACENAMIENTO', 'NUMERO_TANQUES', 'TIPO_CERTIFICADO', 'NUMERO_CERTIFICADO', 'FECHA_APROBACION'];
+                    
+                    $encabezados_lower = array_map('strtolower', array_map('trim', $encabezados));
+                    $columnas_esperadas_lower = array_map('strtolower', $columnas_esperadas);
+                    
+                    $match_count = 0;
+                    foreach ($columnas_esperadas_lower as $columna) {
+                        if (in_array($columna, $encabezados_lower)) {
+                            $match_count++;
+                        }
+                    }
+                    
+                    // Si al menos 7 de 9 columnas coinciden, es probable que sea el formato correcto
+                    if ($match_count >= 7) {
+                        // Leer datos con este separador
+                        while (($fila = fgetcsv($handle, 1000, $separador)) !== FALSE) {
+                            if (count($fila) >= 9) {
+                                $datos[] = [
+                                    'nombre_instalacion' => isset($fila[0]) ? trim($fila[0]) : '',
+                                    'direccion_instalacion' => isset($fila[1]) ? trim($fila[1]) : '',
+                                    'razon_social' => isset($fila[2]) ? trim($fila[2]) : '',
+                                    'nit' => isset($fila[3]) ? trim($fila[3]) : '',
+                                    'capacidad_almacenamiento' => isset($fila[4]) ? trim($fila[4]) : '',
+                                    'numero_tanques' => isset($fila[5]) ? trim($fila[5]) : '',
+                                    'tipo_certificado' => isset($fila[6]) ? trim($fila[6]) : '',
+                                    'numero_certificado' => isset($fila[7]) ? trim($fila[7]) : '',
+                                    'fecha_aprobacion' => isset($fila[8]) ? trim($fila[8]) : ''
+                                ];
+                            }
+                        }
+                        fclose($handle);
+                        break; // Salir del bucle si encontramos datos
+                    }
+                }
+                fclose($handle);
+            }
+        }
+        
+        return $datos;
     }
     
     /**
