@@ -476,21 +476,21 @@ class CertificadosAntecore {
         
         // Menú para administradores
         if (in_array('administrator', $user_roles)) {
-            // Menú principal de aprobación de certificados
+            // Menú principal de certificados
             add_menu_page(
-                __('Aprobación de Certificados', 'certificados-personalizados'),
+                __('Certificados', 'certificados-personalizados'),
                 __('Certificados', 'certificados-personalizados'),
                 'manage_options',
-                'aprobacion-certificados',
+                'certificados',
                 array($this, 'mostrar_aprobacion_certificados'),
-                'dashicons-yes-alt',
+                'dashicons-awards',
                 31
             );
             
             // Submenú de configuración de notificaciones
             add_submenu_page(
-                'aprobacion-certificados',
-                __('Configuración de Notificaciones', 'certificados-personalizados'),
+                'certificados',
+                __('Configurar Notificaciones', 'certificados-personalizados'),
                 __('Configurar Notificaciones', 'certificados-personalizados'),
                 'manage_options',
                 'configuracion-notificaciones',
