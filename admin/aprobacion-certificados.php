@@ -117,6 +117,155 @@ function obtener_tipos_certificado_admin() {
             <input type="submit" class="button" value="<?php _e('Filtrar', 'certificados-personalizados'); ?>">
         </form>
     </div>
+        <div class="formulario-edicion-admin">
+            <h2><?php _e('Editar Certificado', 'certificados-personalizados'); ?></h2>
+            <p><a href="<?php echo admin_url('admin.php?page=certificados'); ?>" class="button button-secondary">
+                ← <?php _e('Volver a Lista', 'certificados-personalizados'); ?>
+            </a></p>
+            
+            <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" id="formulario-edicion-admin">
+                <?php wp_nonce_field('editar_certificado_admin', 'editar_certificado_admin_nonce'); ?>
+                <input type="hidden" name="action" value="editar_certificado_admin">
+                <input type="hidden" name="certificado_id" value="<?php echo $certificado_edicion->id; ?>">
+                
+                <table class="form-table">
+                    <!-- Información de la Instalación -->
+                    <tr>
+                        <th scope="row">
+                            <label for="nombre_instalacion"><?php _e('Nombre del Lugar/Instalación', 'certificados-personalizados'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="nombre_instalacion" name="nombre_instalacion" class="regular-text" 
+                                   value="<?php echo esc_attr($certificado_edicion->nombre_instalacion); ?>" required>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="direccion_instalacion"><?php _e('Dirección del Lugar', 'certificados-personalizados'); ?></label>
+                        </th>
+                        <td>
+                            <textarea id="direccion_instalacion" name="direccion_instalacion" rows="3" cols="50" class="large-text" required><?php echo esc_textarea($certificado_edicion->direccion_instalacion); ?></textarea>
+                        </td>
+                    </tr>
+                    
+                    <!-- Información de la Empresa -->
+                    <tr>
+                        <th scope="row">
+                            <label for="razon_social"><?php _e('Razón Social', 'certificados-personalizados'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="razon_social" name="razon_social" class="regular-text" 
+                                   value="<?php echo esc_attr($certificado_edicion->razon_social); ?>" required>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="nit"><?php _e('NIT', 'certificados-personalizados'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="nit" name="nit" class="regular-text" 
+                                   value="<?php echo esc_attr($certificado_edicion->nit); ?>" required>
+                        </td>
+                    </tr>
+                    
+                    <!-- Información del Certificado -->
+                    <tr>
+                        <th scope="row">
+                            <label for="tipo_certificado"><?php _e('Tipo de Certificado', 'certificados-personalizados'); ?></label>
+                        </th>
+                        <td>
+                            <select id="tipo_certificado" name="tipo_certificado" required>
+                                <option value=""><?php _e('Seleccionar tipo...', 'certificados-personalizados'); ?></option>
+                                <?php foreach (obtener_tipos_certificado_admin() as $valor => $texto): ?>
+                                    <option value="<?php echo esc_attr($valor); ?>" <?php selected($certificado_edicion->tipo_certificado, $valor); ?>>
+                                        <?php echo esc_html($texto); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="numero_certificado"><?php _e('Número del Certificado', 'certificados-personalizados'); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" id="numero_certificado" name="numero_certificado" class="small-text" 
+                                   value="<?php echo esc_attr($certificado_edicion->numero_certificado); ?>" min="1" required>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="fecha_aprobacion"><?php _e('Fecha de Aprobación del Certificado', 'certificados-personalizados'); ?></label>
+                        </th>
+                        <td>
+                            <input type="date" id="fecha_aprobacion" name="fecha_aprobacion" 
+                                   value="<?php echo esc_attr($certificado_edicion->fecha_aprobacion); ?>" required>
+                        </td>
+                    </tr>
+                    
+                    <!-- Información Técnica -->
+                    <tr>
+                        <th scope="row">
+                            <label for="capacidad_almacenamiento"><?php _e('Capacidad de Almacenamiento', 'certificados-personalizados'); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" id="capacidad_almacenamiento" name="capacidad_almacenamiento" class="small-text" 
+                                   value="<?php echo esc_attr($certificado_edicion->capacidad_almacenamiento); ?>" min="0" step="0.01" required>
+                            <span>galones</span>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="numero_tanques"><?php _e('Número de Tanques', 'certificados-personalizados'); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" id="numero_tanques" name="numero_tanques" class="small-text" 
+                                   value="<?php echo esc_attr($certificado_edicion->numero_tanques); ?>" min="1" required>
+                        </td>
+                    </tr>
+                    
+                    <!-- Estado del Certificado -->
+                    <tr>
+                        <th scope="row">
+                            <label for="estado"><?php _e('Estado del Certificado', 'certificados-personalizados'); ?></label>
+                        </th>
+                        <td>
+                            <select id="estado" name="estado" required>
+                                <option value="pendiente" <?php selected($certificado_edicion->estado, 'pendiente'); ?>><?php _e('Pendiente', 'certificados-personalizados'); ?></option>
+                                <option value="aprobado" <?php selected($certificado_edicion->estado, 'aprobado'); ?>><?php _e('Aprobado', 'certificados-personalizados'); ?></option>
+                                <option value="rechazado" <?php selected($certificado_edicion->estado, 'rechazado'); ?>><?php _e('Rechazado', 'certificados-personalizados'); ?></option>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Botones de Acción -->
+                <div class="botones-accion" style="margin: 20px 0;">
+                    <?php submit_button(__('Guardar Cambios', 'certificados-personalizados'), 'primary', 'guardar_cambios', false); ?>
+                    
+                    <a href="<?php echo admin_url('admin.php?page=certificados'); ?>" class="button button-secondary">
+                        <?php _e('Cancelar', 'certificados-personalizados'); ?>
+                    </a>
+                    
+                    <?php if (!empty($certificado_edicion->pdf_path)): ?>
+                        <a href="<?php echo esc_url($certificado_edicion->pdf_path); ?>" target="_blank" class="button button-secondary">
+                            📄 <?php _e('Ver PDF Actual', 'certificados-personalizados'); ?>
+                        </a>
+                    <?php endif; ?>
+                    
+                    <button type="submit" name="regenerar_pdf" value="1" class="button button-secondary" 
+                            onclick="return confirm('¿Regenerar el PDF con los nuevos datos?')">
+                        🔄 <?php _e('Regenerar PDF', 'certificados-personalizados'); ?>
+                    </button>
+                </div>
+            </form>
+        </div>
+    <?php endif; ?>
     
     <!-- Lista de certificados pendientes -->
     <div class="certificados-pendientes">
@@ -286,9 +435,6 @@ function obtener_tipos_certificado_admin() {
         <?php endif; ?>
     </div>
     
-    
-    <!-- Formulario de Edición para Administradores -->
-    <?php if ($modo_edicion && $certificado_edicion): ?>
         <div class="formulario-edicion-admin">
             <h2><?php _e('Editar Certificado', 'certificados-personalizados'); ?></h2>
             <p><a href="<?php echo admin_url('admin.php?page=certificados'); ?>" class="button button-secondary">
