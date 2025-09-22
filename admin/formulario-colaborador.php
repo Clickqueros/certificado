@@ -490,19 +490,9 @@ function obtener_tipos_certificado() {
                         <a href="<?php echo admin_url('admin-post.php?action=descargar_plantilla_excel'); ?>" class="button button-primary">
                             📥 <?php _e('Descargar Plantilla CSV', 'certificados-personalizados'); ?>
                         </a>
-                        <a href="<?php echo admin_url('admin-post.php?action=crear_archivo_simple'); ?>" class="button button-secondary">
-                            🧪 <?php _e('Archivo Simple (Recomendado)', 'certificados-personalizados'); ?>
-                        </a>
-                        <a href="<?php echo admin_url('admin-post.php?action=crear_archivo_prueba'); ?>" class="button button-secondary">
-                            📋 <?php _e('Archivo Completo', 'certificados-personalizados'); ?>
-                        </a>
-                        <a href="<?php echo admin_url('admin-post.php?action=debug_archivo'); ?>" class="button button-secondary" style="background: #d63638; color: white;">
-                            🔍 <?php _e('Debug Sistema', 'certificados-personalizados'); ?>
-                        </a>
                     </p>
                     <p class="description">
-                        <strong><?php _e('Archivo Simple (Recomendado):', 'certificados-personalizados'); ?></strong> <?php _e('Formato básico que funciona en todos los casos.', 'certificados-personalizados'); ?><br>
-                        <strong><?php _e('Archivo Completo:', 'certificados-personalizados'); ?></strong> <?php _e('Incluye descripciones y formato avanzado.', 'certificados-personalizados'); ?>
+                        <?php _e('Descarga la plantilla CSV con el formato correcto y datos de ejemplo para crear múltiples certificados.', 'certificados-personalizados'); ?>
                     </p>
                 </div>
                 
@@ -549,35 +539,16 @@ function obtener_tipos_certificado() {
                         </ul>
                     </div>
                     
-                    <details class="troubleshooting">
-                        <summary><strong><?php _e('🔧 Solución de problemas comunes:', 'certificados-personalizados'); ?></strong></summary>
-                        <div class="troubleshooting-content">
-                            <h4><?php _e('Problema: "No se pudieron leer los datos del archivo"', 'certificados-personalizados'); ?></h4>
-                            <p><strong><?php _e('Solución:', 'certificados-personalizados'); ?></strong></p>
-                            <ol>
-                                <li><?php _e('Asegúrese de haber descargado la plantilla CSV oficial', 'certificados-personalizados'); ?></li>
-                                <li><?php _e('Abra la plantilla con Excel y llene los datos', 'certificados-personalizados'); ?></li>
-                                <li><?php _e('Al guardar, seleccione "CSV UTF-8 (delimitado por comas)"', 'certificados-personalizados'); ?></li>
-                                <li><?php _e('NO guarde como Excel (.xlsx) - solo CSV', 'certificados-personalizados'); ?></li>
-                            </ol>
-                            
-                            <h4><?php _e('Problema: "Encabezados incorrectos"', 'certificados-personalizados'); ?></h4>
-                            <p><strong><?php _e('Solución:', 'certificados-personalizados'); ?></strong></p>
-                            <ol>
-                                <li><?php _e('NO modifique la primera fila (encabezados)', 'certificados-personalizados'); ?></li>
-                                <li><?php _e('Mantenga exactamente estos nombres: NOMBRE_INSTALACION, DIRECCION_INSTALACION, etc.', 'certificados-personalizados'); ?></li>
-                                <li><?php _e('Use solo mayúsculas y guiones bajos en los encabezados', 'certificados-personalizados'); ?></li>
-                            </ol>
-                            
-                            <h4><?php _e('Problema: "Formato de fecha incorrecto"', 'certificados-personalizados'); ?></h4>
-                            <p><strong><?php _e('Solución:', 'certificados-personalizados'); ?></strong></p>
-                            <ol>
-                                <li><?php _e('Use el formato DD/MM/YYYY (ejemplo: 15/12/2024)', 'certificados-personalizados'); ?></li>
-                                <li><?php _e('NO use guiones (-) o puntos (.) en las fechas', 'certificados-personalizados'); ?></li>
-                                <li><?php _e('La fecha no puede ser futura', 'certificados-personalizados'); ?></li>
-                            </ol>
-                        </div>
-                    </details>
+                    <div class="troubleshooting">
+                        <h4><?php _e('💡 Consejos importantes:', 'certificados-personalizados'); ?></h4>
+                        <ul>
+                            <li><?php _e('Use la plantilla CSV oficial descargada arriba', 'certificados-personalizados'); ?></li>
+                            <li><?php _e('Guarde siempre como "CSV UTF-8 (delimitado por comas)"', 'certificados-personalizados'); ?></li>
+                            <li><?php _e('Use formato de fecha DD/MM/YYYY (ejemplo: 15/12/2024)', 'certificados-personalizados'); ?></li>
+                            <li><?php _e('Cada NIT debe ser único en el sistema', 'certificados-personalizados'); ?></li>
+                            <li><?php _e('No modifique los nombres de las columnas (encabezados)', 'certificados-personalizados'); ?></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
