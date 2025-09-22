@@ -117,6 +117,9 @@ function obtener_tipos_certificado_admin() {
             <input type="submit" class="button" value="<?php _e('Filtrar', 'certificados-personalizados'); ?>">
         </form>
     </div>
+    
+    <!-- Formulario de Edición para Administradores -->
+    <?php if ($modo_edicion && $certificado_edicion): ?>
         <div class="formulario-edicion-admin">
             <h2><?php _e('Editar Certificado', 'certificados-personalizados'); ?></h2>
             <p><a href="<?php echo admin_url('admin.php?page=certificados'); ?>" class="button button-secondary">
