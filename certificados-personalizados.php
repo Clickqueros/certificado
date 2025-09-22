@@ -95,6 +95,9 @@ class CertificadosAntecore {
         // Hook para crear archivo de prueba
         add_action('admin_post_crear_archivo_prueba', array($this, 'crear_archivo_prueba'));
         
+        // Hook para crear archivo simple
+        add_action('admin_post_crear_archivo_simple', array($this, 'crear_archivo_simple'));
+        
         // Cargar archivos necesarios
         $this->cargar_archivos();
     }
@@ -1269,16 +1272,62 @@ class CertificadosAntecore {
         // Crear contenido CSV con BOM para UTF-8
         $contenido = "\xEF\xBB\xBF"; // BOM para UTF-8
         
+        // Función para escapar CSV
+        $escapar_csv = function($datos) {
+            $resultado = [];
+            foreach ($datos as $dato) {
+                // Escapar comillas dobles y envolver en comillas si contiene comas, comillas o saltos de línea
+                if (strpos($dato, ',') !== false || strpos($dato, '"') !== false || strpos($dato, "\n") !== false) {
+                    $dato = '"' . str_replace('"', '""', $dato) . '"';
+                }
+                $resultado[] = $dato;
+            }
+            return implode(',', $resultado);
+        };
+        
         // Agregar encabezados
-        $contenido .= implode(',', $encabezados) . "\n";
+        $contenido .= $escapar_csv($encabezados) . "\n";
         
         // Agregar datos de prueba
         foreach ($datos_prueba as $fila) {
-            $contenido .= implode(',', $fila) . "\n";
+            $contenido .= $escapar_csv($fila) . "\n";
         }
         
         // Configurar headers para descarga
         $nombre_archivo = 'archivo-prueba-certificados.csv';
+        
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $nombre_archivo . '"');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        
+        echo $contenido;
+        exit;
+    }
+    
+    /**
+     * Crear archivo simple sin escape complejo
+     */
+    public function crear_archivo_simple() {
+        // Verificar que el usuario esté logueado
+        if (!is_user_logged_in()) {
+            wp_die('Debes estar logueado para realizar esta acción.');
+        }
+        
+        $user = wp_get_current_user();
+        if (!in_array('contributor', $user->roles)) {
+            wp_die('No tienes permisos para realizar esta acción.');
+        }
+        
+        // Crear contenido simple
+        $contenido = "NOMBRE_INSTALACION,DIRECCION_INSTALACION,RAZON_SOCIAL,NIT,CAPACIDAD_ALMACENAMIENTO,NUMERO_TANQUES,TIPO_CERTIFICADO,NUMERO_CERTIFICADO,FECHA_APROBACION\n";
+        $contenido .= "Estación de Servicio ABC,Calle 123 #45-67 Bogotá,Servicios ABC S.A.S.,900123456-1,10000,5,PAGLP,001,15/12/2024\n";
+        $contenido .= "Planta de Almacenamiento XYZ,Carrera 456 #78-90 Medellín,Almacenamiento XYZ Ltda.,900987654-3,25000,8,TEGLP,002,20/12/2024\n";
+        $contenido .= "Distribuidora GLP Central,Avenida 789 #12-34 Cali,Distribuidora Central S.A.S.,900555666-7,15000,3,DEGLP,003,25/12/2024\n";
+        
+        // Configurar headers para descarga
+        $nombre_archivo = 'archivo-simple-certificados.csv';
         
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . $nombre_archivo . '"');

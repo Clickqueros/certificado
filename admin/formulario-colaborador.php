@@ -485,12 +485,16 @@ function obtener_tipos_certificado() {
                         <a href="<?php echo admin_url('admin-post.php?action=descargar_plantilla_excel'); ?>" class="button button-primary">
                             📥 <?php _e('Descargar Plantilla CSV', 'certificados-personalizados'); ?>
                         </a>
+                        <a href="<?php echo admin_url('admin-post.php?action=crear_archivo_simple'); ?>" class="button button-secondary">
+                            🧪 <?php _e('Archivo Simple (Recomendado)', 'certificados-personalizados'); ?>
+                        </a>
                         <a href="<?php echo admin_url('admin-post.php?action=crear_archivo_prueba'); ?>" class="button button-secondary">
-                            🧪 <?php _e('Descargar Archivo de Prueba', 'certificados-personalizados'); ?>
+                            📋 <?php _e('Archivo Completo', 'certificados-personalizados'); ?>
                         </a>
                     </p>
                     <p class="description">
-                        <?php _e('Use el archivo de prueba para verificar que el formato funciona correctamente antes de crear su propio archivo.', 'certificados-personalizados'); ?>
+                        <strong><?php _e('Archivo Simple (Recomendado):', 'certificados-personalizados'); ?></strong> <?php _e('Formato básico que funciona en todos los casos.', 'certificados-personalizados'); ?><br>
+                        <strong><?php _e('Archivo Completo:', 'certificados-personalizados'); ?></strong> <?php _e('Incluye descripciones y formato avanzado.', 'certificados-personalizados'); ?>
                     </p>
                 </div>
                 
