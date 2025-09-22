@@ -493,12 +493,18 @@ function obtener_tipos_certificado() {
                         <a href="<?php echo admin_url('admin-post.php?action=crear_archivo_prueba_simple'); ?>" class="button button-secondary" style="margin-left: 10px;">
                             🧪 <?php _e('Archivo de Prueba Simple', 'certificados-personalizados'); ?>
                         </a>
+                        <a href="<?php echo admin_url('admin-post.php?action=debug_archivo_directo'); ?>" class="button button-secondary" style="margin-left: 10px;">
+                            🔍 <?php _e('Debug del Sistema', 'certificados-personalizados'); ?>
+                        </a>
                     </p>
                     <p class="description">
                         <?php _e('Descarga la plantilla CSV con el formato correcto y datos de ejemplo para crear múltiples certificados.', 'certificados-personalizados'); ?>
                     </p>
                     <p class="description" style="color: #0073aa; font-style: italic;">
                         <strong>🧪 Archivo de Prueba Simple:</strong> <?php _e('Archivo CSV simple con datos de prueba para verificar que el sistema funciona correctamente.', 'certificados-personalizados'); ?>
+                    </p>
+                    <p class="description" style="color: #d63384; font-style: italic;">
+                        <strong>🔍 Debug del Sistema:</strong> <?php _e('Herramienta de diagnóstico que muestra información detallada sobre el procesamiento de archivos CSV/Excel.', 'certificados-personalizados'); ?>
                     </p>
                 </div>
                 
