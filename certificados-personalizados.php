@@ -476,40 +476,20 @@ class CertificadosAntecore {
         
         // Menú para administradores
         if (in_array('administrator', $user_roles)) {
-            // Menú principal de gestión de certificados
+            // Menú principal de aprobación de certificados
             add_menu_page(
-                __('Gestión de Certificados', 'certificados-personalizados'),
+                __('Aprobación de Certificados', 'certificados-personalizados'),
                 __('Certificados', 'certificados-personalizados'),
                 'manage_options',
-                'gestion-certificados',
-                array($this, 'mostrar_gestion_certificados'),
-                'dashicons-admin-tools',
-                31
-            );
-            
-            // Submenú de edición de certificados (PRIMERO)
-            add_submenu_page(
-                'gestion-certificados',
-                __('Editar Certificado', 'certificados-personalizados'),
-                __('Editar Certificado', 'certificados-personalizados'),
-                'manage_options',
-                'editar-certificado',
-                array($this, 'mostrar_edicion_certificado')
-            );
-            
-            // Submenú de aprobación de certificados (SEGUNDO)
-            add_submenu_page(
-                'gestion-certificados',
-                __('Aprobación de Certificados', 'certificados-personalizados'),
-                __('Aprobación de Certificados', 'certificados-personalizados'),
-                'manage_options',
                 'aprobacion-certificados',
-                array($this, 'mostrar_aprobacion_certificados')
+                array($this, 'mostrar_aprobacion_certificados'),
+                'dashicons-yes-alt',
+                31
             );
             
             // Submenú de configuración de notificaciones
             add_submenu_page(
-                'gestion-certificados',
+                'aprobacion-certificados',
                 __('Configuración de Notificaciones', 'certificados-personalizados'),
                 __('Configurar Notificaciones', 'certificados-personalizados'),
                 'manage_options',
@@ -520,36 +500,6 @@ class CertificadosAntecore {
         }
     }
     
-    /**
-     * Mostrar página principal de gestión de certificados
-     */
-    public function mostrar_gestion_certificados() {
-        // Redirigir a la página de aprobación por defecto
-        wp_redirect(admin_url('admin.php?page=aprobacion-certificados'));
-        exit;
-    }
-    
-    /**
-     * Mostrar formulario de edición de certificados
-     */
-    public function mostrar_edicion_certificado() {
-        // Verificar si estamos editando un certificado específico
-        if (isset($_GET['editar']) && !empty($_GET['editar'])) {
-            $certificado_id = intval($_GET['editar']);
-            $certificado_edicion = CertificadosAntecoreBD::obtener_certificado_para_edicion_admin($certificado_id);
-            
-            if ($certificado_edicion) {
-                // Mostrar formulario de edición
-                include plugin_dir_path(__FILE__) . 'admin/edicion-certificado.php';
-            } else {
-                echo '<div class="notice notice-error"><p>Certificado no encontrado.</p></div>';
-                echo '<p><a href="' . admin_url('admin.php?page=aprobacion-certificados') . '" class="button">Volver a la lista</a></p>';
-            }
-        } else {
-            // Mostrar selector de certificados para editar
-            include plugin_dir_path(__FILE__) . 'admin/selector-edicion-certificado.php';
-        }
-    }
     
     /**
      * Mostrar formulario de colaborador

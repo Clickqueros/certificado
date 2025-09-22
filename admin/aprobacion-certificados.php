@@ -274,7 +274,7 @@ function obtener_tipos_certificado_admin() {
                                  
                                  <!-- Botón de Editar para Administradores -->
                                  <br><br>
-                                 <a href="<?php echo admin_url('admin.php?page=editar-certificado&editar=' . $certificado->id); ?>" 
+                                 <a href="<?php echo admin_url('admin.php?page=aprobacion-certificados&editar=' . $certificado->id); ?>" 
                                     class="button button-secondary">
                                      ✏️ <?php _e('Editar', 'certificados-personalizados'); ?>
                                  </a>
@@ -286,8 +286,9 @@ function obtener_tipos_certificado_admin() {
         <?php endif; ?>
     </div>
     
-    <!-- El formulario de edición ahora está en su propio menú -->
-    <?php if (false && $modo_edicion && $certificado_edicion): ?>
+    
+    <!-- Formulario de Edición para Administradores -->
+    <?php if ($modo_edicion && $certificado_edicion): ?>
         <div class="formulario-edicion-admin">
             <h2><?php _e('Editar Certificado', 'certificados-personalizados'); ?></h2>
             <p><a href="<?php echo admin_url('admin.php?page=aprobacion-certificados'); ?>" class="button button-secondary">
