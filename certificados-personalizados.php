@@ -1236,12 +1236,18 @@ class CertificadosAntecore {
             'NUMERO_TANQUES'
         ];
         
+        // Generar NITs únicos basados en timestamp
+        $timestamp = time();
+        $nit1 = '9' . substr($timestamp, -8) . '-1';
+        $nit2 = '9' . substr($timestamp, -8) . '-2';
+        $nit3 = '9' . substr($timestamp, -8) . '-3';
+        
         $datos_prueba = [
             [
                 'Estación de Servicio ABC',
                 'Calle 123 #45-67, Bogotá',
                 'Servicios ABC S.A.S.',
-                '900123456-1',
+                $nit1,
                 'PAGLP',
                 '001',
                 '15/12/2024',
@@ -1252,7 +1258,7 @@ class CertificadosAntecore {
                 'Planta de Almacenamiento XYZ',
                 'Carrera 456 #78-90, Medellín',
                 'Almacenamiento XYZ Ltda.',
-                '900987654-3',
+                $nit2,
                 'TEGLP',
                 '002',
                 '20/12/2024',
@@ -1263,7 +1269,7 @@ class CertificadosAntecore {
                 'Distribuidora GLP Central',
                 'Avenida 789 #12-34, Cali',
                 'Distribuidora Central S.A.S.',
-                '900555666-7',
+                $nit3,
                 'DEGLP',
                 '003',
                 '25/12/2024',
@@ -1323,11 +1329,17 @@ class CertificadosAntecore {
             wp_die('No tienes permisos para realizar esta acción.');
         }
         
+        // Generar NITs únicos basados en timestamp
+        $timestamp = time();
+        $nit1 = '9' . substr($timestamp, -8) . '-1';
+        $nit2 = '9' . substr($timestamp, -8) . '-2';
+        $nit3 = '9' . substr($timestamp, -8) . '-3';
+        
         // Crear contenido simple - ORDEN IGUAL AL FORMULARIO MANUAL
         $contenido = "NOMBRE_INSTALACION,DIRECCION_INSTALACION,RAZON_SOCIAL,NIT,TIPO_CERTIFICADO,NUMERO_CERTIFICADO,FECHA_APROBACION,CAPACIDAD_ALMACENAMIENTO,NUMERO_TANQUES\n";
-        $contenido .= "Estación de Servicio ABC,Calle 123 #45-67 Bogotá,Servicios ABC S.A.S.,900123456-1,PAGLP,001,15/12/2024,10000,5\n";
-        $contenido .= "Planta de Almacenamiento XYZ,Carrera 456 #78-90 Medellín,Almacenamiento XYZ Ltda.,900987654-3,TEGLP,002,20/12/2024,25000,8\n";
-        $contenido .= "Distribuidora GLP Central,Avenida 789 #12-34 Cali,Distribuidora Central S.A.S.,900555666-7,DEGLP,003,25/12/2024,15000,3\n";
+        $contenido .= "Estación de Servicio ABC,Calle 123 #45-67 Bogotá,Servicios ABC S.A.S.,$nit1,PAGLP,001,15/12/2024,10000,5\n";
+        $contenido .= "Planta de Almacenamiento XYZ,Carrera 456 #78-90 Medellín,Almacenamiento XYZ Ltda.,$nit2,TEGLP,002,20/12/2024,25000,8\n";
+        $contenido .= "Distribuidora GLP Central,Avenida 789 #12-34 Cali,Distribuidora Central S.A.S.,$nit3,DEGLP,003,25/12/2024,15000,3\n";
         
         // Configurar headers para descarga
         $nombre_archivo = 'archivo-simple-certificados.csv';
@@ -1359,9 +1371,13 @@ class CertificadosAntecore {
         // Crear archivo de prueba y analizarlo
         $archivo_temp = tempnam(sys_get_temp_dir(), 'debug_csv_') . '.csv';
         
+        // Generar NIT único basado en timestamp
+        $timestamp = time();
+        $nit_unico = '9' . substr($timestamp, -8) . '-1';
+        
         // Escribir contenido de prueba
         $contenido = "NOMBRE_INSTALACION,DIRECCION_INSTALACION,RAZON_SOCIAL,NIT,TIPO_CERTIFICADO,NUMERO_CERTIFICADO,FECHA_APROBACION,CAPACIDAD_ALMACENAMIENTO,NUMERO_TANQUES\n";
-        $contenido .= "Estación de Servicio ABC,Calle 123 #45-67 Bogotá,Servicios ABC S.A.S.,900123456-1,PAGLP,001,15/12/2024,10000,5\n";
+        $contenido .= "Estación de Servicio ABC,Calle 123 #45-67 Bogotá,Servicios ABC S.A.S.,$nit_unico,PAGLP,001,15/12/2024,10000,5\n";
         
         file_put_contents($archivo_temp, $contenido);
         
