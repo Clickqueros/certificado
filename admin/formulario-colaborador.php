@@ -90,14 +90,19 @@ function procesar_excel_masivo() {
     // Limpiar archivo temporal
     CertificadosAntecoreExcel::limpiar_archivo_temporal($_FILES['archivo_excel']['tmp_name']);
     
-    // Preparar mensaje de resultado
-    $mensaje_tipo = 'info';
-    $mensaje_texto = sprintf(
-        'Procesamiento completado. Total filas: %d, Exitosos: %d, Errores: %d',
-        $resultados['total_filas'],
-        $resultados['exitosos'],
-        count($resultados['errores'])
-    );
+        // Preparar mensaje de resultado
+        $mensaje_tipo = 'info';
+        $mensaje_texto = sprintf(
+            'Procesamiento completado. Total filas: %d, Exitosos: %d, Errores: %d',
+            $resultados['total_filas'],
+            $resultados['exitosos'],
+            count($resultados['errores'])
+        );
+        
+        // DEBUG: Agregar información de debug si hay errores
+        if (!empty($resultados['errores'])) {
+            $mensaje_texto .= ' [DEBUG: Revisar logs del servidor para más detalles]';
+        }
     
     if ($resultados['exitosos'] > 0) {
         $mensaje_tipo = 'exito';
@@ -490,6 +495,9 @@ function obtener_tipos_certificado() {
                         </a>
                         <a href="<?php echo admin_url('admin-post.php?action=crear_archivo_prueba'); ?>" class="button button-secondary">
                             📋 <?php _e('Archivo Completo', 'certificados-personalizados'); ?>
+                        </a>
+                        <a href="<?php echo admin_url('admin-post.php?action=debug_archivo'); ?>" class="button button-secondary" style="background: #d63638; color: white;">
+                            🔍 <?php _e('Debug Sistema', 'certificados-personalizados'); ?>
                         </a>
                     </p>
                     <p class="description">

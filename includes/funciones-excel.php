@@ -31,14 +31,23 @@ class CertificadosAntecoreExcel {
                 return $resultados;
             }
             
+            // DEBUG: Log información del archivo
+            $extension = strtolower(pathinfo($archivo_path, PATHINFO_EXTENSION));
+            $tamaño_archivo = filesize($archivo_path);
+            error_log("DEBUG Excel: Archivo = $archivo_path, Extensión = $extension, Tamaño = $tamaño_archivo bytes");
+            
             // Leer archivo Excel usando método simple (sin PhpSpreadsheet)
             $datos_excel = self::leer_archivo_excel_simple($archivo_path);
             
+            // DEBUG: Log resultado de lectura
+            error_log("DEBUG Excel: Datos leídos = " . count($datos_excel) . " filas");
+            
             if (empty($datos_excel)) {
-                $extension = strtolower(pathinfo($archivo_path, PATHINFO_EXTENSION));
-                
                 // Intentar diagnóstico del archivo
                 $diagnostico = self::diagnosticar_archivo($archivo_path);
+                
+                // DEBUG: Log diagnóstico completo
+                error_log("DEBUG Excel: Diagnóstico = " . json_encode($diagnostico));
                 
                 if ($extension === 'csv') {
                     $mensaje = "No se pudieron leer los datos del archivo CSV. ";
@@ -132,15 +141,22 @@ class CertificadosAntecoreExcel {
         $datos = [];
         $separadores = [',', ';', '\t']; // Probar diferentes separadores
         
+        // DEBUG: Log inicio de lectura CSV
+        error_log("DEBUG CSV: Iniciando lectura de $archivo_path");
+        
         foreach ($separadores as $separador) {
             if (($handle = fopen($archivo_path, "r")) !== FALSE) {
                 // Leer encabezados
                 $encabezados = fgetcsv($handle, 1000, $separador);
                 
                 if (!$encabezados) {
+                    error_log("DEBUG CSV: No se pudieron leer encabezados con separador '$separador'");
                     fclose($handle);
                     continue;
                 }
+                
+                // DEBUG: Log encabezados encontrados
+                error_log("DEBUG CSV: Encabezados con separador '$separador': " . json_encode($encabezados));
                 
                 // Verificar si los encabezados coinciden con lo esperado
                 $encabezados_limpios = array_map('trim', $encabezados);
@@ -162,8 +178,12 @@ class CertificadosAntecoreExcel {
                     }
                 }
                 
+                // DEBUG: Log resultado de validación
+                error_log("DEBUG CSV: Match count = $match_count de " . count($columnas_esperadas));
+                
                 // Si al menos 5 de 9 columnas coinciden, procesar (más flexible)
                 if ($match_count >= 5) {
+                    error_log("DEBUG CSV: Validación exitosa, procesando datos...");
                     while (($fila = fgetcsv($handle, 1000, $separador)) !== FALSE) {
                         if (count($fila) >= 9) { // Verificar que tenga al menos 9 columnas
                             // Limpiar datos y asegurar que no estén vacíos
@@ -187,12 +207,16 @@ class CertificadosAntecoreExcel {
                         }
                     }
                     fclose($handle);
+                    error_log("DEBUG CSV: Datos procesados exitosamente: " . count($datos) . " filas");
                     break; // Salir del bucle si encontramos datos
+                } else {
+                    error_log("DEBUG CSV: Validación fallida con separador '$separador'");
                 }
                 fclose($handle);
             }
         }
         
+        error_log("DEBUG CSV: Total de datos final: " . count($datos) . " filas");
         return $datos;
     }
     
@@ -555,6 +579,10 @@ class CertificadosAntecoreExcel {
         }
         
         $diagnostico['tiene_contenido'] = true;
+        
+        // DEBUG: Log contenido del archivo (primeras 500 caracteres)
+        $contenido_preview = substr($contenido, 0, 500);
+        error_log("DEBUG Diagnóstico: Contenido preview = " . $contenido_preview);
         
         // Detectar separador más común
         $separadores = [',', ';', '\t', '|'];

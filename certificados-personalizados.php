@@ -98,6 +98,9 @@ class CertificadosAntecore {
         // Hook para crear archivo simple
         add_action('admin_post_crear_archivo_simple', array($this, 'crear_archivo_simple'));
         
+        // Hook para debug de archivos
+        add_action('admin_post_debug_archivo', array($this, 'debug_archivo'));
+        
         // Cargar archivos necesarios
         $this->cargar_archivos();
     }
@@ -1336,6 +1339,57 @@ class CertificadosAntecore {
         header('Expires: 0');
         
         echo $contenido;
+        exit;
+    }
+    
+    /**
+     * Debug de archivos para diagnosticar problemas
+     */
+    public function debug_archivo() {
+        // Verificar que el usuario esté logueado
+        if (!is_user_logged_in()) {
+            wp_die('Debes estar logueado para realizar esta acción.');
+        }
+        
+        $user = wp_get_current_user();
+        if (!in_array('contributor', $user->roles)) {
+            wp_die('No tienes permisos para realizar esta acción.');
+        }
+        
+        // Crear archivo de prueba y analizarlo
+        $archivo_temp = tempnam(sys_get_temp_dir(), 'debug_csv_');
+        
+        // Escribir contenido de prueba
+        $contenido = "NOMBRE_INSTALACION,DIRECCION_INSTALACION,RAZON_SOCIAL,NIT,TIPO_CERTIFICADO,NUMERO_CERTIFICADO,FECHA_APROBACION,CAPACIDAD_ALMACENAMIENTO,NUMERO_TANQUES\n";
+        $contenido .= "Estación de Servicio ABC,Calle 123 #45-67 Bogotá,Servicios ABC S.A.S.,900123456-1,PAGLP,001,15/12/2024,10000,5\n";
+        
+        file_put_contents($archivo_temp, $contenido);
+        
+        // Analizar el archivo
+        $diagnostico = CertificadosAntecoreExcel::diagnosticar_archivo($archivo_temp);
+        $datos_leidos = CertificadosAntecoreExcel::procesar_archivo_excel($archivo_temp, $user->ID);
+        
+        // Limpiar archivo temporal
+        unlink($archivo_temp);
+        
+        // Mostrar resultados de debug
+        header('Content-Type: text/html; charset=utf-8');
+        echo '<html><head><title>Debug Excel</title></head><body>';
+        echo '<h1>Debug de Archivos Excel/CSV</h1>';
+        echo '<h2>Archivo de Prueba Creado:</h2>';
+        echo '<pre>' . htmlspecialchars($contenido) . '</pre>';
+        
+        echo '<h2>Diagnóstico del Archivo:</h2>';
+        echo '<pre>' . print_r($diagnostico, true) . '</pre>';
+        
+        echo '<h2>Resultado del Procesamiento:</h2>';
+        echo '<pre>' . print_r($datos_leidos, true) . '</pre>';
+        
+        echo '<h2>Logs Recientes:</h2>';
+        echo '<p>Revisa los logs del servidor para ver los mensajes de debug detallados.</p>';
+        
+        echo '<p><a href="' . admin_url('admin.php?page=mis-certificados') . '">← Volver al formulario</a></p>';
+        echo '</body></html>';
         exit;
     }
 }
