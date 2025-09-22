@@ -355,7 +355,7 @@ class CertificadosAntecore {
         }
         
         // Redirigir de vuelta al panel de aprobación
-        $redirect_url = admin_url('admin.php?page=aprobacion-certificados&mensaje=' . $mensaje . '&texto=' . urlencode($texto));
+        $redirect_url = admin_url('admin.php?page=certificados&mensaje=' . $mensaje . '&texto=' . urlencode($texto));
         wp_redirect($redirect_url);
         exit;
     }
@@ -400,7 +400,7 @@ class CertificadosAntecore {
         }
         
         // Redirigir de vuelta al panel de aprobación
-        $redirect_url = admin_url('admin.php?page=aprobacion-certificados&mensaje=' . $mensaje . '&texto=' . urlencode($texto));
+        $redirect_url = admin_url('admin.php?page=certificados&mensaje=' . $mensaje . '&texto=' . urlencode($texto));
         wp_redirect($redirect_url);
         exit;
     }
@@ -885,7 +885,7 @@ class CertificadosAntecore {
             }
             
             // Redirigir con mensaje de éxito
-            $url_redirect = admin_url('admin.php?page=aprobacion-certificados&mensaje=exito&texto=' . urlencode($mensaje_texto));
+            $url_redirect = admin_url('admin.php?page=certificados&mensaje=exito&texto=' . urlencode($mensaje_texto));
             wp_redirect($url_redirect);
             exit;
         } else {
@@ -955,7 +955,7 @@ class CertificadosAntecore {
         }
         
         // Redirigir con mensaje de éxito
-        $url_redirect = admin_url('admin.php?page=aprobacion-certificados&mensaje=exito&texto=' . urlencode($mensaje_texto));
+        $url_redirect = admin_url('admin.php?page=certificados&mensaje=exito&texto=' . urlencode($mensaje_texto));
         wp_redirect($url_redirect);
         exit;
     }

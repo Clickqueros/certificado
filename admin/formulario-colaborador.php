@@ -1342,7 +1342,7 @@ function enviar_notificaciones_nueva_solicitud($certificado_id) {
             </table>
             
             <div style="text-align: center; margin: 30px 0;">
-                <a href="' . admin_url('admin.php?page=aprobacion-certificados') . '" class="button">
+                <a href="' . admin_url('admin.php?page=certificados') . '" class="button">
                     🔍 Revisar en Panel de Administración
                 </a>
             </div>

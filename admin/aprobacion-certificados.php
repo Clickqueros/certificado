@@ -99,7 +99,7 @@ function obtener_tipos_certificado_admin() {
     <div class="filtros-certificados">
         <h2><?php _e('Filtrar Certificados', 'certificados-personalizados'); ?></h2>
         <form method="get" action="">
-            <input type="hidden" name="page" value="aprobacion-certificados">
+            <input type="hidden" name="page" value="certificados">
             <select name="estado" onchange="this.form.submit()">
                 <option value="pendiente" <?php selected($estado_filtro, 'pendiente'); ?>>
                     <?php _e('Pendientes de Aprobación', 'certificados-personalizados'); ?>
