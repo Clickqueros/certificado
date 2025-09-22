@@ -43,9 +43,17 @@ class CertificadosAntecoreExcel {
                 if ($extension === 'csv') {
                     $mensaje = "No se pudieron leer los datos del archivo CSV. ";
                     if ($diagnostico['tiene_contenido']) {
-                        $mensaje .= "El archivo tiene contenido pero no se pudo parsear. Posibles causas: ";
-                        $mensaje .= "separador incorrecto, formato de encabezados incorrecto, o codificación no UTF-8. ";
-                        $mensaje .= "Descargue la plantilla CSV oficial y úsela como base.";
+                        $mensaje .= "El archivo tiene contenido pero no se pudo parsear. ";
+                        if ($diagnostico['separador_detectado']) {
+                            $mensaje .= "Separador detectado: '" . $diagnostico['separador_detectado'] . "'. ";
+                        }
+                        if ($diagnostico['numero_columnas'] > 0) {
+                            $mensaje .= "Columnas encontradas: " . $diagnostico['numero_columnas'] . ". ";
+                        }
+                        if (!$diagnostico['tiene_encabezados']) {
+                            $mensaje .= "Encabezados no válidos. ";
+                        }
+                        $mensaje .= "Descargue la plantilla CSV oficial y compare el formato exacto.";
                     } else {
                         $mensaje .= "El archivo parece estar vacío o corrupto.";
                     }
@@ -102,9 +110,15 @@ class CertificadosAntecoreExcel {
             return self::leer_archivo_csv($archivo_path);
         }
         
-        // Para archivos Excel, intentar convertir a CSV primero
+        // Para archivos Excel, intentar leer como CSV también (por si se guardó mal)
         if (in_array($extension, ['xlsx', 'xls'])) {
-            // Intentar usar PHP para leer Excel básico
+            // Primero intentar como CSV (por si se guardó mal como Excel)
+            $datos_csv = self::leer_archivo_csv($archivo_path);
+            if (!empty($datos_csv)) {
+                return $datos_csv;
+            }
+            
+            // Si no funciona como CSV, intentar como Excel básico
             return self::leer_archivo_excel_basico($archivo_path);
         }
         
@@ -137,13 +151,19 @@ class CertificadosAntecoreExcel {
                 
                 $match_count = 0;
                 foreach ($columnas_esperadas_lower as $columna) {
-                    if (in_array($columna, $encabezados_lower)) {
-                        $match_count++;
+                    foreach ($encabezados_lower as $encabezado) {
+                        // Buscar coincidencias parciales también
+                        if ($encabezado === $columna || 
+                            strpos($encabezado, $columna) !== false || 
+                            strpos($columna, $encabezado) !== false) {
+                            $match_count++;
+                            break;
+                        }
                     }
                 }
                 
-                // Si al menos 7 de 9 columnas coinciden, procesar
-                if ($match_count >= 7) {
+                // Si al menos 5 de 9 columnas coinciden, procesar (más flexible)
+                if ($match_count >= 5) {
                     while (($fila = fgetcsv($handle, 1000, $separador)) !== FALSE) {
                         if (count($fila) >= 9) { // Verificar que tenga al menos 9 columnas
                             // Limpiar datos y asegurar que no estén vacíos

@@ -92,6 +92,9 @@ class CertificadosAntecore {
         // Hook para descargar plantilla Excel
         add_action('admin_post_descargar_plantilla_excel', array($this, 'descargar_plantilla_excel'));
         
+        // Hook para crear archivo de prueba
+        add_action('admin_post_crear_archivo_prueba', array($this, 'crear_archivo_prueba'));
+        
         // Cargar archivos necesarios
         $this->cargar_archivos();
     }
@@ -1195,6 +1198,93 @@ class CertificadosAntecore {
         
         // Agregar BOM para UTF-8 (para que Excel abra correctamente caracteres especiales)
         echo "\xEF\xBB\xBF";
+        
+        echo $contenido;
+        exit;
+    }
+    
+    /**
+     * Crear archivo de prueba con datos de ejemplo
+     */
+    public function crear_archivo_prueba() {
+        // Verificar que el usuario esté logueado
+        if (!is_user_logged_in()) {
+            wp_die('Debes estar logueado para realizar esta acción.');
+        }
+        
+        $user = wp_get_current_user();
+        if (!in_array('contributor', $user->roles)) {
+            wp_die('No tienes permisos para realizar esta acción.');
+        }
+        
+        // Crear contenido con datos de prueba
+        $encabezados = [
+            'NOMBRE_INSTALACION',
+            'DIRECCION_INSTALACION',
+            'RAZON_SOCIAL',
+            'NIT',
+            'CAPACIDAD_ALMACENAMIENTO',
+            'NUMERO_TANQUES',
+            'TIPO_CERTIFICADO',
+            'NUMERO_CERTIFICADO',
+            'FECHA_APROBACION'
+        ];
+        
+        $datos_prueba = [
+            [
+                'Estación de Servicio ABC',
+                'Calle 123 #45-67, Bogotá',
+                'Servicios ABC S.A.S.',
+                '900123456-1',
+                '10000',
+                '5',
+                'PAGLP',
+                '001',
+                '15/12/2024'
+            ],
+            [
+                'Planta de Almacenamiento XYZ',
+                'Carrera 456 #78-90, Medellín',
+                'Almacenamiento XYZ Ltda.',
+                '900987654-3',
+                '25000',
+                '8',
+                'TEGLP',
+                '002',
+                '20/12/2024'
+            ],
+            [
+                'Distribuidora GLP Central',
+                'Avenida 789 #12-34, Cali',
+                'Distribuidora Central S.A.S.',
+                '900555666-7',
+                '15000',
+                '3',
+                'DEGLP',
+                '003',
+                '25/12/2024'
+            ]
+        ];
+        
+        // Crear contenido CSV con BOM para UTF-8
+        $contenido = "\xEF\xBB\xBF"; // BOM para UTF-8
+        
+        // Agregar encabezados
+        $contenido .= implode(',', $encabezados) . "\n";
+        
+        // Agregar datos de prueba
+        foreach ($datos_prueba as $fila) {
+            $contenido .= implode(',', $fila) . "\n";
+        }
+        
+        // Configurar headers para descarga
+        $nombre_archivo = 'archivo-prueba-certificados.csv';
+        
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $nombre_archivo . '"');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
         
         echo $contenido;
         exit;
