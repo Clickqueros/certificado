@@ -260,11 +260,6 @@ function obtener_tipos_certificado_admin() {
                             📄 <?php _e('Ver PDF Actual', 'certificados-personalizados'); ?>
                         </a>
                     <?php endif; ?>
-                    
-                    <button type="submit" name="regenerar_pdf" value="1" class="button button-secondary" 
-                            onclick="return confirm('¿Regenerar el PDF con los nuevos datos?')">
-                        🔄 <?php _e('Regenerar PDF', 'certificados-personalizados'); ?>
-                    </button>
                 </div>
             </form>
         </div>
