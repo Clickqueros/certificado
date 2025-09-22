@@ -490,9 +490,15 @@ function obtener_tipos_certificado() {
                         <a href="<?php echo admin_url('admin-post.php?action=descargar_plantilla_excel'); ?>" class="button button-primary">
                             📥 <?php _e('Descargar Plantilla CSV', 'certificados-personalizados'); ?>
                         </a>
+                        <a href="<?php echo admin_url('admin-post.php?action=crear_archivo_prueba_simple'); ?>" class="button button-secondary" style="margin-left: 10px;">
+                            🧪 <?php _e('Archivo de Prueba Simple', 'certificados-personalizados'); ?>
+                        </a>
                     </p>
                     <p class="description">
                         <?php _e('Descarga la plantilla CSV con el formato correcto y datos de ejemplo para crear múltiples certificados.', 'certificados-personalizados'); ?>
+                    </p>
+                    <p class="description" style="color: #0073aa; font-style: italic;">
+                        <strong>🧪 Archivo de Prueba Simple:</strong> <?php _e('Archivo CSV simple con datos de prueba para verificar que el sistema funciona correctamente.', 'certificados-personalizados'); ?>
                     </p>
                 </div>
                 

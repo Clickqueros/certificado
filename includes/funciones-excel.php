@@ -49,6 +49,9 @@ class CertificadosAntecoreExcel {
                 // DEBUG: Log diagnóstico completo
                 error_log("DEBUG Excel: Diagnóstico = " . json_encode($diagnostico));
                 
+                // DEBUG: Intentar leer el archivo línea por línea para debug detallado
+                self::debug_detallado_archivo($archivo_path);
+                
                 if ($extension === 'csv') {
                     $mensaje = "No se pudieron leer los datos del archivo CSV. ";
                     if ($diagnostico['tiene_contenido']) {
@@ -200,11 +203,11 @@ class CertificadosAntecoreExcel {
                 // DEBUG: Log resultado de validación
                 error_log("DEBUG CSV: Match count = $match_count de " . count($columnas_esperadas));
                 
-                // Si al menos 5 de 9 columnas coinciden, procesar (más flexible)
-                if ($match_count >= 5) {
+                // Si al menos 3 de 9 columnas coinciden, procesar (más flexible)
+                if ($match_count >= 3) {
                     error_log("DEBUG CSV: Validación exitosa, procesando datos...");
                     while (($fila = fgetcsv($handle, 1000, $separador)) !== FALSE) {
-                        if (count($fila) >= 9) { // Verificar que tenga al menos 9 columnas
+                        if (count($fila) >= 3) { // Verificar que tenga al menos 3 columnas (más flexible)
                             // Limpiar datos y asegurar que no estén vacíos
                             $fila_limpia = array_map('trim', $fila);
                             
@@ -644,5 +647,42 @@ class CertificadosAntecoreExcel {
         }
         
         return $diagnostico;
+    }
+    
+    /**
+     * Debug detallado del archivo para identificar problemas específicos
+     */
+    public static function debug_detallado_archivo($archivo_path) {
+        error_log("=== DEBUG DETALLADO ARCHIVO ===");
+        
+        if (!file_exists($archivo_path)) {
+            error_log("ERROR: Archivo no existe: $archivo_path");
+            return;
+        }
+        
+        $contenido = file_get_contents($archivo_path);
+        error_log("Tamaño del archivo: " . strlen($contenido) . " bytes");
+        error_log("Primeros 1000 caracteres: " . substr($contenido, 0, 1000));
+        
+        // Analizar líneas
+        $lineas = explode("\n", $contenido);
+        error_log("Número total de líneas: " . count($lineas));
+        
+        for ($i = 0; $i < min(5, count($lineas)); $i++) {
+            error_log("Línea $i: '" . $lineas[$i] . "' (longitud: " . strlen($lineas[$i]) . ")");
+        }
+        
+        // Detectar codificación
+        $encoding = mb_detect_encoding($contenido, ['UTF-8', 'ISO-8859-1', 'Windows-1252'], true);
+        error_log("Codificación detectada: $encoding");
+        
+        // Intentar diferentes separadores
+        $separadores = [',', ';', '\t', '|'];
+        foreach ($separadores as $sep) {
+            $count = substr_count($contenido, $sep);
+            error_log("Separador '$sep': $count ocurrencias");
+        }
+        
+        error_log("=== FIN DEBUG DETALLADO ===");
     }
 }

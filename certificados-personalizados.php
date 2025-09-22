@@ -90,6 +90,9 @@ class CertificadosAntecore {
         // Hook para descargar plantilla Excel
         add_action('admin_post_descargar_plantilla_excel', array($this, 'descargar_plantilla_excel'));
         
+        // Hook para crear archivo de prueba simple
+        add_action('admin_post_crear_archivo_prueba_simple', array($this, 'crear_archivo_prueba_simple'));
+        
         
         // Cargar archivos necesarios
         $this->cargar_archivos();
@@ -1123,7 +1126,34 @@ class CertificadosAntecore {
         exit;
     }
     
-    
+    /**
+     * Crear archivo de prueba simple para debug
+     */
+    public function crear_archivo_prueba_simple() {
+        // Verificar permisos
+        if (!current_user_can('read')) {
+            wp_die('No tienes permisos para realizar esta acción.');
+        }
+        
+        $timestamp = time();
+        
+        // Crear contenido CSV simple
+        $contenido = "NOMBRE_INSTALACION,DIRECCION_INSTALACION,RAZON_SOCIAL,NIT,TIPO_CERTIFICADO,NUMERO_CERTIFICADO,FECHA_APROBACION,CAPACIDAD_ALMACENAMIENTO,NUMERO_TANQUES\n";
+        $contenido .= "Estación de Servicio Test,Calle 123 #45-67 Bogotá,Servicios Test S.A.S.,TEST{$timestamp}-1,PAGLP,001,15/12/2024,10000,5\n";
+        $contenido .= "Taller Mecánico ABC,Carrera 456 #78-90 Medellín,Taller ABC Ltda.,TEST{$timestamp}-2,PAGLP,002,16/12/2024,5000,3\n";
+        
+        // Configurar headers para descarga
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="archivo_prueba_simple_' . date('Y-m-d_H-i-s') . '.csv"');
+        header('Cache-Control: no-cache, must-revalidate');
+        header('Expires: 0');
+        
+        // Agregar BOM para UTF-8
+        echo "\xEF\xBB\xBF";
+        
+        echo $contenido;
+        exit;
+    }
     
 }
 
