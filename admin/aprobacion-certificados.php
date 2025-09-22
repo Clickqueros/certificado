@@ -580,7 +580,6 @@ function obtener_tipos_certificado_admin() {
                 </p>
             </form>
         </div>
-    <?php endif; ?>
 </div>
 
 <style>
