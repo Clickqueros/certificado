@@ -37,10 +37,25 @@ class CertificadosAntecoreExcel {
             if (empty($datos_excel)) {
                 $extension = strtolower(pathinfo($archivo_path, PATHINFO_EXTENSION));
                 
+                // Intentar diagnóstico del archivo
+                $diagnostico = self::diagnosticar_archivo($archivo_path);
+                
                 if ($extension === 'csv') {
-                    $resultados['errores'][] = "No se pudieron leer los datos del archivo CSV. Verifique que el archivo tenga el formato correcto y las columnas esperadas.";
+                    $mensaje = "No se pudieron leer los datos del archivo CSV. ";
+                    if ($diagnostico['tiene_contenido']) {
+                        $mensaje .= "El archivo tiene contenido pero no se pudo parsear. Posibles causas: ";
+                        $mensaje .= "separador incorrecto, formato de encabezados incorrecto, o codificación no UTF-8. ";
+                        $mensaje .= "Descargue la plantilla CSV oficial y úsela como base.";
+                    } else {
+                        $mensaje .= "El archivo parece estar vacío o corrupto.";
+                    }
+                    $resultados['errores'][] = $mensaje;
                 } else {
-                    $resultados['errores'][] = "No se pudieron leer los datos del archivo Excel. Para archivos .xlsx/.xls, se recomienda convertirlos a CSV primero. Descargue la plantilla CSV y úsela como base.";
+                    $mensaje = "No se pudieron leer los datos del archivo Excel. ";
+                    $mensaje .= "Para archivos .xlsx/.xls, se recomienda convertirlos a CSV primero. ";
+                    $mensaje .= "Pasos: 1) Abra el archivo en Excel, 2) Guarde como 'CSV UTF-8 (delimitado por comas)', ";
+                    $mensaje .= "3) Descargue la plantilla CSV oficial y compare el formato.";
+                    $resultados['errores'][] = $mensaje;
                 }
                 return $resultados;
             }
@@ -371,21 +386,60 @@ class CertificadosAntecoreExcel {
         ];
         
         $ejemplos = [
-            'Ejemplo: Estación de Servicio ABC',
-            'Ejemplo: Calle 123 #45-67, Bogotá',
-            'Ejemplo: Servicios ABC S.A.S.',
-            'Ejemplo: 900123456-1',
-            'Ejemplo: 10000',
-            'Ejemplo: 5',
-            'Ejemplo: PAGLP',
-            'Ejemplo: 001',
-            'Ejemplo: 15/12/2024'
+            'Estación de Servicio ABC',
+            'Calle 123 #45-67, Bogotá',
+            'Servicios ABC S.A.S.',
+            '900123456-1',
+            '10000',
+            '5',
+            'PAGLP',
+            '001',
+            '15/12/2024'
         ];
         
-        $contenido = implode(',', $encabezados) . "\n";
-        $contenido .= implode(',', $ejemplos) . "\n";
+        $descripciones = [
+            'Nombre de la instalación o lugar',
+            'Dirección completa de la instalación',
+            'Razón social de la empresa',
+            'Número de identificación tributaria',
+            'Capacidad en galones',
+            'Cantidad de tanques',
+            'PAGLP, TEGLP, PEGLP, DEGLP, PVGLP',
+            'Número del certificado',
+            'Fecha en formato DD/MM/YYYY'
+        ];
+        
+        // Crear contenido CSV con BOM para UTF-8
+        $contenido = "\xEF\xBB\xBF"; // BOM para UTF-8
+        
+        // Agregar encabezados
+        $contenido .= self::escapar_csv($encabezados) . "\n";
+        
+        // Agregar ejemplos
+        $contenido .= self::escapar_csv($ejemplos) . "\n";
+        
+        // Agregar descripciones
+        $contenido .= self::escapar_csv($descripciones) . "\n";
+        
+        // Agregar fila vacía para datos del usuario
+        $contenido .= str_repeat(',', count($encabezados) - 1) . "\n";
         
         return $contenido;
+    }
+    
+    /**
+     * Escapar datos para CSV
+     */
+    private static function escapar_csv($datos) {
+        $resultado = [];
+        foreach ($datos as $dato) {
+            // Escapar comillas dobles y envolver en comillas si contiene comas, comillas o saltos de línea
+            if (strpos($dato, ',') !== false || strpos($dato, '"') !== false || strpos($dato, "\n") !== false) {
+                $dato = '"' . str_replace('"', '""', $dato) . '"';
+            }
+            $resultado[] = $dato;
+        }
+        return implode(',', $resultado);
     }
     
     /**
@@ -452,5 +506,73 @@ class CertificadosAntecoreExcel {
         if (file_exists($archivo_path)) {
             unlink($archivo_path);
         }
+    }
+    
+    /**
+     * Diagnosticar archivo para detectar problemas
+     */
+    private static function diagnosticar_archivo($archivo_path) {
+        $diagnostico = [
+            'tiene_contenido' => false,
+            'tiene_encabezados' => false,
+            'separador_detectado' => null,
+            'numero_columnas' => 0,
+            'problemas' => []
+        ];
+        
+        if (!file_exists($archivo_path)) {
+            $diagnostico['problemas'][] = 'El archivo no existe';
+            return $diagnostico;
+        }
+        
+        $contenido = file_get_contents($archivo_path);
+        if (empty($contenido)) {
+            $diagnostico['problemas'][] = 'El archivo está vacío';
+            return $diagnostico;
+        }
+        
+        $diagnostico['tiene_contenido'] = true;
+        
+        // Detectar separador más común
+        $separadores = [',', ';', '\t', '|'];
+        $conteo_separadores = [];
+        
+        foreach ($separadores as $sep) {
+            $conteo = substr_count($contenido, $sep);
+            $conteo_separadores[$sep] = $conteo;
+        }
+        
+        $separador_mas_comun = array_search(max($conteo_separadores), $conteo_separadores);
+        $diagnostico['separador_detectado'] = $separador_mas_comun;
+        
+        // Leer primera línea para verificar encabezados
+        $lineas = explode("\n", $contenido);
+        if (!empty($lineas[0])) {
+            $primera_linea = $lineas[0];
+            $columnas = explode($separador_mas_comun, $primera_linea);
+            $diagnostico['numero_columnas'] = count($columnas);
+            
+            // Verificar si parece ser encabezados
+            $encabezados_esperados = ['nombre_instalacion', 'direccion_instalacion', 'razon_social', 'nit'];
+            $encabezados_lower = array_map('strtolower', array_map('trim', $columnas));
+            
+            $match_count = 0;
+            foreach ($encabezados_esperados as $esperado) {
+                foreach ($encabezados_lower as $encabezado) {
+                    if (strpos($encabezado, $esperado) !== false) {
+                        $match_count++;
+                        break;
+                    }
+                }
+            }
+            
+            if ($match_count >= 2) {
+                $diagnostico['tiene_encabezados'] = true;
+            } else {
+                $diagnostico['problemas'][] = 'No se detectaron encabezados válidos';
+            }
+        }
+        
+        return $diagnostico;
     }
 }
