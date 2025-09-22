@@ -21,6 +21,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['solicitar_certificado
     $mensaje = procesar_solicitud_certificado();
 }
 
+// Process Excel upload
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['procesar_excel_masivo'])) {
+    $mensaje = procesar_excel_masivo();
+}
+
 // Process redirect messages (from approval submission)
 if (isset($_GET['mensaje']) && isset($_GET['texto'])) {
     $mensaje = array(
@@ -56,6 +61,57 @@ if (isset($_GET['editar']) && !empty($_GET['editar'])) {
 
 // Get current user's certificates
 $certificados = CertificadosAntecoreBD::obtener_certificados_usuario();
+
+/**
+ * Procesar Excel masivo
+ */
+function procesar_excel_masivo() {
+    // Verificar nonce
+    if (!wp_verify_nonce($_POST['excel_masivo_nonce'], 'procesar_excel_masivo')) {
+        return array('tipo' => 'error', 'mensaje' => 'Error de seguridad.');
+    }
+    
+    // Verificar que se subió un archivo
+    if (!isset($_FILES['archivo_excel']) || $_FILES['archivo_excel']['error'] !== UPLOAD_ERR_OK) {
+        return array('tipo' => 'error', 'mensaje' => 'Error al subir el archivo.');
+    }
+    
+    // Validar archivo
+    $errores_validacion = CertificadosAntecoreExcel::validar_archivo_subido($_FILES['archivo_excel']);
+    
+    if (!empty($errores_validacion)) {
+        return array('tipo' => 'error', 'mensaje' => implode('; ', $errores_validacion));
+    }
+    
+    // Procesar archivo
+    $user_id = get_current_user_id();
+    $resultados = CertificadosAntecoreExcel::procesar_archivo_excel($_FILES['archivo_excel']['tmp_name'], $user_id);
+    
+    // Limpiar archivo temporal
+    CertificadosAntecoreExcel::limpiar_archivo_temporal($_FILES['archivo_excel']['tmp_name']);
+    
+    // Preparar mensaje de resultado
+    $mensaje_tipo = 'info';
+    $mensaje_texto = sprintf(
+        'Procesamiento completado. Total filas: %d, Exitosos: %d, Errores: %d',
+        $resultados['total_filas'],
+        $resultados['exitosos'],
+        count($resultados['errores'])
+    );
+    
+    if ($resultados['exitosos'] > 0) {
+        $mensaje_tipo = 'exito';
+    }
+    
+    if (!empty($resultados['errores'])) {
+        $mensaje_texto .= '. Errores: ' . implode('; ', array_slice($resultados['errores'], 0, 3));
+        if (count($resultados['errores']) > 3) {
+            $mensaje_texto .= '... (y ' . (count($resultados['errores']) - 3) . ' más)';
+        }
+    }
+    
+    return array('tipo' => $mensaje_tipo, 'mensaje' => $mensaje_texto);
+}
 
 /**
  * Procesar solicitud de certificado
@@ -208,8 +264,20 @@ function obtener_tipos_certificado() {
     <?php endif; ?>
     
     <div class="certificados-container">
-        <!-- Formulario de solicitud -->
-        <div class="certificado-formulario">
+        <!-- Pestañas de navegación -->
+        <div class="nav-tab-wrapper">
+            <a href="#certificado-individual" class="nav-tab nav-tab-active" data-tab="certificado-individual">
+                <?php _e('Certificado Individual', 'certificados-personalizados'); ?>
+            </a>
+            <a href="#carga-masiva" class="nav-tab" data-tab="carga-masiva">
+                <?php _e('Carga Masiva (Excel)', 'certificados-personalizados'); ?>
+            </a>
+        </div>
+        
+        <!-- Contenido de pestaña: Certificado Individual -->
+        <div id="certificado-individual" class="tab-content">
+            <!-- Formulario de solicitud -->
+            <div class="certificado-formulario">
             <h2>
                 <?php if ($modo_edicion): ?>
                     <?php _e('Editar Certificado', 'certificados-personalizados'); ?>
@@ -381,6 +449,76 @@ function obtener_tipos_certificado() {
                     </button>
                 </p>
             </form>
+        </div>
+        </div>
+        
+        <!-- Contenido de pestaña: Carga Masiva -->
+        <div id="carga-masiva" class="tab-content" style="display: none;">
+            <div class="certificado-formulario">
+                <h2><?php _e('Carga Masiva de Certificados', 'certificados-personalizados'); ?></h2>
+                
+                <div class="notice notice-info">
+                    <p><strong><?php _e('Instrucciones:', 'certificados-personalizados'); ?></strong></p>
+                    <ol>
+                        <li><?php _e('Descarga la plantilla Excel/CSV', 'certificados-personalizados'); ?></li>
+                        <li><?php _e('Llena la plantilla con los datos de los certificados', 'certificados-personalizados'); ?></li>
+                        <li><?php _e('Sube el archivo completado', 'certificados-personalizados'); ?></li>
+                        <li><?php _e('Revisa los resultados del procesamiento', 'certificados-personalizados'); ?></li>
+                    </ol>
+                </div>
+                
+                <div class="upload-section">
+                    <h3><?php _e('1. Descargar Plantilla', 'certificados-personalizados'); ?></h3>
+                    <p><?php _e('Descarga la plantilla Excel/CSV con el formato correcto:', 'certificados-personalizados'); ?></p>
+                    <a href="<?php echo admin_url('admin-post.php?action=descargar_plantilla_excel'); ?>" class="button button-primary">
+                        📥 <?php _e('Descargar Plantilla Excel/CSV', 'certificados-personalizados'); ?>
+                    </a>
+                </div>
+                
+                <div class="upload-section">
+                    <h3><?php _e('2. Subir Archivo', 'certificados-personalizados'); ?></h3>
+                    <form method="post" enctype="multipart/form-data" id="formulario-excel">
+                        <?php wp_nonce_field('procesar_excel_masivo', 'excel_masivo_nonce'); ?>
+                        
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row">
+                                    <label for="archivo_excel"><?php _e('Archivo Excel/CSV', 'certificados-personalizados'); ?> *</label>
+                                </th>
+                                <td>
+                                    <input type="file" id="archivo_excel" name="archivo_excel" accept=".csv,.xlsx,.xls" required>
+                                    <p class="description">
+                                        <?php _e('Formatos permitidos: CSV, XLSX, XLS. Máximo 5MB.', 'certificados-personalizados'); ?>
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                        
+                        <p class="submit">
+                            <input type="submit" name="procesar_excel_masivo" class="button button-primary" 
+                                   value="<?php _e('Procesar Archivo', 'certificados-personalizados'); ?>">
+                        </p>
+                    </form>
+                </div>
+                
+                <div class="upload-section">
+                    <h3><?php _e('Información de la Plantilla', 'certificados-personalizados'); ?></h3>
+                    <div class="plantilla-info">
+                        <p><strong><?php _e('Columnas requeridas:', 'certificados-personalizados'); ?></strong></p>
+                        <ul>
+                            <li><strong>NOMBRE_INSTALACION:</strong> <?php _e('Nombre de la instalación', 'certificados-personalizados'); ?></li>
+                            <li><strong>DIRECCION_INSTALACION:</strong> <?php _e('Dirección completa', 'certificados-personalizados'); ?></li>
+                            <li><strong>RAZON_SOCIAL:</strong> <?php _e('Razón social de la empresa', 'certificados-personalizados'); ?></li>
+                            <li><strong>NIT:</strong> <?php _e('Número de identificación tributaria', 'certificados-personalizados'); ?></li>
+                            <li><strong>CAPACIDAD_ALMACENAMIENTO:</strong> <?php _e('Capacidad en galones', 'certificados-personalizados'); ?></li>
+                            <li><strong>NUMERO_TANQUES:</strong> <?php _e('Cantidad de tanques', 'certificados-personalizados'); ?></li>
+                            <li><strong>TIPO_CERTIFICADO:</strong> <?php _e('PAGLP, TEGLP, PEGLP, DEGLP, PVGLP', 'certificados-personalizados'); ?></li>
+                            <li><strong>NUMERO_CERTIFICADO:</strong> <?php _e('Número del certificado', 'certificados-personalizados'); ?></li>
+                            <li><strong>FECHA_APROBACION:</strong> <?php _e('Fecha en formato DD/MM/YYYY', 'certificados-personalizados'); ?></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <!-- Lista de certificados -->
@@ -1209,4 +1347,136 @@ function enviar_notificaciones_nueva_solicitud($certificado_id) {
     
     return $emails_enviados > 0;
 }
+?>
+
+<script>
+jQuery(document).ready(function($) {
+    // Funcionalidad de pestañas
+    $('.nav-tab').on('click', function(e) {
+        e.preventDefault();
+        
+        // Remover clase activa de todas las pestañas
+        $('.nav-tab').removeClass('nav-tab-active');
+        
+        // Agregar clase activa a la pestaña clickeada
+        $(this).addClass('nav-tab-active');
+        
+        // Ocultar todos los contenidos de pestañas
+        $('.tab-content').hide();
+        
+        // Mostrar el contenido de la pestaña seleccionada
+        var tab_id = $(this).data('tab');
+        $('#' + tab_id).show();
+    });
+    
+    // Validación del formulario Excel
+    $('#formulario-excel').on('submit', function(e) {
+        var archivo = $('#archivo_excel')[0].files[0];
+        
+        if (!archivo) {
+            e.preventDefault();
+            alert('Por favor, selecciona un archivo Excel/CSV.');
+            return false;
+        }
+        
+        // Verificar extensión
+        var extensiones_permitidas = ['csv', 'xlsx', 'xls'];
+        var extension = archivo.name.split('.').pop().toLowerCase();
+        
+        if (extensiones_permitidas.indexOf(extension) === -1) {
+            e.preventDefault();
+            alert('Tipo de archivo no permitido. Solo se permiten: CSV, XLSX, XLS');
+            return false;
+        }
+        
+        // Verificar tamaño (5MB máximo)
+        if (archivo.size > 5 * 1024 * 1024) {
+            e.preventDefault();
+            alert('El archivo es demasiado grande. Máximo 5MB permitido.');
+            return false;
+        }
+        
+        // Mostrar mensaje de procesamiento
+        if (!confirm('¿Estás seguro de que quieres procesar este archivo? Esta acción creará múltiples certificados.')) {
+            e.preventDefault();
+            return false;
+        }
+    });
+});
+</script>
+
+<style>
+/* Estilos para las pestañas */
+.nav-tab-wrapper {
+    border-bottom: 1px solid #ccd0d4;
+    margin-bottom: 20px;
+}
+
+.nav-tab {
+    background: #f1f1f1;
+    border: 1px solid #ccd0d4;
+    border-bottom: none;
+    color: #50575e;
+    display: inline-block;
+    padding: 8px 12px;
+    text-decoration: none;
+    margin-right: 2px;
+}
+
+.nav-tab:hover {
+    background: #f9f9f9;
+    color: #135e96;
+}
+
+.nav-tab-active {
+    background: #fff;
+    border-bottom: 1px solid #fff;
+    color: #135e96;
+    margin-bottom: -1px;
+}
+
+.tab-content {
+    margin-top: 20px;
+}
+
+.upload-section {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.upload-section h3 {
+    margin-top: 0;
+    color: #135e96;
+}
+
+.plantilla-info {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    margin-top: 10px;
+}
+
+.plantilla-info ul {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.plantilla-info li {
+    margin-bottom: 5px;
+}
+
+/* Estilos para el formulario Excel */
+#formulario-excel .form-table th {
+    width: 200px;
+}
+
+#formulario-excel input[type="file"] {
+    width: 100%;
+    max-width: 400px;
+}
+</style>
 ?> 

@@ -86,6 +86,12 @@ class CertificadosAntecore {
         // Hook para manejar ver_pdf en el frontend
         add_action('init', array($this, 'manejar_ver_pdf'));
         
+        // Hook para procesar carga masiva de Excel
+        add_action('admin_post_procesar_excel_masivo', array($this, 'procesar_excel_masivo'));
+        
+        // Hook para descargar plantilla Excel
+        add_action('admin_post_descargar_plantilla_excel', array($this, 'descargar_plantilla_excel'));
+        
         // Cargar archivos necesarios
         $this->cargar_archivos();
     }
@@ -98,6 +104,7 @@ class CertificadosAntecore {
             // Verificar que los archivos existen antes de cargarlos
             $archivo_bd = CERTIFICADOS_ANTECORE_PLUGIN_PATH . 'includes/funciones-bd.php';
             $archivo_pdf = CERTIFICADOS_ANTECORE_PLUGIN_PATH . 'includes/funciones-pdf.php';
+            $archivo_excel = CERTIFICADOS_ANTECORE_PLUGIN_PATH . 'includes/funciones-excel.php';
             
             if (!file_exists($archivo_bd)) {
                 error_log('CertificadosPersonalizados: Archivo funciones-bd.php no encontrado en: ' . $archivo_bd);
@@ -114,6 +121,11 @@ class CertificadosAntecore {
             
             // Cargar funciones de PDF
             require_once $archivo_pdf;
+            
+            // Cargar funciones de Excel si existe
+            if (file_exists($archivo_excel)) {
+                require_once $archivo_excel;
+            }
             
         } catch (Exception $e) {
             error_log('CertificadosPersonalizados: Error al cargar archivos: ' . $e->getMessage());
@@ -1083,6 +1095,109 @@ class CertificadosAntecore {
             readfile($file_path);
             exit;
         }
+    }
+    
+    /**
+     * Procesar carga masiva de certificados desde Excel
+     */
+    public function procesar_excel_masivo() {
+        // Verificar nonce
+        if (!isset($_POST['excel_masivo_nonce']) || 
+            !wp_verify_nonce($_POST['excel_masivo_nonce'], 'procesar_excel_masivo')) {
+            wp_die('Error de seguridad.');
+        }
+        
+        // Verificar que el usuario esté logueado y sea contributor
+        if (!is_user_logged_in()) {
+            wp_die('Debes estar logueado para realizar esta acción.');
+        }
+        
+        $user = wp_get_current_user();
+        if (!in_array('contributor', $user->roles)) {
+            wp_die('No tienes permisos para realizar esta acción.');
+        }
+        
+        $user_id = get_current_user_id();
+        
+        // Verificar que se subió un archivo
+        if (!isset($_FILES['archivo_excel']) || $_FILES['archivo_excel']['error'] !== UPLOAD_ERR_OK) {
+            $redirect_url = admin_url('admin.php?page=mis-certificados&mensaje=error&texto=' . urlencode('Error al subir el archivo.'));
+            wp_redirect($redirect_url);
+            exit;
+        }
+        
+        // Validar archivo
+        $errores_validacion = CertificadosAntecoreExcel::validar_archivo_subido($_FILES['archivo_excel']);
+        
+        if (!empty($errores_validacion)) {
+            $redirect_url = admin_url('admin.php?page=mis-certificados&mensaje=error&texto=' . urlencode(implode('; ', $errores_validacion)));
+            wp_redirect($redirect_url);
+            exit;
+        }
+        
+        // Procesar archivo
+        $resultados = CertificadosAntecoreExcel::procesar_archivo_excel($_FILES['archivo_excel']['tmp_name'], $user_id);
+        
+        // Limpiar archivo temporal
+        CertificadosAntecoreExcel::limpiar_archivo_temporal($_FILES['archivo_excel']['tmp_name']);
+        
+        // Preparar mensaje de resultado
+        $mensaje_tipo = 'info';
+        $mensaje_texto = sprintf(
+            'Procesamiento completado. Total filas: %d, Exitosos: %d, Errores: %d',
+            $resultados['total_filas'],
+            $resultados['exitosos'],
+            count($resultados['errores'])
+        );
+        
+        if ($resultados['exitosos'] > 0) {
+            $mensaje_tipo = 'exito';
+        }
+        
+        if (!empty($resultados['errores'])) {
+            $mensaje_texto .= '. Errores: ' . implode('; ', array_slice($resultados['errores'], 0, 3));
+            if (count($resultados['errores']) > 3) {
+                $mensaje_texto .= '... (y ' . (count($resultados['errores']) - 3) . ' más)';
+            }
+        }
+        
+        // Redirigir con mensaje
+        $redirect_url = admin_url('admin.php?page=mis-certificados&mensaje=' . $mensaje_tipo . '&texto=' . urlencode($mensaje_texto));
+        wp_redirect($redirect_url);
+        exit;
+    }
+    
+    /**
+     * Descargar plantilla Excel/CSV
+     */
+    public function descargar_plantilla_excel() {
+        // Verificar que el usuario esté logueado
+        if (!is_user_logged_in()) {
+            wp_die('Debes estar logueado para realizar esta acción.');
+        }
+        
+        $user = wp_get_current_user();
+        if (!in_array('contributor', $user->roles)) {
+            wp_die('No tienes permisos para realizar esta acción.');
+        }
+        
+        // Generar contenido de la plantilla
+        $contenido = CertificadosAntecoreExcel::generar_plantilla();
+        
+        // Configurar headers para descarga
+        $nombre_archivo = 'plantilla-certificados-antecore.csv';
+        
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $nombre_archivo . '"');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        
+        // Agregar BOM para UTF-8 (para que Excel abra correctamente caracteres especiales)
+        echo "\xEF\xBB\xBF";
+        
+        echo $contenido;
+        exit;
     }
 }
 
