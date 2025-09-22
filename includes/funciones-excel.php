@@ -558,7 +558,7 @@ class CertificadosAntecoreExcel {
     /**
      * Diagnosticar archivo para detectar problemas
      */
-    private static function diagnosticar_archivo($archivo_path) {
+    public static function diagnosticar_archivo($archivo_path) {
         $diagnostico = [
             'tiene_contenido' => false,
             'tiene_encabezados' => false,
