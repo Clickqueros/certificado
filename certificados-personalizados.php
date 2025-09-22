@@ -1220,17 +1220,17 @@ class CertificadosAntecore {
             wp_die('No tienes permisos para realizar esta acción.');
         }
         
-        // Crear contenido con datos de prueba
+        // Crear contenido con datos de prueba - ORDEN IGUAL AL FORMULARIO MANUAL
         $encabezados = [
             'NOMBRE_INSTALACION',
             'DIRECCION_INSTALACION',
             'RAZON_SOCIAL',
             'NIT',
-            'CAPACIDAD_ALMACENAMIENTO',
-            'NUMERO_TANQUES',
             'TIPO_CERTIFICADO',
             'NUMERO_CERTIFICADO',
-            'FECHA_APROBACION'
+            'FECHA_APROBACION',
+            'CAPACIDAD_ALMACENAMIENTO',
+            'NUMERO_TANQUES'
         ];
         
         $datos_prueba = [
@@ -1239,33 +1239,33 @@ class CertificadosAntecore {
                 'Calle 123 #45-67, Bogotá',
                 'Servicios ABC S.A.S.',
                 '900123456-1',
-                '10000',
-                '5',
                 'PAGLP',
                 '001',
-                '15/12/2024'
+                '15/12/2024',
+                '10000',
+                '5'
             ],
             [
                 'Planta de Almacenamiento XYZ',
                 'Carrera 456 #78-90, Medellín',
                 'Almacenamiento XYZ Ltda.',
                 '900987654-3',
-                '25000',
-                '8',
                 'TEGLP',
                 '002',
-                '20/12/2024'
+                '20/12/2024',
+                '25000',
+                '8'
             ],
             [
                 'Distribuidora GLP Central',
                 'Avenida 789 #12-34, Cali',
                 'Distribuidora Central S.A.S.',
                 '900555666-7',
-                '15000',
-                '3',
                 'DEGLP',
                 '003',
-                '25/12/2024'
+                '25/12/2024',
+                '15000',
+                '3'
             ]
         ];
         
@@ -1320,11 +1320,11 @@ class CertificadosAntecore {
             wp_die('No tienes permisos para realizar esta acción.');
         }
         
-        // Crear contenido simple
-        $contenido = "NOMBRE_INSTALACION,DIRECCION_INSTALACION,RAZON_SOCIAL,NIT,CAPACIDAD_ALMACENAMIENTO,NUMERO_TANQUES,TIPO_CERTIFICADO,NUMERO_CERTIFICADO,FECHA_APROBACION\n";
-        $contenido .= "Estación de Servicio ABC,Calle 123 #45-67 Bogotá,Servicios ABC S.A.S.,900123456-1,10000,5,PAGLP,001,15/12/2024\n";
-        $contenido .= "Planta de Almacenamiento XYZ,Carrera 456 #78-90 Medellín,Almacenamiento XYZ Ltda.,900987654-3,25000,8,TEGLP,002,20/12/2024\n";
-        $contenido .= "Distribuidora GLP Central,Avenida 789 #12-34 Cali,Distribuidora Central S.A.S.,900555666-7,15000,3,DEGLP,003,25/12/2024\n";
+        // Crear contenido simple - ORDEN IGUAL AL FORMULARIO MANUAL
+        $contenido = "NOMBRE_INSTALACION,DIRECCION_INSTALACION,RAZON_SOCIAL,NIT,TIPO_CERTIFICADO,NUMERO_CERTIFICADO,FECHA_APROBACION,CAPACIDAD_ALMACENAMIENTO,NUMERO_TANQUES\n";
+        $contenido .= "Estación de Servicio ABC,Calle 123 #45-67 Bogotá,Servicios ABC S.A.S.,900123456-1,PAGLP,001,15/12/2024,10000,5\n";
+        $contenido .= "Planta de Almacenamiento XYZ,Carrera 456 #78-90 Medellín,Almacenamiento XYZ Ltda.,900987654-3,TEGLP,002,20/12/2024,25000,8\n";
+        $contenido .= "Distribuidora GLP Central,Avenida 789 #12-34 Cali,Distribuidora Central S.A.S.,900555666-7,DEGLP,003,25/12/2024,15000,3\n";
         
         // Configurar headers para descarga
         $nombre_archivo = 'archivo-simple-certificados.csv';

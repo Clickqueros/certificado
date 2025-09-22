@@ -171,16 +171,17 @@ class CertificadosAntecoreExcel {
                             
                             // Solo agregar si no es una fila completamente vacía
                             if (!empty(array_filter($fila_limpia))) {
+                                // Orden correcto: nombre, direccion, razon_social, nit, tipo, numero, fecha, capacidad, tanques
                                 $datos[] = [
                                     'nombre_instalacion' => isset($fila_limpia[0]) ? $fila_limpia[0] : '',
                                     'direccion_instalacion' => isset($fila_limpia[1]) ? $fila_limpia[1] : '',
                                     'razon_social' => isset($fila_limpia[2]) ? $fila_limpia[2] : '',
                                     'nit' => isset($fila_limpia[3]) ? $fila_limpia[3] : '',
-                                    'capacidad_almacenamiento' => isset($fila_limpia[4]) ? $fila_limpia[4] : '',
-                                    'numero_tanques' => isset($fila_limpia[5]) ? $fila_limpia[5] : '',
-                                    'tipo_certificado' => isset($fila_limpia[6]) ? $fila_limpia[6] : '',
-                                    'numero_certificado' => isset($fila_limpia[7]) ? $fila_limpia[7] : '',
-                                    'fecha_aprobacion' => isset($fila_limpia[8]) ? $fila_limpia[8] : ''
+                                    'tipo_certificado' => isset($fila_limpia[4]) ? $fila_limpia[4] : '',
+                                    'numero_certificado' => isset($fila_limpia[5]) ? $fila_limpia[5] : '',
+                                    'fecha_aprobacion' => isset($fila_limpia[6]) ? $fila_limpia[6] : '',
+                                    'capacidad_almacenamiento' => isset($fila_limpia[7]) ? $fila_limpia[7] : '',
+                                    'numero_tanques' => isset($fila_limpia[8]) ? $fila_limpia[8] : ''
                                 ];
                             }
                         }
@@ -228,16 +229,17 @@ class CertificadosAntecoreExcel {
                         // Leer datos con este separador
                         while (($fila = fgetcsv($handle, 1000, $separador)) !== FALSE) {
                             if (count($fila) >= 9) {
+                                // Orden correcto: nombre, direccion, razon_social, nit, tipo, numero, fecha, capacidad, tanques
                                 $datos[] = [
                                     'nombre_instalacion' => isset($fila[0]) ? trim($fila[0]) : '',
                                     'direccion_instalacion' => isset($fila[1]) ? trim($fila[1]) : '',
                                     'razon_social' => isset($fila[2]) ? trim($fila[2]) : '',
                                     'nit' => isset($fila[3]) ? trim($fila[3]) : '',
-                                    'capacidad_almacenamiento' => isset($fila[4]) ? trim($fila[4]) : '',
-                                    'numero_tanques' => isset($fila[5]) ? trim($fila[5]) : '',
-                                    'tipo_certificado' => isset($fila[6]) ? trim($fila[6]) : '',
-                                    'numero_certificado' => isset($fila[7]) ? trim($fila[7]) : '',
-                                    'fecha_aprobacion' => isset($fila[8]) ? trim($fila[8]) : ''
+                                    'tipo_certificado' => isset($fila[4]) ? trim($fila[4]) : '',
+                                    'numero_certificado' => isset($fila[5]) ? trim($fila[5]) : '',
+                                    'fecha_aprobacion' => isset($fila[6]) ? trim($fila[6]) : '',
+                                    'capacidad_almacenamiento' => isset($fila[7]) ? trim($fila[7]) : '',
+                                    'numero_tanques' => isset($fila[8]) ? trim($fila[8]) : ''
                                 ];
                             }
                         }
@@ -393,16 +395,17 @@ class CertificadosAntecoreExcel {
      * Generar plantilla Excel/CSV
      */
     public static function generar_plantilla() {
+        // ORDEN IGUAL AL FORMULARIO MANUAL
         $encabezados = [
             'NOMBRE_INSTALACION',
             'DIRECCION_INSTALACION',
             'RAZON_SOCIAL',
             'NIT',
-            'CAPACIDAD_ALMACENAMIENTO',
-            'NUMERO_TANQUES',
             'TIPO_CERTIFICADO',
             'NUMERO_CERTIFICADO',
-            'FECHA_APROBACION'
+            'FECHA_APROBACION',
+            'CAPACIDAD_ALMACENAMIENTO',
+            'NUMERO_TANQUES'
         ];
         
         $ejemplos = [
@@ -410,11 +413,11 @@ class CertificadosAntecoreExcel {
             'Calle 123 #45-67, Bogotá',
             'Servicios ABC S.A.S.',
             '900123456-1',
-            '10000',
-            '5',
             'PAGLP',
             '001',
-            '15/12/2024'
+            '15/12/2024',
+            '10000',
+            '5'
         ];
         
         $descripciones = [
@@ -422,11 +425,11 @@ class CertificadosAntecoreExcel {
             'Dirección completa de la instalación',
             'Razón social de la empresa',
             'Número de identificación tributaria',
-            'Capacidad en galones',
-            'Cantidad de tanques',
             'PAGLP, TEGLP, PEGLP, DEGLP, PVGLP',
             'Número del certificado',
-            'Fecha en formato DD/MM/YYYY'
+            'Fecha en formato DD/MM/YYYY',
+            'Capacidad en galones',
+            'Cantidad de tanques'
         ];
         
         // Crear contenido CSV con BOM para UTF-8
