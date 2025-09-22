@@ -114,24 +114,33 @@ class CertificadosAntecoreExcel {
         $datos = [];
         $extension = strtolower(pathinfo($archivo_path, PATHINFO_EXTENSION));
         
+        // DEBUG: Log extensión detectada
+        error_log("DEBUG leer_archivo_excel_simple: Extensión detectada = '$extension'");
+        
         // Para archivos CSV
         if ($extension === 'csv') {
+            error_log("DEBUG: Procesando como CSV");
             return self::leer_archivo_csv($archivo_path);
         }
         
         // Para archivos Excel, intentar leer como CSV también (por si se guardó mal)
         if (in_array($extension, ['xlsx', 'xls'])) {
+            error_log("DEBUG: Procesando como Excel");
             // Primero intentar como CSV (por si se guardó mal como Excel)
             $datos_csv = self::leer_archivo_csv($archivo_path);
             if (!empty($datos_csv)) {
+                error_log("DEBUG: Excel procesado exitosamente como CSV");
                 return $datos_csv;
             }
             
             // Si no funciona como CSV, intentar como Excel básico
+            error_log("DEBUG: Intentando como Excel básico");
             return self::leer_archivo_excel_basico($archivo_path);
         }
         
-        return [];
+        // Para archivos sin extensión o con extensión desconocida, intentar como CSV
+        error_log("DEBUG: Extensión desconocida '$extension', intentando como CSV");
+        return self::leer_archivo_csv($archivo_path);
     }
     
     /**

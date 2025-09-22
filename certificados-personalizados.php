@@ -1357,7 +1357,7 @@ class CertificadosAntecore {
         }
         
         // Crear archivo de prueba y analizarlo
-        $archivo_temp = tempnam(sys_get_temp_dir(), 'debug_csv_');
+        $archivo_temp = tempnam(sys_get_temp_dir(), 'debug_csv_') . '.csv';
         
         // Escribir contenido de prueba
         $contenido = "NOMBRE_INSTALACION,DIRECCION_INSTALACION,RAZON_SOCIAL,NIT,TIPO_CERTIFICADO,NUMERO_CERTIFICADO,FECHA_APROBACION,CAPACIDAD_ALMACENAMIENTO,NUMERO_TANQUES\n";
