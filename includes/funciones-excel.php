@@ -91,7 +91,17 @@ class CertificadosAntecoreExcel {
                     $certificado_id = self::crear_certificado_desde_excel($fila_datos, $user_id);
                     
                     if ($certificado_id) {
-                        $resultados['exitosos']++;
+                        // Generar PDF automáticamente
+                        $pdf_generado = CertificadosAntecorePDF::generar_certificado_pdf($certificado_id);
+                        
+                        if ($pdf_generado) {
+                            $resultados['exitosos']++;
+                            error_log("CertificadosAntecoreExcel: PDF generado para certificado ID: $certificado_id");
+                        } else {
+                            $resultados['exitosos']++; // Certificado creado pero sin PDF
+                            $resultados['errores'][] = "Fila $fila_real: Certificado creado pero error generando PDF.";
+                            error_log("CertificadosAntecoreExcel: Error generando PDF para certificado ID: $certificado_id");
+                        }
                     } else {
                         $resultados['errores'][] = "Fila $fila_real: Error al crear el certificado en la base de datos.";
                     }
