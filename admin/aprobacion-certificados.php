@@ -123,13 +123,15 @@ function obtener_tipos_certificado_admin() {
         </form>
     </div>
     
-    <!-- Formulario de Edición para Administradores -->
-    <?php if ($modo_edicion && $certificado_edicion && isset($certificado_edicion->id)): 
-        // Función helper para obtener valores del certificado de forma segura
-        function get_certificado_value($certificado, $field, $default = '') {
-            return isset($certificado->$field) ? $certificado->$field : $default;
-        }
+    <!-- Función helper para obtener valores del certificado de forma segura -->
+    <?php
+    function get_certificado_value($certificado, $field, $default = '') {
+        return isset($certificado->$field) ? $certificado->$field : $default;
+    }
     ?>
+    
+    <!-- Formulario de Edición para Administradores -->
+    <?php if ($modo_edicion && $certificado_edicion && isset($certificado_edicion->id)): ?>
         <div class="formulario-edicion-admin">
             <h2><?php _e('Editar Certificado', 'certificados-personalizados'); ?></h2>
             <p><a href="<?php echo admin_url('admin.php?page=certificados'); ?>" class="button button-secondary">
