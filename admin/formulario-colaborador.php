@@ -1583,5 +1583,4 @@ jQuery(document).ready(function($) {
 .notice-warning li {
     margin-bottom: 5px;
 }
-</style>
-?> 
+</style> 
