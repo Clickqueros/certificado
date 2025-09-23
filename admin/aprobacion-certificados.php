@@ -26,6 +26,11 @@ if (isset($_GET['editar']) && !empty($_GET['editar'])) {
     
     if ($certificado_edicion) {
         $modo_edicion = true;
+    } else {
+        // Si no se encuentra el certificado, mostrar mensaje de error
+        echo '<div class="notice notice-error"><p>' . sprintf(__('Error: No se encontró el certificado con ID %d.', 'certificados-personalizados'), $certificado_id) . '</p></div>';
+        $modo_edicion = false;
+        $certificado_edicion = null;
     }
 }
 
@@ -119,7 +124,12 @@ function obtener_tipos_certificado_admin() {
     </div>
     
     <!-- Formulario de Edición para Administradores -->
-    <?php if ($modo_edicion && $certificado_edicion): ?>
+    <?php if ($modo_edicion && $certificado_edicion && isset($certificado_edicion->id)): 
+        // Función helper para obtener valores del certificado de forma segura
+        function get_certificado_value($certificado, $field, $default = '') {
+            return isset($certificado->$field) ? $certificado->$field : $default;
+        }
+    ?>
         <div class="formulario-edicion-admin">
             <h2><?php _e('Editar Certificado', 'certificados-personalizados'); ?></h2>
             <p><a href="<?php echo admin_url('admin.php?page=certificados'); ?>" class="button button-secondary">
@@ -129,7 +139,7 @@ function obtener_tipos_certificado_admin() {
             <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" id="formulario-edicion-admin">
                 <?php wp_nonce_field('editar_certificado_admin', 'editar_certificado_admin_nonce'); ?>
                 <input type="hidden" name="action" value="editar_certificado_admin">
-                <input type="hidden" name="certificado_id" value="<?php echo $certificado_edicion->id; ?>">
+                <input type="hidden" name="certificado_id" value="<?php echo esc_attr($certificado_edicion->id); ?>">
                 
                 <table class="form-table">
                     <!-- Información de la Instalación -->
@@ -139,7 +149,7 @@ function obtener_tipos_certificado_admin() {
                         </th>
                         <td>
                             <input type="text" id="nombre_instalacion" name="nombre_instalacion" class="regular-text" 
-                                   value="<?php echo esc_attr($certificado_edicion->nombre_instalacion); ?>" required>
+                                   value="<?php echo esc_attr(get_certificado_value($certificado_edicion, 'nombre_instalacion')); ?>" required>
                         </td>
                     </tr>
                     
@@ -148,7 +158,7 @@ function obtener_tipos_certificado_admin() {
                             <label for="direccion_instalacion"><?php _e('Dirección del Lugar', 'certificados-personalizados'); ?></label>
                         </th>
                         <td>
-                            <textarea id="direccion_instalacion" name="direccion_instalacion" rows="3" cols="50" class="large-text" required><?php echo esc_textarea($certificado_edicion->direccion_instalacion); ?></textarea>
+                            <textarea id="direccion_instalacion" name="direccion_instalacion" rows="3" cols="50" class="large-text" required><?php echo esc_textarea(get_certificado_value($certificado_edicion, 'direccion_instalacion')); ?></textarea>
                         </td>
                     </tr>
                     
@@ -159,7 +169,7 @@ function obtener_tipos_certificado_admin() {
                         </th>
                         <td>
                             <input type="text" id="razon_social" name="razon_social" class="regular-text" 
-                                   value="<?php echo esc_attr($certificado_edicion->razon_social); ?>" required>
+                                   value="<?php echo esc_attr(get_certificado_value($certificado_edicion, 'razon_social')); ?>" required>
                         </td>
                     </tr>
                     
@@ -169,7 +179,7 @@ function obtener_tipos_certificado_admin() {
                         </th>
                         <td>
                             <input type="text" id="nit" name="nit" class="regular-text" 
-                                   value="<?php echo esc_attr($certificado_edicion->nit); ?>" required>
+                                   value="<?php echo esc_attr(get_certificado_value($certificado_edicion, 'nit')); ?>" required>
                         </td>
                     </tr>
                     
@@ -182,7 +192,7 @@ function obtener_tipos_certificado_admin() {
                             <select id="tipo_certificado" name="tipo_certificado" required>
                                 <option value=""><?php _e('Seleccionar tipo...', 'certificados-personalizados'); ?></option>
                                 <?php foreach (obtener_tipos_certificado_admin() as $valor => $texto): ?>
-                                    <option value="<?php echo esc_attr($valor); ?>" <?php selected($certificado_edicion->tipo_certificado, $valor); ?>>
+                                    <option value="<?php echo esc_attr($valor); ?>" <?php selected(get_certificado_value($certificado_edicion, 'tipo_certificado'), $valor); ?>>
                                         <?php echo esc_html($texto); ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -196,7 +206,7 @@ function obtener_tipos_certificado_admin() {
                         </th>
                         <td>
                             <input type="number" id="numero_certificado" name="numero_certificado" class="small-text" 
-                                   value="<?php echo esc_attr($certificado_edicion->numero_certificado); ?>" min="1" required>
+                                   value="<?php echo esc_attr(get_certificado_value($certificado_edicion, 'numero_certificado')); ?>" min="1" required>
                         </td>
                     </tr>
                     
@@ -206,7 +216,7 @@ function obtener_tipos_certificado_admin() {
                         </th>
                         <td>
                             <input type="date" id="fecha_aprobacion" name="fecha_aprobacion" 
-                                   value="<?php echo esc_attr($certificado_edicion->fecha_aprobacion); ?>" required>
+                                   value="<?php echo esc_attr(get_certificado_value($certificado_edicion, 'fecha_aprobacion')); ?>" required>
                         </td>
                     </tr>
                     
@@ -217,7 +227,7 @@ function obtener_tipos_certificado_admin() {
                         </th>
                         <td>
                             <input type="number" id="capacidad_almacenamiento" name="capacidad_almacenamiento" class="small-text" 
-                                   value="<?php echo esc_attr($certificado_edicion->capacidad_almacenamiento); ?>" min="0" step="0.01" required>
+                                   value="<?php echo esc_attr(get_certificado_value($certificado_edicion, 'capacidad_almacenamiento')); ?>" min="0" step="0.01" required>
                             <span>galones</span>
                         </td>
                     </tr>
@@ -228,7 +238,7 @@ function obtener_tipos_certificado_admin() {
                         </th>
                         <td>
                             <input type="number" id="numero_tanques" name="numero_tanques" class="small-text" 
-                                   value="<?php echo esc_attr($certificado_edicion->numero_tanques); ?>" min="1" required>
+                                   value="<?php echo esc_attr(get_certificado_value($certificado_edicion, 'numero_tanques')); ?>" min="1" required>
                         </td>
                     </tr>
                     
@@ -239,9 +249,9 @@ function obtener_tipos_certificado_admin() {
                         </th>
                         <td>
                             <select id="estado" name="estado" required>
-                                <option value="pendiente" <?php selected($certificado_edicion->estado, 'pendiente'); ?>><?php _e('Pendiente', 'certificados-personalizados'); ?></option>
-                                <option value="aprobado" <?php selected($certificado_edicion->estado, 'aprobado'); ?>><?php _e('Aprobado', 'certificados-personalizados'); ?></option>
-                                <option value="rechazado" <?php selected($certificado_edicion->estado, 'rechazado'); ?>><?php _e('Rechazado', 'certificados-personalizados'); ?></option>
+                                <option value="pendiente" <?php selected(get_certificado_value($certificado_edicion, 'estado'), 'pendiente'); ?>><?php _e('Pendiente', 'certificados-personalizados'); ?></option>
+                                <option value="aprobado" <?php selected(get_certificado_value($certificado_edicion, 'estado'), 'aprobado'); ?>><?php _e('Aprobado', 'certificados-personalizados'); ?></option>
+                                <option value="rechazado" <?php selected(get_certificado_value($certificado_edicion, 'estado'), 'rechazado'); ?>><?php _e('Rechazado', 'certificados-personalizados'); ?></option>
                             </select>
                         </td>
                     </tr>
@@ -255,8 +265,8 @@ function obtener_tipos_certificado_admin() {
                         <?php _e('Cancelar', 'certificados-personalizados'); ?>
                     </a>
                     
-                    <?php if (!empty($certificado_edicion->pdf_path)): ?>
-                        <a href="<?php echo esc_url($certificado_edicion->pdf_path); ?>" target="_blank" class="button button-secondary">
+                    <?php if (!empty(get_certificado_value($certificado_edicion, 'pdf_path'))): ?>
+                        <a href="<?php echo esc_url(get_certificado_value($certificado_edicion, 'pdf_path')); ?>" target="_blank" class="button button-secondary">
                             📄 <?php _e('Ver PDF Actual', 'certificados-personalizados'); ?>
                         </a>
                     <?php endif; ?>
@@ -452,7 +462,7 @@ function obtener_tipos_certificado_admin() {
                         </th>
                         <td>
                             <input type="text" id="nombre_instalacion" name="nombre_instalacion" class="regular-text" 
-                                   value="<?php echo esc_attr($certificado_edicion->nombre_instalacion); ?>" required>
+                                   value="<?php echo esc_attr(get_certificado_value($certificado_edicion, 'nombre_instalacion')); ?>" required>
                         </td>
                     </tr>
                     
@@ -461,7 +471,7 @@ function obtener_tipos_certificado_admin() {
                             <label for="direccion_instalacion"><?php _e('Dirección del Lugar', 'certificados-personalizados'); ?></label>
                         </th>
                         <td>
-                            <textarea id="direccion_instalacion" name="direccion_instalacion" rows="3" cols="50" class="large-text" required><?php echo esc_textarea($certificado_edicion->direccion_instalacion); ?></textarea>
+                            <textarea id="direccion_instalacion" name="direccion_instalacion" rows="3" cols="50" class="large-text" required><?php echo esc_textarea(get_certificado_value($certificado_edicion, 'direccion_instalacion')); ?></textarea>
                         </td>
                     </tr>
                     
@@ -472,7 +482,7 @@ function obtener_tipos_certificado_admin() {
                         </th>
                         <td>
                             <input type="text" id="razon_social" name="razon_social" class="regular-text" 
-                                   value="<?php echo esc_attr($certificado_edicion->razon_social); ?>" required>
+                                   value="<?php echo esc_attr(get_certificado_value($certificado_edicion, 'razon_social')); ?>" required>
                         </td>
                     </tr>
                     
@@ -482,7 +492,7 @@ function obtener_tipos_certificado_admin() {
                         </th>
                         <td>
                             <input type="text" id="nit" name="nit" class="regular-text" 
-                                   value="<?php echo esc_attr($certificado_edicion->nit); ?>" required>
+                                   value="<?php echo esc_attr(get_certificado_value($certificado_edicion, 'nit')); ?>" required>
                         </td>
                     </tr>
                     
@@ -498,7 +508,7 @@ function obtener_tipos_certificado_admin() {
                                 foreach ($tipos as $valor => $etiqueta): 
                                 ?>
                                     <option value="<?php echo esc_attr($valor); ?>" 
-                                            <?php selected($certificado_edicion->tipo_certificado, $valor); ?>>
+                                            <?php selected(get_certificado_value($certificado_edicion, 'tipo_certificado'), $valor); ?>>
                                         <?php echo esc_html($etiqueta); ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -512,7 +522,7 @@ function obtener_tipos_certificado_admin() {
                         </th>
                         <td>
                             <input type="number" id="numero_certificado" name="numero_certificado" class="small-text" 
-                                   value="<?php echo esc_attr($certificado_edicion->numero_certificado); ?>" min="1" required>
+                                   value="<?php echo esc_attr(get_certificado_value($certificado_edicion, 'numero_certificado')); ?>" min="1" required>
                         </td>
                     </tr>
                     
@@ -522,7 +532,7 @@ function obtener_tipos_certificado_admin() {
                         </th>
                         <td>
                             <input type="date" id="fecha_aprobacion" name="fecha_aprobacion" 
-                                   value="<?php echo esc_attr($certificado_edicion->fecha_aprobacion); ?>" required>
+                                   value="<?php echo esc_attr(get_certificado_value($certificado_edicion, 'fecha_aprobacion')); ?>" required>
                         </td>
                     </tr>
                     
@@ -533,7 +543,7 @@ function obtener_tipos_certificado_admin() {
                         </th>
                         <td>
                             <input type="number" id="capacidad_almacenamiento" name="capacidad_almacenamiento" class="regular-text" 
-                                   value="<?php echo esc_attr($certificado_edicion->capacidad_almacenamiento); ?>" min="1" required>
+                                   value="<?php echo esc_attr(get_certificado_value($certificado_edicion, 'capacidad_almacenamiento')); ?>" min="1" required>
                         </td>
                     </tr>
                     
@@ -543,7 +553,7 @@ function obtener_tipos_certificado_admin() {
                         </th>
                         <td>
                             <input type="number" id="numero_tanques" name="numero_tanques" class="small-text" 
-                                   value="<?php echo esc_attr($certificado_edicion->numero_tanques); ?>" min="1" required>
+                                   value="<?php echo esc_attr(get_certificado_value($certificado_edicion, 'numero_tanques')); ?>" min="1" required>
                         </td>
                     </tr>
                     
@@ -554,13 +564,13 @@ function obtener_tipos_certificado_admin() {
                         </th>
                         <td>
                             <select id="estado" name="estado" required>
-                                <option value="pendiente" <?php selected($certificado_edicion->estado, 'pendiente'); ?>>
+                                <option value="pendiente" <?php selected(get_certificado_value($certificado_edicion, 'estado'), 'pendiente'); ?>>
                                     <?php _e('Pendiente', 'certificados-personalizados'); ?>
                                 </option>
-                                <option value="aprobado" <?php selected($certificado_edicion->estado, 'aprobado'); ?>>
+                                <option value="aprobado" <?php selected(get_certificado_value($certificado_edicion, 'estado'), 'aprobado'); ?>>
                                     <?php _e('Aprobado', 'certificados-personalizados'); ?>
                                 </option>
-                                <option value="rechazado" <?php selected($certificado_edicion->estado, 'rechazado'); ?>>
+                                <option value="rechazado" <?php selected(get_certificado_value($certificado_edicion, 'estado'), 'rechazado'); ?>>
                                     <?php _e('Rechazado', 'certificados-personalizados'); ?>
                                 </option>
                             </select>
