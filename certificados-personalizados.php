@@ -96,6 +96,9 @@ class CertificadosAntecore {
         // Hook para debug directo de archivos
         add_action('admin_post_debug_archivo_directo', array($this, 'debug_archivo_directo'));
         
+        // Hook para vaciar certificados
+        add_action('admin_post_vaciar_certificados', array($this, 'procesar_vaciar_certificados'));
+        
         
         // Cargar archivos necesarios
         $this->cargar_archivos();
@@ -499,6 +502,16 @@ class CertificadosAntecore {
                 'manage_options',
                 'configuracion-notificaciones',
                 array($this, 'mostrar_configuracion_notificaciones')
+            );
+            
+            // Submenú para vaciar certificados
+            add_submenu_page(
+                'certificados',
+                __('Vaciar Certificados', 'certificados-personalizados'),
+                __('Vaciar Certificados', 'certificados-personalizados'),
+                'manage_options',
+                'vaciar-certificados',
+                array($this, 'mostrar_vaciar_certificados')
             );
             
         }
@@ -1383,6 +1396,225 @@ class CertificadosAntecore {
         }
         
         return $debug_info;
+    }
+    
+    /**
+     * Mostrar página para vaciar certificados
+     */
+    public function mostrar_vaciar_certificados() {
+        // Verificar permisos
+        if (!current_user_can('manage_options')) {
+            wp_die('No tienes permisos para acceder a esta página.');
+        }
+        
+        // Obtener estadísticas de certificados
+        global $wpdb;
+        $tabla_certificados = $wpdb->prefix . 'certificados_antecore';
+        
+        $total_certificados = $wpdb->get_var("SELECT COUNT(*) FROM $tabla_certificados");
+        $certificados_pendientes = $wpdb->get_var("SELECT COUNT(*) FROM $tabla_certificados WHERE estado = 'pendiente'");
+        $certificados_aprobados = $wpdb->get_var("SELECT COUNT(*) FROM $tabla_certificados WHERE estado = 'aprobado'");
+        $certificados_rechazados = $wpdb->get_var("SELECT COUNT(*) FROM $tabla_certificados WHERE estado = 'rechazado'");
+        
+        // Mostrar mensajes de resultado
+        if (isset($_GET['mensaje']) && isset($_GET['texto'])) {
+            $mensaje = sanitize_text_field($_GET['texto']);
+            $tipo = $_GET['mensaje'] === 'exito' ? 'notice-success' : 'notice-error';
+            echo '<div class="notice ' . $tipo . ' is-dismissible"><p>' . esc_html($mensaje) . '</p></div>';
+        }
+        
+        ?>
+        <div class="wrap">
+            <h1><?php _e('🗑️ Vaciar Certificados', 'certificados-personalizados'); ?></h1>
+            
+            <div class="notice notice-warning">
+                <p><strong>⚠️ Advertencia:</strong> <?php _e('Esta acción eliminará TODOS los certificados de la base de datos de forma permanente. Esta acción no se puede deshacer.', 'certificados-personalizados'); ?></p>
+            </div>
+            
+            <div class="card">
+                <h2><?php _e('📊 Estadísticas Actuales', 'certificados-personalizados'); ?></h2>
+                <table class="widefat">
+                    <thead>
+                        <tr>
+                            <th><?php _e('Estado', 'certificados-personalizados'); ?></th>
+                            <th><?php _e('Cantidad', 'certificados-personalizados'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong><?php _e('Total de Certificados', 'certificados-personalizados'); ?></strong></td>
+                            <td><span class="dashicons dashicons-awards"></span> <strong><?php echo $total_certificados; ?></strong></td>
+                        </tr>
+                        <tr>
+                            <td><?php _e('Pendientes', 'certificados-personalizados'); ?></td>
+                            <td><span class="dashicons dashicons-clock"></span> <?php echo $certificados_pendientes; ?></td>
+                        </tr>
+                        <tr>
+                            <td><?php _e('Aprobados', 'certificados-personalizados'); ?></td>
+                            <td><span class="dashicons dashicons-yes-alt"></span> <?php echo $certificados_aprobados; ?></td>
+                        </tr>
+                        <tr>
+                            <td><?php _e('Rechazados', 'certificados-personalizados'); ?></td>
+                            <td><span class="dashicons dashicons-dismiss"></span> <?php echo $certificados_rechazados; ?></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <?php if ($total_certificados > 0): ?>
+                <div class="card" style="border-left: 4px solid #d63384;">
+                    <h2><?php _e('🚨 Eliminar Todos los Certificados', 'certificados-personalizados'); ?></h2>
+                    <p><?php _e('Esta acción eliminará permanentemente todos los certificados de la base de datos.', 'certificados-personalizados'); ?></p>
+                    
+                    <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" id="form-vaciar-certificados">
+                        <?php wp_nonce_field('vaciar_certificados', 'vaciar_certificados_nonce'); ?>
+                        <input type="hidden" name="action" value="vaciar_certificados">
+                        
+                        <p>
+                            <label>
+                                <input type="checkbox" name="confirmar_vaciado" value="1" required>
+                                <?php _e('Confirmo que quiero eliminar TODOS los certificados permanentemente', 'certificados-personalizados'); ?>
+                            </label>
+                        </p>
+                        
+                        <p>
+                            <label>
+                                <input type="checkbox" name="eliminar_pdfs" value="1">
+                                <?php _e('También eliminar archivos PDF asociados del servidor', 'certificados-personalizados'); ?>
+                            </label>
+                        </p>
+                        
+                        <p>
+                            <button type="submit" class="button button-primary" style="background: #d63384; border-color: #d63384;" onclick="return confirm('<?php _e('¿Está seguro de que desea eliminar TODOS los certificados? Esta acción no se puede deshacer.', 'certificados-personalizados'); ?>')">
+                                🗑️ <?php _e('ELIMINAR TODOS LOS CERTIFICADOS', 'certificados-personalizados'); ?>
+                            </button>
+                        </p>
+                    </form>
+                </div>
+            <?php else: ?>
+                <div class="card" style="border-left: 4px solid #28a745;">
+                    <h2><?php _e('✅ Base de Datos Limpia', 'certificados-personalizados'); ?></h2>
+                    <p><?php _e('No hay certificados en la base de datos. No es necesario vaciar nada.', 'certificados-personalizados'); ?></p>
+                </div>
+            <?php endif; ?>
+            
+            <div class="card">
+                <h2><?php _e('💡 Información Importante', 'certificados-personalizados'); ?></h2>
+                <ul>
+                    <li><strong><?php _e('Backup recomendado:', 'certificados-personalizados'); ?></strong> <?php _e('Antes de vaciar, considera hacer una copia de seguridad de la base de datos.', 'certificados-personalizados'); ?></li>
+                    <li><strong><?php _e('Archivos PDF:', 'certificados-personalizados'); ?></strong> <?php _e('Los archivos PDF se almacenan en el servidor y no se eliminan automáticamente.', 'certificados-personalizados'); ?></li>
+                    <li><strong><?php _e('Usuarios:', 'certificados-personalizados'); ?></strong> <?php _e('Los usuarios y colaboradores no se eliminan, solo los certificados.', 'certificados-personalizados'); ?></li>
+                    <li><strong><?php _e('Configuración:', 'certificados-personalizados'); ?></strong> <?php _e('La configuración de notificaciones se mantiene intacta.', 'certificados-personalizados'); ?></li>
+                </ul>
+            </div>
+        </div>
+        
+        <style>
+        .card {
+            background: #fff;
+            border: 1px solid #c3c4c7;
+            border-radius: 4px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 1px 1px rgba(0,0,0,.04);
+        }
+        .card h2 {
+            margin-top: 0;
+            color: #1d2327;
+        }
+        .widefat th, .widefat td {
+            padding: 12px;
+        }
+        .dashicons {
+            margin-right: 5px;
+        }
+        </style>
+        <?php
+    }
+    
+    /**
+     * Procesar vaciado de certificados
+     */
+    public function procesar_vaciar_certificados() {
+        // Verificar permisos
+        if (!current_user_can('manage_options')) {
+            wp_die('No tienes permisos para realizar esta acción.');
+        }
+        
+        // Verificar nonce
+        if (!isset($_POST['vaciar_certificados_nonce']) || 
+            !wp_verify_nonce($_POST['vaciar_certificados_nonce'], 'vaciar_certificados')) {
+            wp_die('Error de seguridad.');
+        }
+        
+        // Verificar confirmación
+        if (!isset($_POST['confirmar_vaciado']) || $_POST['confirmar_vaciado'] !== '1') {
+            wp_die('Debe confirmar la acción para continuar.');
+        }
+        
+        global $wpdb;
+        $tabla_certificados = $wpdb->prefix . 'certificados_antecore';
+        
+        try {
+            // Obtener información de certificados antes de eliminar
+            $certificados = $wpdb->get_results("SELECT id, pdf_path FROM $tabla_certificados");
+            $total_eliminados = count($certificados);
+            
+            // Eliminar certificados de la base de datos
+            $resultado = $wpdb->query("DELETE FROM $tabla_certificados");
+            
+            if ($resultado === false) {
+                throw new Exception('Error al eliminar certificados de la base de datos.');
+            }
+            
+            // Reiniciar contador de ID
+            $wpdb->query("ALTER TABLE $tabla_certificados AUTO_INCREMENT = 1");
+            
+            // Eliminar archivos PDF si se solicitó
+            $pdfs_eliminados = 0;
+            if (isset($_POST['eliminar_pdfs']) && $_POST['eliminar_pdfs'] === '1') {
+                foreach ($certificados as $certificado) {
+                    if (!empty($certificado->pdf_path)) {
+                        $ruta_pdf = ABSPATH . str_replace(site_url('/'), '', $certificado->pdf_path);
+                        if (file_exists($ruta_pdf)) {
+                            if (unlink($ruta_pdf)) {
+                                $pdfs_eliminados++;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Mensaje de éxito
+            $mensaje = sprintf(
+                __('✅ Certificados eliminados exitosamente. Total eliminados: %d', 'certificados-personalizados'),
+                $total_eliminados
+            );
+            
+            if ($pdfs_eliminados > 0) {
+                $mensaje .= sprintf(
+                    __('. Archivos PDF eliminados: %d', 'certificados-personalizados'),
+                    $pdfs_eliminados
+                );
+            }
+            
+            // Redirigir con mensaje de éxito
+            $redirect_url = admin_url('admin.php?page=vaciar-certificados&mensaje=exito&texto=' . urlencode($mensaje));
+            wp_redirect($redirect_url);
+            exit;
+            
+        } catch (Exception $e) {
+            // Mensaje de error
+            $mensaje = sprintf(
+                __('❌ Error al eliminar certificados: %s', 'certificados-personalizados'),
+                $e->getMessage()
+            );
+            
+            // Redirigir con mensaje de error
+            $redirect_url = admin_url('admin.php?page=vaciar-certificados&mensaje=error&texto=' . urlencode($mensaje));
+            wp_redirect($redirect_url);
+            exit;
+        }
     }
     
 }
