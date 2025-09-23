@@ -139,7 +139,7 @@ function obtener_tipos_certificado_admin() {
             <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" id="formulario-edicion-admin">
                 <?php wp_nonce_field('editar_certificado_admin', 'editar_certificado_admin_nonce'); ?>
                 <input type="hidden" name="action" value="editar_certificado_admin">
-                <input type="hidden" name="certificado_id" value="<?php echo esc_attr($certificado_edicion->id); ?>">
+                <input type="hidden" name="certificado_id" value="<?php echo esc_attr(get_certificado_value($certificado_edicion, 'id')); ?>">
                 
                 <table class="form-table">
                     <!-- Información de la Instalación -->
@@ -452,7 +452,7 @@ function obtener_tipos_certificado_admin() {
             <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" id="formulario-edicion-admin">
                 <?php wp_nonce_field('editar_certificado_admin', 'editar_certificado_admin_nonce'); ?>
                 <input type="hidden" name="action" value="editar_certificado_admin">
-                <input type="hidden" name="certificado_id" value="<?php echo $certificado_edicion->id; ?>">
+                <input type="hidden" name="certificado_id" value="<?php echo esc_attr(get_certificado_value($certificado_edicion, 'id')); ?>">
                 
                 <table class="form-table">
                     <!-- Información de la Instalación -->
