@@ -123,7 +123,7 @@ class CertificadosAntecoreExcel {
     /**
      * Leer archivo Excel de forma simple (sin PhpSpreadsheet)
      */
-    private static function leer_archivo_excel_simple($archivo_path) {
+    public static function leer_archivo_excel_simple($archivo_path) {
         $datos = [];
         $extension = strtolower(pathinfo($archivo_path, PATHINFO_EXTENSION));
         
