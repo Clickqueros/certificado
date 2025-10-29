@@ -326,12 +326,8 @@ class CertificadosAntecoreExcel {
         }
         
         // Validaciones específicas
-        if (!empty($datos['nit'])) {
-            // Verificar si el NIT ya existe
-            if (self::nit_existe($datos['nit'])) {
-                $errores[] = "NIT ya existe en el sistema";
-            }
-        }
+        // Nota: Se permite NITs duplicados en carga masiva
+        // La validación de NIT duplicado fue removida para permitir múltiples certificados con el mismo NIT
         
         if (!empty($datos['tipo_certificado'])) {
             $tipos_validos = ['PAGLP', 'TEGLP', 'PEGLP', 'DEGLP', 'PVGLP'];
