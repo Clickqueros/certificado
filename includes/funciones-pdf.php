@@ -513,16 +513,23 @@ class CertificadosAntecorePDF {
             
             // Registrar fuentes DIN Pro si existen (buscar archivos realmente generados)
             $fonts_dir = plugin_dir_path(__FILE__) . 'libs/tcpdf/fonts/';
+            $dinpro_registered = false;
+            $dinprobold_registered = false;
             
             // Buscar archivos de fuentes DIN Pro (regular)
             $dinpro_files = glob($fonts_dir . 'dinpro*.php');
             foreach ($dinpro_files as $font_file) {
                 $font_name = basename($font_file, '.php');
                 // Excluir la versión bold
-                if (stripos($font_name, 'bold') === false) {
-                    $pdf->AddFont('dinpro', '', $font_name . '.php');
-                    error_log('CertificadosAntecorePDF: Fuente DIN Pro Regular registrada como: dinpro desde ' . $font_name);
-                    break; // Solo necesitamos una versión regular
+                if (stripos($font_name, 'bold') === false && file_exists($font_file)) {
+                    try {
+                        $pdf->AddFont('dinpro', '', $font_name);
+                        error_log('CertificadosAntecorePDF: Fuente DIN Pro Regular registrada como: dinpro desde ' . $font_name);
+                        $dinpro_registered = true;
+                        break; // Solo necesitamos una versión regular
+                    } catch (Exception $e) {
+                        error_log('CertificadosAntecorePDF: Error al registrar fuente dinpro desde ' . $font_name . ': ' . $e->getMessage());
+                    }
                 }
             }
             
@@ -531,25 +538,47 @@ class CertificadosAntecorePDF {
             foreach ($dinprobold_files as $font_file) {
                 $font_name = basename($font_file, '.php');
                 // Solo procesar si contiene "dinpro" o "bold"
-                if (stripos($font_name, 'dinpro') !== false || stripos($font_name, 'bold') !== false) {
-                    $pdf->AddFont('dinprobold', 'B', $font_name . '.php');
-                    error_log('CertificadosAntecorePDF: Fuente DIN Pro Bold registrada como: dinprobold desde ' . $font_name);
-                    break; // Solo necesitamos una versión bold
+                if ((stripos($font_name, 'dinpro') !== false || stripos($font_name, 'bold') !== false) && file_exists($font_file)) {
+                    try {
+                        $pdf->AddFont('dinprobold', 'B', $font_name);
+                        error_log('CertificadosAntecorePDF: Fuente DIN Pro Bold registrada como: dinprobold desde ' . $font_name);
+                        $dinprobold_registered = true;
+                        break; // Solo necesitamos una versión bold
+                    } catch (Exception $e) {
+                        error_log('CertificadosAntecorePDF: Error al registrar fuente dinprobold desde ' . $font_name . ': ' . $e->getMessage());
+                    }
                 }
             }
             
-            // También intentar registrar con nombres alternativos comunes
-            $common_names = ['dinpro', 'dinproregular', 'dinpro_bold', 'dinprobold'];
-            foreach ($common_names as $name) {
-                if (file_exists($fonts_dir . $name . '.php')) {
-                    if (stripos($name, 'bold') !== false) {
-                        $pdf->AddFont('dinprobold', 'B', $name . '.php');
-                        error_log('CertificadosAntecorePDF: Fuente registrada (fallback): dinprobold desde ' . $name);
-                    } else {
-                        $pdf->AddFont('dinpro', '', $name . '.php');
-                        error_log('CertificadosAntecorePDF: Fuente registrada (fallback): dinpro desde ' . $name);
+            // También intentar registrar con nombres alternativos comunes si no se registró antes
+            if (!$dinpro_registered || !$dinprobold_registered) {
+                $common_names = ['dinpro', 'dinproregular', 'dinpro_bold', 'dinprobold'];
+                foreach ($common_names as $name) {
+                    $font_file_path = $fonts_dir . $name . '.php';
+                    if (file_exists($font_file_path)) {
+                        try {
+                            if (stripos($name, 'bold') !== false && !$dinprobold_registered) {
+                                $pdf->AddFont('dinprobold', 'B', $name);
+                                error_log('CertificadosAntecorePDF: Fuente registrada (fallback): dinprobold desde ' . $name);
+                                $dinprobold_registered = true;
+                            } elseif (!$dinpro_registered) {
+                                $pdf->AddFont('dinpro', '', $name);
+                                error_log('CertificadosAntecorePDF: Fuente registrada (fallback): dinpro desde ' . $name);
+                                $dinpro_registered = true;
+                            }
+                        } catch (Exception $e) {
+                            error_log('CertificadosAntecorePDF: Error al registrar fuente (fallback) ' . $name . ': ' . $e->getMessage());
+                        }
                     }
                 }
+            }
+            
+            // Log final del estado de registro
+            if (!$dinpro_registered) {
+                error_log('CertificadosAntecorePDF: ADVERTENCIA - No se pudo registrar DIN Pro Regular. Se usará helvetica como fallback.');
+            }
+            if (!$dinprobold_registered) {
+                error_log('CertificadosAntecorePDF: ADVERTENCIA - No se pudo registrar DIN Pro Bold. Se usará helvetica como fallback.');
             }
             
             // Desactivar header y footer automáticos
@@ -571,13 +600,18 @@ class CertificadosAntecorePDF {
             // Desactivar saltos de página automáticos para mantener en una sola página
             $pdf->SetAutoPageBreak(false);
             
-            // Intentar usar dinpro como fuente por defecto, si no está disponible usar helvetica
-            try {
-                $pdf->SetFont('dinpro', '', 12);
-                error_log('CertificadosAntecorePDF: Fuente por defecto establecida como: dinpro');
-            } catch (Exception $e) {
+            // Intentar usar dinpro como fuente por defecto solo si se registró correctamente
+            if ($dinpro_registered) {
+                try {
+                    $pdf->SetFont('dinpro', '', 12);
+                    error_log('CertificadosAntecorePDF: Fuente por defecto establecida como: dinpro');
+                } catch (Exception $e) {
+                    $pdf->SetFont('helvetica', '', 12);
+                    error_log('CertificadosAntecorePDF: Fuente por defecto establecida como: helvetica (error al usar dinpro: ' . $e->getMessage() . ')');
+                }
+            } else {
                 $pdf->SetFont('helvetica', '', 12);
-                error_log('CertificadosAntecorePDF: Fuente por defecto establecida como: helvetica (dinpro no disponible)');
+                error_log('CertificadosAntecorePDF: Fuente por defecto establecida como: helvetica (dinpro no se registró correctamente)');
             }
             
             // Agregar página A4 horizontal
