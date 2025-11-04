@@ -205,7 +205,8 @@ class CertificadosAntecorePDF {
         
         // Reemplazar alcance y requisitos según el tipo de certificado
         $html = str_replace('[ALCANCE_CERTIFICADO]', htmlspecialchars($info_certificado['alcance']), $html);
-        $html = str_replace('[REQUISITOS_CERTIFICADO]', htmlspecialchars($info_certificado['requisitos']), $html);
+        // No usar htmlspecialchars en requisitos porque contiene <br> para saltos de línea
+        $html = str_replace('[REQUISITOS_CERTIFICADO]', $info_certificado['requisitos'], $html);
         
         // Debug: Verificar si se reemplazaron
         error_log('DEBUG PDF: Después del reemplazo - Contiene [ALCANCE_CERTIFICADO]: ' . (strpos($html, '[ALCANCE_CERTIFICADO]') !== false ? 'SI' : 'NO'));
@@ -224,31 +225,31 @@ class CertificadosAntecorePDF {
         $info_certificados = array(
             'PAGLP' => array(
                 'alcance' => 'Certificación de instalaciones para recibo, almacenamiento y distribución de GLP en plantas almacenadoras e industriales.',
-                'requisitos' => 'Resolución 40246 de marzo de 2016 del Ministerio de Minas y Energía Capítulo I –' . "\n" . 
-                              'Capítulo II Artículos 6, 7 y 8' . "\n" . 
+                'requisitos' => 'Resolución 40246 de marzo de 2016 del Ministerio de Minas y Energía Capítulo I –' . '<br>' . 
+                              'Capítulo II Artículos 6, 7 y 8' . '<br>' . 
                               'Resolución 40867 de septiembre de 2016 del Ministerio de Minas y Energía'
             ),
             'TEGLP' => array(
                 'alcance' => 'Certificación de tanques estacionarios de GLP instalados en domicilio de usuarios finales',
-                'requisitos' => 'Resolución 40246 de marzo de 2016 del Ministerio de Minas y Energía Capítulo I /' . "\n" . 
-                              'Capítulo III Artículos 9,10 y 11' . "\n" . 
+                'requisitos' => 'Resolución 40246 de marzo de 2016 del Ministerio de Minas y Energía Capítulo I /' . '<br>' . 
+                              'Capítulo III Artículos 9,10 y 11' . '<br>' . 
                               'Resolución 40867 de septiembre de 2016 del Ministerio de Minas y Energía'
             ),
             'PEGLP' => array(
                 'alcance' => 'Certificación de plantas de envasado de GLP.',
-                'requisitos' => 'Resolución 40247 de marzo de 2016 del Ministerio de Minas y Energía' . "\n" . 
+                'requisitos' => 'Resolución 40247 de marzo de 2016 del Ministerio de Minas y Energía' . '<br>' . 
                               'Resolución 40868 de septiembre de 2016 del Ministerio de Minas y Energía'
             ),
             'DEGLP' => array(
                 'alcance' => 'Certificación de depósitos de cilindros de GLP',
-                'requisitos' => 'Resolución 40248 de marzo de 2016 del Ministerio de Minas y Energía Capítulo I /' . "\n" . 
-                              'Capítulo III Artículos 6, 7 y 8' . "\n" . 
+                'requisitos' => 'Resolución 40248 de marzo de 2016 del Ministerio de Minas y Energía Capítulo I /' . '<br>' . 
+                              'Capítulo III Artículos 6, 7 y 8' . '<br>' . 
                               'Resolución 40869 de septiembre de 2016 del Ministerio de Minas y Energía'
             ),
             'PVGLP' => array(
                 'alcance' => 'Certificación de expendios y puntos de venta de cilindros de GLP',
-                'requisitos' => 'Resolución 40248 de marzo de 2016 del Ministerio de Minas y Energía Capítulo I /' . "\n" . 
-                              'Capítulo III Artículos 9,10 y 11' . "\n" . 
+                'requisitos' => 'Resolución 40248 de marzo de 2016 del Ministerio de Minas y Energía Capítulo I /' . '<br>' . 
+                              'Capítulo III Artículos 9,10 y 11' . '<br>' . 
                               'Resolución 40869 de septiembre de 2016 del Ministerio de Minas y Energía'
             )
         );
