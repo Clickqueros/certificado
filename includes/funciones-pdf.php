@@ -415,38 +415,68 @@ class CertificadosAntecorePDF {
         }
         
         if (!class_exists('TCPDF_FONTS')) {
+            error_log('CertificadosAntecorePDF: TCPDF_FONTS no disponible');
             return false;
         }
         
         $fonts_dir = plugin_dir_path(__FILE__) . 'libs/tcpdf/fonts/';
         $source_fonts_dir = plugin_dir_path(__FILE__) . '../templates/fonts/';
         
+        // Verificar que el directorio de fuentes fuente existe
+        if (!file_exists($source_fonts_dir)) {
+            error_log('CertificadosAntecorePDF: Directorio de fuentes fuente no existe: ' . $source_fonts_dir);
+        }
+        
         // Verificar y convertir DIN Pro Regular
-        $dinpro_regular_file = $fonts_dir . 'dinpro.php';
-        if (!file_exists($dinpro_regular_file)) {
-            $source_font = $source_fonts_dir . 'dinpro.otf';
-            if (file_exists($source_font)) {
-                $font_name = TCPDF_FONTS::addTTFfont($source_font, 'TrueTypeUnicode', '', 32, $fonts_dir);
-                if ($font_name !== false) {
-                    error_log('CertificadosAntecorePDF: DIN Pro Regular convertido como: ' . $font_name);
-                } else {
-                    error_log('CertificadosAntecorePDF: Error al convertir DIN Pro Regular');
-                }
+        $dinpro_regular_files = glob($fonts_dir . 'dinpro*.php');
+        $dinpro_regular_exists = false;
+        foreach ($dinpro_regular_files as $file) {
+            if (stripos(basename($file), 'bold') === false) {
+                $dinpro_regular_exists = true;
+                error_log('CertificadosAntecorePDF: DIN Pro Regular ya existe: ' . basename($file));
+                break;
             }
         }
         
-        // Verificar y convertir DIN Pro Bold (verificar ambos nombres posibles)
-        $dinpro_bold_file1 = $fonts_dir . 'dinprobold.php';
-        $dinpro_bold_file2 = $fonts_dir . 'dinpro_bold.php';
-        if (!file_exists($dinpro_bold_file1) && !file_exists($dinpro_bold_file2)) {
-            $source_font = $source_fonts_dir . 'dinpro_bold.otf';
+        if (!$dinpro_regular_exists) {
+            $source_font = $source_fonts_dir . 'dinpro.otf';
             if (file_exists($source_font)) {
+                error_log('CertificadosAntecorePDF: Convirtiendo DIN Pro Regular desde: ' . $source_font);
                 $font_name = TCPDF_FONTS::addTTFfont($source_font, 'TrueTypeUnicode', '', 32, $fonts_dir);
                 if ($font_name !== false) {
-                    error_log('CertificadosAntecorePDF: DIN Pro Bold convertido como: ' . $font_name);
+                    error_log('CertificadosAntecorePDF: DIN Pro Regular convertido exitosamente como: ' . $font_name);
                 } else {
-                    error_log('CertificadosAntecorePDF: Error al convertir DIN Pro Bold');
+                    error_log('CertificadosAntecorePDF: ERROR al convertir DIN Pro Regular - addTTFfont retornó false');
                 }
+            } else {
+                error_log('CertificadosAntecorePDF: Archivo fuente no encontrado: ' . $source_font);
+            }
+        }
+        
+        // Verificar y convertir DIN Pro Bold
+        $dinpro_bold_files = glob($fonts_dir . '*bold*.php');
+        $dinpro_bold_exists = false;
+        foreach ($dinpro_bold_files as $file) {
+            $filename = basename($file);
+            if (stripos($filename, 'dinpro') !== false || stripos($filename, 'bold') !== false) {
+                $dinpro_bold_exists = true;
+                error_log('CertificadosAntecorePDF: DIN Pro Bold ya existe: ' . $filename);
+                break;
+            }
+        }
+        
+        if (!$dinpro_bold_exists) {
+            $source_font = $source_fonts_dir . 'dinpro_bold.otf';
+            if (file_exists($source_font)) {
+                error_log('CertificadosAntecorePDF: Convirtiendo DIN Pro Bold desde: ' . $source_font);
+                $font_name = TCPDF_FONTS::addTTFfont($source_font, 'TrueTypeUnicode', '', 32, $fonts_dir);
+                if ($font_name !== false) {
+                    error_log('CertificadosAntecorePDF: DIN Pro Bold convertido exitosamente como: ' . $font_name);
+                } else {
+                    error_log('CertificadosAntecorePDF: ERROR al convertir DIN Pro Bold - addTTFfont retornó false');
+                }
+            } else {
+                error_log('CertificadosAntecorePDF: Archivo fuente no encontrado: ' . $source_font);
             }
         }
         
@@ -481,20 +511,50 @@ class CertificadosAntecorePDF {
             // Crear nueva instancia de TCPDF
             $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
             
-            // Registrar fuentes DIN Pro si existen (verificar diferentes nombres posibles)
+            // Registrar fuentes DIN Pro si existen (buscar archivos realmente generados)
             $fonts_dir = plugin_dir_path(__FILE__) . 'libs/tcpdf/fonts/';
-            // Intentar con dinpro.php (regular)
-            if (file_exists($fonts_dir . 'dinpro.php')) {
-                $pdf->AddFont('dinpro', '', 'dinpro.php');
+            
+            // Buscar archivos de fuentes DIN Pro (regular)
+            $dinpro_files = glob($fonts_dir . 'dinpro*.php');
+            foreach ($dinpro_files as $font_file) {
+                $font_name = basename($font_file, '.php');
+                // Excluir la versión bold
+                if (stripos($font_name, 'bold') === false) {
+                    $pdf->AddFont('dinpro', '', $font_name . '.php');
+                    error_log('CertificadosAntecorePDF: Fuente DIN Pro Regular registrada como: dinpro desde ' . $font_name);
+                    break; // Solo necesitamos una versión regular
+                }
             }
-            // Intentar con dinprobold.php (bold sin guion bajo)
-            if (file_exists($fonts_dir . 'dinprobold.php')) {
-                $pdf->AddFont('dinprobold', 'B', 'dinprobold.php');
+            
+            // Buscar archivos de fuentes DIN Pro (bold)
+            $dinprobold_files = glob($fonts_dir . '*bold*.php');
+            foreach ($dinprobold_files as $font_file) {
+                $font_name = basename($font_file, '.php');
+                // Solo procesar si contiene "dinpro" o "bold"
+                if (stripos($font_name, 'dinpro') !== false || stripos($font_name, 'bold') !== false) {
+                    $pdf->AddFont('dinprobold', 'B', $font_name . '.php');
+                    error_log('CertificadosAntecorePDF: Fuente DIN Pro Bold registrada como: dinprobold desde ' . $font_name);
+                    break; // Solo necesitamos una versión bold
+                }
             }
-            // Intentar con dinpro_bold.php (bold con guion bajo)
-            elseif (file_exists($fonts_dir . 'dinpro_bold.php')) {
-                $pdf->AddFont('dinprobold', 'B', 'dinpro_bold.php');
+            
+            // También intentar registrar con nombres alternativos comunes
+            $common_names = ['dinpro', 'dinproregular', 'dinpro_bold', 'dinprobold'];
+            foreach ($common_names as $name) {
+                if (file_exists($fonts_dir . $name . '.php')) {
+                    if (stripos($name, 'bold') !== false) {
+                        $pdf->AddFont('dinprobold', 'B', $name . '.php');
+                        error_log('CertificadosAntecorePDF: Fuente registrada (fallback): dinprobold desde ' . $name);
+                    } else {
+                        $pdf->AddFont('dinpro', '', $name . '.php');
+                        error_log('CertificadosAntecorePDF: Fuente registrada (fallback): dinpro desde ' . $name);
+                    }
+                }
             }
+            
+            // Verificar qué fuentes están disponibles después del registro
+            $available_fonts = $pdf->getFontsList();
+            error_log('CertificadosAntecorePDF: Fuentes disponibles en TCPDF: ' . print_r($available_fonts, true));
             
             // Desactivar header y footer automáticos
             $pdf->setPrintHeader(false);
@@ -515,8 +575,14 @@ class CertificadosAntecorePDF {
             // Desactivar saltos de página automáticos para mantener en una sola página
             $pdf->SetAutoPageBreak(false);
             
-            // Configurar fuente
-            $pdf->SetFont('helvetica', '', 12);
+            // Intentar usar dinpro como fuente por defecto, si no está disponible usar helvetica
+            try {
+                $pdf->SetFont('dinpro', '', 12);
+                error_log('CertificadosAntecorePDF: Fuente por defecto establecida como: dinpro');
+            } catch (Exception $e) {
+                $pdf->SetFont('helvetica', '', 12);
+                error_log('CertificadosAntecorePDF: Fuente por defecto establecida como: helvetica (dinpro no disponible)');
+            }
             
             // Agregar página A4 horizontal
             $pdf->AddPage('L', 'A4');
