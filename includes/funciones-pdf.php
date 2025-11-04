@@ -188,7 +188,7 @@ class CertificadosAntecorePDF {
         // Reemplazar placeholders del certificado de GLP
         $html = str_replace('[NOMBRE_INSTALACION]', htmlspecialchars($certificado->nombre_instalacion), $html);
         $html = str_replace('[DIRECCION_INSTALACION]', htmlspecialchars($certificado->direccion_instalacion), $html);
-        $html = str_replace('[RAZON_SOCIAL]', htmlspecialchars($certificado->razon_social), $html);
+        $html = str_replace('[RAZON_SOCIAL]', htmlspecialchars(strtoupper($certificado->razon_social)), $html);
         $html = str_replace('[NIT]', htmlspecialchars($certificado->nit), $html);
         $html = str_replace('[NUMERO_CERTIFICADO]', $certificado->tipo_certificado . '-' . str_pad($certificado->numero_certificado, 3, '0', STR_PAD_LEFT), $html);
         $html = str_replace('[FECHA_APROBACION]', date('d-m-Y', strtotime($certificado->fecha_aprobacion)), $html);
