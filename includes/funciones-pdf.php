@@ -666,8 +666,8 @@ class CertificadosAntecorePDF {
             // Generar contenido del PDF
             $html_content = self::generar_html_certificado($certificado);
             
-            // Convertir HTML a contenido para TCPDF
-            $contenido_pdf = self::convertir_html_para_tcpdf($html_content);
+            // Convertir HTML a contenido para TCPDF (pasar información de fuentes registradas)
+            $contenido_pdf = self::convertir_html_para_tcpdf($html_content, $dinpro_registered, $dinprobold_registered);
             
             // Escribir contenido
             $pdf->writeHTML($contenido_pdf, true, false, true, false, '');
@@ -691,12 +691,47 @@ class CertificadosAntecorePDF {
     /**
      * Convertir HTML para TCPDF
      */
-    private static function convertir_html_para_tcpdf($html) {
+    private static function convertir_html_para_tcpdf($html, $dinpro_registered = false, $dinprobold_registered = false) {
         // Simplificar el HTML para TCPDF
         $html = preg_replace('/<style[^>]*>.*?<\/style>/is', '', $html);
         $html = preg_replace('/<script[^>]*>.*?<\/script>/is', '', $html);
         
-        // Reemplazar estilos complejos con estilos básicos para el template de certificado
+        // TCPDF tiene problemas con comillas en nombres de fuente en CSS inline
+        // Reemplazar referencias a fuentes con comillas por referencias sin comillas
+        // Solo hacer esto si las fuentes están registradas
+        
+        if ($dinpro_registered) {
+            // Reemplazar 'dinpro' y "dinpro" por dinpro (sin comillas)
+            $html = preg_replace("/font-family:\s*['\"]dinpro['\"]/i", "font-family: dinpro", $html);
+            $html = preg_replace("/font-family:\s*['\"]dinpro['\"],/i", "font-family: dinpro,", $html);
+        } else {
+            // Si dinpro no está registrada, reemplazar por helvetica
+            $html = preg_replace("/font-family:\s*['\"]?dinpro['\"]?/i", "font-family: helvetica", $html);
+        }
+        
+        if ($dinprobold_registered) {
+            // Reemplazar 'dinprobold' y "dinprobold" por dinprobold (sin comillas)
+            $html = preg_replace("/font-family:\s*['\"]dinprobold['\"]/i", "font-family: dinprobold", $html);
+            $html = preg_replace("/font-family:\s*['\"]dinprobold['\"],/i", "font-family: dinprobold,", $html);
+        } else {
+            // Si dinprobold no está registrada, reemplazar por helvetica
+            $html = preg_replace("/font-family:\s*['\"]?dinprobold['\"]?/i", "font-family: helvetica", $html);
+        }
+        
+        // También manejar casos donde hay múltiples fuentes en la lista (font-family: 'dinprobold', 'dinpro', Arial)
+        // TCPDF necesita que el nombre de la fuente esté primero sin comillas
+        if ($dinprobold_registered) {
+            $html = preg_replace("/font-family:\s*['\"]dinprobold['\"],\s*['\"]dinpro['\"]/i", "font-family: dinprobold, dinpro", $html);
+        } elseif ($dinpro_registered) {
+            $html = preg_replace("/font-family:\s*['\"]dinprobold['\"],\s*['\"]dinpro['\"]/i", "font-family: dinpro", $html);
+        }
+        
+        if ($dinpro_registered) {
+            $html = preg_replace("/font-family:\s*['\"]dinpro['\"],\s*['\"]dinprobold['\"]/i", "font-family: dinpro, dinprobold", $html);
+        }
+        
+        error_log('CertificadosAntecorePDF: HTML convertido para TCPDF. dinpro_registered: ' . ($dinpro_registered ? 'SI' : 'NO') . ', dinprobold_registered: ' . ($dinprobold_registered ? 'SI' : 'NO'));
+        
         return $html;
     }
     
