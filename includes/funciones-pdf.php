@@ -552,10 +552,6 @@ class CertificadosAntecorePDF {
                 }
             }
             
-            // Verificar qué fuentes están disponibles después del registro
-            $available_fonts = $pdf->getFontsList();
-            error_log('CertificadosAntecorePDF: Fuentes disponibles en TCPDF: ' . print_r($available_fonts, true));
-            
             // Desactivar header y footer automáticos
             $pdf->setPrintHeader(false);
             $pdf->setPrintFooter(false);
