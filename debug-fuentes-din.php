@@ -484,9 +484,15 @@ if (!defined('ABSPATH')) {
             if ($dinpro_regular_name) {
                 echo '<h3>Registro DIN Pro Regular</h3>';
                 try {
-                    $pdf->AddFont('dinpro', '', $dinpro_regular_name);
-                    echo '<div class="success">✓ Fuente registrada exitosamente como "dinpro" desde archivo: ' . htmlspecialchars($dinpro_regular_name) . '</div>';
-                    $exitos[] = 'DIN Pro Regular registrada en TCPDF';
+                    $font_regular_file = $fonts_dir . $dinpro_regular_name . '.php';
+                    if (file_exists($font_regular_file)) {
+                        $pdf->AddFont('dinpro', '', $font_regular_file);
+                        echo '<div class="success">✓ Fuente registrada exitosamente como "dinpro" desde archivo: ' . htmlspecialchars($font_regular_file) . '</div>';
+                        $exitos[] = 'DIN Pro Regular registrada en TCPDF';
+                    } else {
+                        echo '<div class="error">✗ Archivo de fuente no encontrado: ' . htmlspecialchars($font_regular_file) . '</div>';
+                        $errores[] = 'Archivo de fuente DIN Pro Regular no encontrado';
+                    }
                 } catch (Exception $e) {
                     echo '<div class="error">✗ Error al registrar: ' . htmlspecialchars($e->getMessage()) . '</div>';
                     $errores[] = 'Error al registrar DIN Pro Regular en TCPDF';
@@ -498,9 +504,15 @@ if (!defined('ABSPATH')) {
             if ($dinpro_bold_name) {
                 echo '<h3>Registro DIN Pro Bold</h3>';
                 try {
-                    $pdf->AddFont('dinprobold', 'B', $dinpro_bold_name);
-                    echo '<div class="success">✓ Fuente registrada exitosamente como "dinprobold" desde archivo: ' . htmlspecialchars($dinpro_bold_name) . '</div>';
-                    $exitos[] = 'DIN Pro Bold registrada en TCPDF';
+                    $font_bold_file = $fonts_dir . $dinpro_bold_name . '.php';
+                    if (file_exists($font_bold_file)) {
+                        $pdf->AddFont('dinprobold', 'B', $font_bold_file);
+                        echo '<div class="success">✓ Fuente registrada exitosamente como "dinprobold" desde archivo: ' . htmlspecialchars($font_bold_file) . '</div>';
+                        $exitos[] = 'DIN Pro Bold registrada en TCPDF';
+                    } else {
+                        echo '<div class="error">✗ Archivo de fuente no encontrado: ' . htmlspecialchars($font_bold_file) . '</div>';
+                        $errores[] = 'Archivo de fuente DIN Pro Bold no encontrado';
+                    }
                 } catch (Exception $e) {
                     echo '<div class="error">✗ Error al registrar: ' . htmlspecialchars($e->getMessage()) . '</div>';
                     $errores[] = 'Error al registrar DIN Pro Bold en TCPDF';

@@ -655,10 +655,20 @@ class CertificadosAntecorePDF {
             // Registrar DIN Pro Regular si está disponible
             if (!empty($font_regular)) {
                 try {
-                    // Registrar como 'dinpro' para uso en CSS - AddFont(alias, estilo, nombre_archivo_base)
-                    $pdf->AddFont('dinpro', '', $font_regular);
-                    error_log('CertificadosAntecorePDF: Fuente DIN Pro Regular registrada como "dinpro" desde archivo: ' . $font_regular);
-                    $dinpro_registered = true;
+                    // Registrar usando la ruta completa del archivo .php
+                    $font_regular_file = $fonts_dir . $font_regular . '.php';
+                    if (file_exists($font_regular_file)) {
+                        // Registrar como 'dinpro' para uso en CSS - AddFont(alias, estilo, ruta_completa_archivo)
+                        $pdf->AddFont('dinpro', '', $font_regular_file);
+                        error_log('CertificadosAntecorePDF: Fuente DIN Pro Regular registrada como "dinpro" desde archivo: ' . $font_regular_file);
+                        $dinpro_registered = true;
+                    } else {
+                        error_log('CertificadosAntecorePDF: ERROR - Archivo de fuente no encontrado: ' . $font_regular_file);
+                        // Intentar con solo el nombre base como fallback
+                        $pdf->AddFont('dinpro', '', $font_regular);
+                        error_log('CertificadosAntecorePDF: Fuente DIN Pro Regular registrada con nombre base: ' . $font_regular);
+                        $dinpro_registered = true;
+                    }
                 } catch (Exception $e) {
                     error_log('CertificadosAntecorePDF: Error al registrar fuente dinpro desde ' . $font_regular . ': ' . $e->getMessage());
                 }
@@ -691,10 +701,20 @@ class CertificadosAntecorePDF {
             // Registrar DIN Pro Bold si está disponible
             if (!empty($font_bold)) {
                 try {
-                    // Registrar como 'dinprobold' para uso en CSS - AddFont(alias, estilo, nombre_archivo_base)
-                    $pdf->AddFont('dinprobold', 'B', $font_bold);
-                    error_log('CertificadosAntecorePDF: Fuente DIN Pro Bold registrada como "dinprobold" desde archivo: ' . $font_bold);
-                    $dinprobold_registered = true;
+                    // Registrar usando la ruta completa del archivo .php
+                    $font_bold_file = $fonts_dir . $font_bold . '.php';
+                    if (file_exists($font_bold_file)) {
+                        // Registrar como 'dinprobold' para uso en CSS - AddFont(alias, estilo, ruta_completa_archivo)
+                        $pdf->AddFont('dinprobold', 'B', $font_bold_file);
+                        error_log('CertificadosAntecorePDF: Fuente DIN Pro Bold registrada como "dinprobold" desde archivo: ' . $font_bold_file);
+                        $dinprobold_registered = true;
+                    } else {
+                        error_log('CertificadosAntecorePDF: ERROR - Archivo de fuente no encontrado: ' . $font_bold_file);
+                        // Intentar con solo el nombre base como fallback
+                        $pdf->AddFont('dinprobold', 'B', $font_bold);
+                        error_log('CertificadosAntecorePDF: Fuente DIN Pro Bold registrada con nombre base: ' . $font_bold);
+                        $dinprobold_registered = true;
+                    }
                 } catch (Exception $e) {
                     error_log('CertificadosAntecorePDF: Error al registrar fuente dinprobold desde ' . $font_bold . ': ' . $e->getMessage());
                 }
