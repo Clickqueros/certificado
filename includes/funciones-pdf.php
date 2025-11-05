@@ -461,13 +461,28 @@ class CertificadosAntecorePDF {
             }
         }
         
-        // Si no existe, convertir desde .otf
+        // Si no existe, convertir desde .ttf (preferido) o .otf (fallback)
         if (!$dinpro_regular_name) {
-            $source_font = $source_fonts_dir . 'dinpro.otf';
+            // Intentar primero con .ttf (TrueType, compatible con TCPDF)
+            $source_font = $source_fonts_dir . 'dinpro.ttf';
+            $font_ext = '.ttf';
+            
+            // Si no existe .ttf, intentar con .otf como fallback
+            if (!file_exists($source_font)) {
+                $source_font = $source_fonts_dir . 'dinpro.otf';
+                $font_ext = '.otf';
+            }
+            
             if (file_exists($source_font)) {
-                error_log('CertificadosAntecorePDF: Convirtiendo DIN Pro Regular desde: ' . $source_font);
+                error_log('CertificadosAntecorePDF: Convirtiendo DIN Pro Regular desde: ' . $source_font . ' (formato: ' . $font_ext . ')');
                 error_log('CertificadosAntecorePDF: Directorio de destino: ' . $fonts_dir);
                 error_log('CertificadosAntecorePDF: Permisos del directorio: ' . substr(sprintf('%o', fileperms($fonts_dir)), -4));
+                
+                // Verificar si es OpenType CFF (no compatible)
+                $font_content = file_get_contents($source_font, false, null, 0, 12);
+                if (substr($font_content, 0, 4) == 'OTTO') {
+                    error_log('CertificadosAntecorePDF: ADVERTENCIA - El archivo es OpenType CFF (PostScript), TCPDF no lo soporta. Necesitas convertir a .ttf primero.');
+                }
                 
                 // Convertir la fuente usando addTTFfont
                 $font_name = TCPDF_FONTS::addTTFfont($source_font, 'TrueTypeUnicode', '', 32, $fonts_dir);
@@ -485,9 +500,12 @@ class CertificadosAntecorePDF {
                     }
                 } else {
                     error_log('CertificadosAntecorePDF: ERROR al convertir DIN Pro Regular - addTTFfont retornó: ' . var_export($font_name, true));
+                    if ($font_ext == '.otf') {
+                        error_log('CertificadosAntecorePDF: SUGERENCIA - El archivo .otf puede ser OpenType CFF. Intenta convertir a .ttf usando FontForge o convertidores online.');
+                    }
                 }
             } else {
-                error_log('CertificadosAntecorePDF: Archivo fuente no encontrado: ' . $source_font);
+                error_log('CertificadosAntecorePDF: Archivo fuente no encontrado (buscado: dinpro.ttf y dinpro.otf en ' . $source_fonts_dir . ')');
             }
         }
         
@@ -511,12 +529,27 @@ class CertificadosAntecorePDF {
             }
         }
         
-        // Si no existe, convertir desde .otf
+        // Si no existe, convertir desde .ttf (preferido) o .otf (fallback)
         if (!$dinpro_bold_name) {
-            $source_font = $source_fonts_dir . 'dinpro_bold.otf';
+            // Intentar primero con .ttf (TrueType, compatible con TCPDF)
+            $source_font = $source_fonts_dir . 'dinpro_bold.ttf';
+            $font_ext = '.ttf';
+            
+            // Si no existe .ttf, intentar con .otf como fallback
+            if (!file_exists($source_font)) {
+                $source_font = $source_fonts_dir . 'dinpro_bold.otf';
+                $font_ext = '.otf';
+            }
+            
             if (file_exists($source_font)) {
-                error_log('CertificadosAntecorePDF: Convirtiendo DIN Pro Bold desde: ' . $source_font);
+                error_log('CertificadosAntecorePDF: Convirtiendo DIN Pro Bold desde: ' . $source_font . ' (formato: ' . $font_ext . ')');
                 error_log('CertificadosAntecorePDF: Directorio de destino: ' . $fonts_dir);
+                
+                // Verificar si es OpenType CFF (no compatible)
+                $font_content = file_get_contents($source_font, false, null, 0, 12);
+                if (substr($font_content, 0, 4) == 'OTTO') {
+                    error_log('CertificadosAntecorePDF: ADVERTENCIA - El archivo es OpenType CFF (PostScript), TCPDF no lo soporta. Necesitas convertir a .ttf primero.');
+                }
                 
                 // Convertir la fuente usando addTTFfont
                 $font_name = TCPDF_FONTS::addTTFfont($source_font, 'TrueTypeUnicode', '', 32, $fonts_dir);
@@ -534,9 +567,12 @@ class CertificadosAntecorePDF {
                     }
                 } else {
                     error_log('CertificadosAntecorePDF: ERROR al convertir DIN Pro Bold - addTTFfont retornó: ' . var_export($font_name, true));
+                    if ($font_ext == '.otf') {
+                        error_log('CertificadosAntecorePDF: SUGERENCIA - El archivo .otf puede ser OpenType CFF. Intenta convertir a .ttf usando FontForge o convertidores online.');
+                    }
                 }
             } else {
-                error_log('CertificadosAntecorePDF: Archivo fuente no encontrado: ' . $source_font);
+                error_log('CertificadosAntecorePDF: Archivo fuente no encontrado (buscado: dinpro_bold.ttf y dinpro_bold.otf en ' . $source_fonts_dir . ')');
             }
         }
         

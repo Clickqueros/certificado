@@ -103,13 +103,31 @@ if (!defined('ABSPATH')) {
         $exitos = array();
         
         // ============================================
-        // TEST 1: Verificar archivos fuente .otf
+        // TEST 1: Verificar archivos fuente .ttf o .otf
         // ============================================
         echo '<div class="test-section">';
-        echo '<h2>1. Verificación de Archivos Fuente (.otf)</h2>';
+        echo '<h2>1. Verificación de Archivos Fuente (.ttf o .otf)</h2>';
         
-        $dinpro_regular_source = $source_fonts_dir . 'dinpro.otf';
-        $dinpro_bold_source = $source_fonts_dir . 'dinpro_bold.otf';
+        // Buscar archivos .ttf primero (preferido), luego .otf como fallback
+        $dinpro_regular_source = null;
+        $dinpro_regular_ext = null;
+        if (file_exists($source_fonts_dir . 'dinpro.ttf')) {
+            $dinpro_regular_source = $source_fonts_dir . 'dinpro.ttf';
+            $dinpro_regular_ext = '.ttf';
+        } elseif (file_exists($source_fonts_dir . 'dinpro.otf')) {
+            $dinpro_regular_source = $source_fonts_dir . 'dinpro.otf';
+            $dinpro_regular_ext = '.otf';
+        }
+        
+        $dinpro_bold_source = null;
+        $dinpro_bold_ext = null;
+        if (file_exists($source_fonts_dir . 'dinpro_bold.ttf')) {
+            $dinpro_bold_source = $source_fonts_dir . 'dinpro_bold.ttf';
+            $dinpro_bold_ext = '.ttf';
+        } elseif (file_exists($source_fonts_dir . 'dinpro_bold.otf')) {
+            $dinpro_bold_source = $source_fonts_dir . 'dinpro_bold.otf';
+            $dinpro_bold_ext = '.otf';
+        }
         
         $tests = array(
             'Directorio fuente existe' => array(
@@ -117,17 +135,19 @@ if (!defined('ABSPATH')) {
                 'path' => $source_fonts_dir,
                 'permisos' => file_exists($source_fonts_dir) ? substr(sprintf('%o', fileperms($source_fonts_dir)), -4) : 'N/A'
             ),
-            'dinpro.otf existe' => array(
-                'check' => file_exists($dinpro_regular_source),
-                'path' => $dinpro_regular_source,
-                'size' => file_exists($dinpro_regular_source) ? filesize($dinpro_regular_source) : 0,
-                'readable' => file_exists($dinpro_regular_source) ? is_readable($dinpro_regular_source) : false
+            'dinpro.ttf o dinpro.otf existe' => array(
+                'check' => $dinpro_regular_source !== null,
+                'path' => $dinpro_regular_source ? $dinpro_regular_source : 'No encontrado',
+                'size' => $dinpro_regular_source ? filesize($dinpro_regular_source) : 0,
+                'readable' => $dinpro_regular_source ? is_readable($dinpro_regular_source) : false,
+                'ext' => $dinpro_regular_ext
             ),
-            'dinpro_bold.otf existe' => array(
-                'check' => file_exists($dinpro_bold_source),
-                'path' => $dinpro_bold_source,
-                'size' => file_exists($dinpro_bold_source) ? filesize($dinpro_bold_source) : 0,
-                'readable' => file_exists($dinpro_bold_source) ? is_readable($dinpro_bold_source) : false
+            'dinpro_bold.ttf o dinpro_bold.otf existe' => array(
+                'check' => $dinpro_bold_source !== null,
+                'path' => $dinpro_bold_source ? $dinpro_bold_source : 'No encontrado',
+                'size' => $dinpro_bold_source ? filesize($dinpro_bold_source) : 0,
+                'readable' => $dinpro_bold_source ? is_readable($dinpro_bold_source) : false,
+                'ext' => $dinpro_bold_ext
             )
         );
         
@@ -147,6 +167,9 @@ if (!defined('ABSPATH')) {
             }
             if (isset($test_data['readable'])) {
                 $details .= '<strong>Legible:</strong> ' . ($test_data['readable'] ? 'SÍ' : 'NO') . '<br>';
+            }
+            if (isset($test_data['ext'])) {
+                $details .= '<strong>Formato:</strong> ' . htmlspecialchars($test_data['ext']) . '<br>';
             }
             echo '<tr><td>' . $test_name . '</td><td>' . $status . '</td><td>' . $details . '</td></tr>';
             
@@ -252,7 +275,7 @@ if (!defined('ABSPATH')) {
         echo '<h2>4. Prueba de Conversión</h2>';
         
         // Intentar convertir DIN Pro Regular
-        if (file_exists($dinpro_regular_source)) {
+        if ($dinpro_regular_source !== null && file_exists($dinpro_regular_source)) {
             echo '<h3>DIN Pro Regular</h3>';
             
             // Verificar tipo de archivo fuente
@@ -328,10 +351,13 @@ if (!defined('ABSPATH')) {
                 echo '</div>';
                 $errores[] = 'Excepción al convertir DIN Pro Regular: ' . $e->getMessage();
             }
+        } else {
+            echo '<h3>DIN Pro Regular</h3>';
+            echo '<div class="warning">⚠ No se encontró archivo dinpro.ttf ni dinpro.otf en el directorio de fuentes.</div>';
         }
         
         // Intentar convertir DIN Pro Bold
-        if (file_exists($dinpro_bold_source)) {
+        if ($dinpro_bold_source !== null && file_exists($dinpro_bold_source)) {
             echo '<h3>DIN Pro Bold</h3>';
             
             // Verificar tipo de archivo fuente
@@ -404,6 +430,9 @@ if (!defined('ABSPATH')) {
                 echo '</div>';
                 $errores[] = 'Excepción al convertir DIN Pro Bold: ' . $e->getMessage();
             }
+        } else {
+            echo '<h3>DIN Pro Bold</h3>';
+            echo '<div class="warning">⚠ No se encontró archivo dinpro_bold.ttf ni dinpro_bold.otf en el directorio de fuentes.</div>';
         }
         echo '</div>';
         
