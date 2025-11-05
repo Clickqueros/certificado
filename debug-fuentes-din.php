@@ -2,32 +2,34 @@
 /**
  * Script de Diagnóstico Completo para Fuentes DIN Pro
  * 
- * Acceder a: /wp-content/plugins/certificado/debug-fuentes-din.php
+ * Acceder desde: Certificados → Diagnóstico de Fuentes (en el admin de WordPress)
  */
 
-// Cargar WordPress
-$wp_load_paths = array(
-    __DIR__ . '/../../../wp-load.php',
-    __DIR__ . '/../../../../wp-load.php',
-    __DIR__ . '/../../../../../wp-load.php',
-);
+// Si no se está ejecutando desde WordPress admin, intentar cargar WordPress
+if (!defined('ABSPATH')) {
+    $wp_load_paths = array(
+        __DIR__ . '/../../../wp-load.php',
+        __DIR__ . '/../../../../wp-load.php',
+        __DIR__ . '/../../../../../wp-load.php',
+    );
 
-$wp_loaded = false;
-foreach ($wp_load_paths as $path) {
-    if (file_exists($path)) {
-        require_once $path;
-        $wp_loaded = true;
-        break;
+    $wp_loaded = false;
+    foreach ($wp_load_paths as $path) {
+        if (file_exists($path)) {
+            require_once $path;
+            $wp_loaded = true;
+            break;
+        }
     }
-}
 
-if (!$wp_loaded) {
-    die('ERROR: No se pudo cargar WordPress.');
+    if (!$wp_loaded) {
+        die('ERROR: No se pudo cargar WordPress.');
+    }
 }
 
 // Verificar permisos
 if (!current_user_can('manage_options')) {
-    die('ERROR: No tienes permisos para ejecutar este script.');
+    wp_die('ERROR: No tienes permisos para ejecutar este script.');
 }
 
 // Cargar TCPDF
@@ -46,15 +48,26 @@ if (!defined('K_PATH_FONTS')) {
     define('K_PATH_FONTS', $fonts_dir);
 }
 
-header('Content-Type: text/html; charset=utf-8');
+// Si se está ejecutando desde admin de WordPress, no enviar headers directamente
+if (!defined('ABSPATH')) {
+    header('Content-Type: text/html; charset=utf-8');
+}
 ?>
 <!DOCTYPE html>
 <html>
 <head>
     <title>🔍 Diagnóstico de Fuentes DIN Pro</title>
+    <?php if (defined('ABSPATH')): ?>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .wrap { margin: 20px 20px 0 0; }
+    </style>
+    <?php endif; ?>
+    <style>
+        body { font-family: Arial, sans-serif; <?php if (!defined('ABSPATH')): ?>padding: 20px; background: #f5f5f5;<?php endif; ?> }
         .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        <?php if (defined('ABSPATH')): ?>
+        .wrap { background: white; padding: 20px; border-radius: 8px; }
+        <?php endif; ?>
         h1 { color: #333; border-bottom: 2px solid #0073aa; padding-bottom: 10px; }
         h2 { color: #0073aa; margin-top: 30px; border-left: 4px solid #0073aa; padding-left: 10px; }
         h3 { color: #0073aa; margin-top: 20px; }
@@ -75,8 +88,13 @@ header('Content-Type: text/html; charset=utf-8');
     </style>
 </head>
 <body>
+    <?php if (defined('ABSPATH')): ?>
+    <div class="wrap">
+        <h1>🔍 Diagnóstico Completo de Fuentes DIN Pro</h1>
+    <?php else: ?>
     <div class="container">
         <h1>🔍 Diagnóstico Completo de Fuentes DIN Pro</h1>
+    <?php endif; ?>
         
         <?php
         $diagnostico = array();
@@ -236,15 +254,43 @@ header('Content-Type: text/html; charset=utf-8');
         // Intentar convertir DIN Pro Regular
         if (file_exists($dinpro_regular_source)) {
             echo '<h3>DIN Pro Regular</h3>';
+            
+            // Verificar tipo de archivo fuente
+            $font_content = file_get_contents($dinpro_regular_source, false, null, 0, 12);
+            $font_type_info = '';
+            $is_otf_cff = false;
+            
+            if (substr($font_content, 0, 4) == 'OTTO') {
+                $font_type_info = '<div class="error">⚠ Este archivo es OpenType con formato CFF (PostScript outlines). TCPDF NO soporta este formato directamente.</div>';
+                $is_otf_cff = true;
+            } elseif (substr($font_content, 0, 4) == "\x00\x01\x00\x00" || substr($font_content, 0, 4) == "true") {
+                $font_type_info = '<div class="info">✓ Este archivo es TrueType/OpenType con TrueType outlines (compatible con TCPDF).</div>';
+            } else {
+                $hex_start = bin2hex(substr($font_content, 0, 4));
+                $font_type_info = '<div class="warning">⚠ Tipo de archivo no reconocido. Primeros 4 bytes (hex): ' . $hex_start . '</div>';
+            }
+            echo $font_type_info;
+            
             try {
                 error_log('DEBUG: Intentando convertir DIN Pro Regular desde: ' . $dinpro_regular_source);
                 error_log('DEBUG: Directorio destino: ' . $fonts_dir);
                 error_log('DEBUG: Permisos directorio: ' . (file_exists($fonts_dir) ? substr(sprintf('%o', fileperms($fonts_dir)), -4) : 'N/A'));
                 error_log('DEBUG: Directorio escribible: ' . (is_writable($fonts_dir) ? 'SÍ' : 'NO'));
                 
-                $font_name = TCPDF_FONTS::addTTFfont($dinpro_regular_source, 'TrueTypeUnicode', '', 32, $fonts_dir);
-                
-                if ($font_name !== false && !empty($font_name)) {
+                if ($is_otf_cff) {
+                    echo '<div class="error">';
+                    echo '✗ <strong>No se puede convertir:</strong> TCPDF no soporta fuentes OpenType con formato CFF (PostScript outlines).<br>';
+                    echo '<strong>Solución:</strong> Necesitas convertir el archivo .otf a formato .ttf (TrueType) primero.<br>';
+                    echo 'Puedes usar herramientas como:<br>';
+                    echo '- FontForge (gratuito, multiplataforma)<br>';
+                    echo '- Online converters (fontconverter.org, convertio.co)<br>';
+                    echo '- Adobe Font Development Kit for OpenType (AFDKO)<br>';
+                    echo '</div>';
+                    $errores[] = 'DIN Pro Regular es OpenType CFF - no compatible con TCPDF';
+                } else {
+                    $font_name = TCPDF_FONTS::addTTFfont($dinpro_regular_source, 'TrueTypeUnicode', '', 32, $fonts_dir);
+                    
+                    if ($font_name !== false && !empty($font_name)) {
                     echo '<div class="success">';
                     echo '✓ <strong>Conversión exitosa:</strong> ' . htmlspecialchars($font_name) . '<br>';
                     
@@ -263,11 +309,18 @@ header('Content-Type: text/html; charset=utf-8');
                         $advertencias[] = 'Archivos .php/.z no creados para DIN Pro Regular';
                     }
                     echo '</div>';
-                } else {
-                    echo '<div class="error">';
-                    echo '✗ <strong>Error en conversión:</strong> addTTFfont retornó: ' . var_export($font_name, true);
-                    echo '</div>';
-                    $errores[] = 'Error al convertir DIN Pro Regular';
+                    } else {
+                        echo '<div class="error">';
+                        echo '✗ <strong>Error en conversión:</strong> addTTFfont retornó: ' . var_export($font_name, true) . '<br>';
+                        echo '<strong>Posibles causas:</strong><br>';
+                        echo '- El archivo puede estar corrupto<br>';
+                        echo '- El formato puede no ser compatible<br>';
+                        echo '- Puede haber un problema de memoria PHP<br>';
+                        echo '- Verifica los logs de PHP para más detalles';
+                        echo '</div>';
+                        $errores[] = 'Error al convertir DIN Pro Regular';
+                    }
+                    }
                 }
             } catch (Exception $e) {
                 echo '<div class="error">';
@@ -281,12 +334,40 @@ header('Content-Type: text/html; charset=utf-8');
         // Intentar convertir DIN Pro Bold
         if (file_exists($dinpro_bold_source)) {
             echo '<h3>DIN Pro Bold</h3>';
+            
+            // Verificar tipo de archivo fuente
+            $font_content = file_get_contents($dinpro_bold_source, false, null, 0, 12);
+            $font_type_info = '';
+            $is_otf_cff = false;
+            
+            if (substr($font_content, 0, 4) == 'OTTO') {
+                $font_type_info = '<div class="error">⚠ Este archivo es OpenType con formato CFF (PostScript outlines). TCPDF NO soporta este formato directamente.</div>';
+                $is_otf_cff = true;
+            } elseif (substr($font_content, 0, 4) == "\x00\x01\x00\x00" || substr($font_content, 0, 4) == "true") {
+                $font_type_info = '<div class="info">✓ Este archivo es TrueType/OpenType con TrueType outlines (compatible con TCPDF).</div>';
+            } else {
+                $hex_start = bin2hex(substr($font_content, 0, 4));
+                $font_type_info = '<div class="warning">⚠ Tipo de archivo no reconocido. Primeros 4 bytes (hex): ' . $hex_start . '</div>';
+            }
+            echo $font_type_info;
+            
             try {
                 error_log('DEBUG: Intentando convertir DIN Pro Bold desde: ' . $dinpro_bold_source);
                 
-                $font_name = TCPDF_FONTS::addTTFfont($dinpro_bold_source, 'TrueTypeUnicode', '', 32, $fonts_dir);
-                
-                if ($font_name !== false && !empty($font_name)) {
+                if ($is_otf_cff) {
+                    echo '<div class="error">';
+                    echo '✗ <strong>No se puede convertir:</strong> TCPDF no soporta fuentes OpenType con formato CFF (PostScript outlines).<br>';
+                    echo '<strong>Solución:</strong> Necesitas convertir el archivo .otf a formato .ttf (TrueType) primero.<br>';
+                    echo 'Puedes usar herramientas como:<br>';
+                    echo '- FontForge (gratuito, multiplataforma)<br>';
+                    echo '- Online converters (fontconverter.org, convertio.co)<br>';
+                    echo '- Adobe Font Development Kit for OpenType (AFDKO)<br>';
+                    echo '</div>';
+                    $errores[] = 'DIN Pro Bold es OpenType CFF - no compatible con TCPDF';
+                } else {
+                    $font_name = TCPDF_FONTS::addTTFfont($dinpro_bold_source, 'TrueTypeUnicode', '', 32, $fonts_dir);
+                    
+                    if ($font_name !== false && !empty($font_name)) {
                     echo '<div class="success">';
                     echo '✓ <strong>Conversión exitosa:</strong> ' . htmlspecialchars($font_name) . '<br>';
                     
@@ -305,11 +386,18 @@ header('Content-Type: text/html; charset=utf-8');
                         $advertencias[] = 'Archivos .php/.z no creados para DIN Pro Bold';
                     }
                     echo '</div>';
-                } else {
-                    echo '<div class="error">';
-                    echo '✗ <strong>Error en conversión:</strong> addTTFfont retornó: ' . var_export($font_name, true);
-                    echo '</div>';
-                    $errores[] = 'Error al convertir DIN Pro Bold';
+                    } else {
+                        echo '<div class="error">';
+                        echo '✗ <strong>Error en conversión:</strong> addTTFfont retornó: ' . var_export($font_name, true) . '<br>';
+                        echo '<strong>Posibles causas:</strong><br>';
+                        echo '- El archivo puede estar corrupto<br>';
+                        echo '- El formato puede no ser compatible<br>';
+                        echo '- Puede haber un problema de memoria PHP<br>';
+                        echo '- Verifica los logs de PHP para más detalles';
+                        echo '</div>';
+                        $errores[] = 'Error al convertir DIN Pro Bold';
+                    }
+                    }
                 }
             } catch (Exception $e) {
                 echo '<div class="error">';
@@ -440,8 +528,12 @@ header('Content-Type: text/html; charset=utf-8');
         ?>
         
         <br>
-        <a href="<?php echo admin_url(); ?>" class="btn">← Volver al Dashboard</a>
-        <a href="<?php echo str_replace('debug-fuentes-din.php', 'convertir-fuentes.php', $_SERVER['PHP_SELF']); ?>" class="btn">🔄 Convertir Fuentes</a>
+        <?php if (defined('ABSPATH')): ?>
+            <a href="<?php echo admin_url('admin.php?page=certificados'); ?>" class="btn">← Volver a Certificados</a>
+            <a href="<?php echo admin_url('admin.php?page=diagnostico-fuentes-din'); ?>" class="btn" onclick="location.reload(); return false;">🔄 Actualizar Diagnóstico</a>
+        <?php else: ?>
+            <a href="<?php echo admin_url(); ?>" class="btn">← Volver al Dashboard</a>
+        <?php endif; ?>
     </div>
 </body>
 </html>

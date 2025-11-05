@@ -502,6 +502,16 @@ class CertificadosAntecore {
                 array($this, 'mostrar_configuracion_notificaciones')
             );
             
+            // Submenú de diagnóstico de fuentes DIN Pro
+            add_submenu_page(
+                'certificados',
+                __('Diagnóstico de Fuentes', 'certificados-personalizados'),
+                __('Diagnóstico de Fuentes', 'certificados-personalizados'),
+                'manage_options',
+                'diagnostico-fuentes-din',
+                array($this, 'mostrar_diagnostico_fuentes')
+            );
+            
             
         }
     }
@@ -545,6 +555,19 @@ class CertificadosAntecore {
         // Cargar vista
         include CERTIFICADOS_ANTECORE_PLUGIN_PATH . 'admin/configuracion-notificaciones.php';
         ConfiguracionNotificaciones::mostrar_pagina_configuracion();
+    }
+    
+    /**
+     * Mostrar diagnóstico de fuentes DIN Pro
+     */
+    public function mostrar_diagnostico_fuentes() {
+        // Verificar permisos
+        if (!current_user_can('manage_options')) {
+            wp_die(__('No tienes permisos para acceder a esta página.', 'certificados-personalizados'));
+        }
+        
+        // Incluir el script de diagnóstico
+        include CERTIFICADOS_ANTECORE_PLUGIN_PATH . 'debug-fuentes-din.php';
     }
     
     /**
