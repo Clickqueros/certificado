@@ -320,7 +320,6 @@ if (!defined('ABSPATH')) {
                         echo '</div>';
                         $errores[] = 'Error al convertir DIN Pro Regular';
                     }
-                    }
                 }
             } catch (Exception $e) {
                 echo '<div class="error">';
@@ -396,7 +395,6 @@ if (!defined('ABSPATH')) {
                         echo '- Verifica los logs de PHP para más detalles';
                         echo '</div>';
                         $errores[] = 'Error al convertir DIN Pro Bold';
-                    }
                     }
                 }
             } catch (Exception $e) {
