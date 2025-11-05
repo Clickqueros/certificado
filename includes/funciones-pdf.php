@@ -511,13 +511,18 @@ class CertificadosAntecorePDF {
         
         // Verificar y convertir DIN Pro Bold
         $dinpro_bold_name = null;
-        // Buscar archivos que contengan "bold" y "dinpro"
-        $bold_php_files = glob($fonts_dir . '*.php');
+        // Buscar archivos que puedan ser DIN Pro Bold
+        // TCPDF puede generar nombres como: dinpro_b, dinprobold, dinpro_bold, etc.
+        $bold_php_files = glob($fonts_dir . 'dinpro*.php');
         foreach ($bold_php_files as $file) {
             $basename = basename($file, '.php');
-            // Buscar archivos que contengan "dinpro" y "bold" o solo "bold" si viene de dinpro_bold.otf
-            if ((stripos($basename, 'dinpro') !== false && stripos($basename, 'bold') !== false) || 
-                (stripos($basename, 'bold') !== false && stripos($basename, 'dinpro') !== false)) {
+            // Excluir el regular (dinpro sin sufijos)
+            if ($basename == 'dinpro') {
+                continue;
+            }
+            // Buscar archivos que contengan "dinpro" y "bold" o "dinpro_b" (formato generado por TCPDF)
+            if ((stripos($basename, 'dinpro') !== false && (stripos($basename, 'bold') !== false || stripos($basename, '_b') !== false)) ||
+                (stripos($basename, 'dinpro_b') === 0)) {
                 // Verificar que también existe el archivo .z correspondiente
                 $z_file = $fonts_dir . $basename . '.z';
                 if (file_exists($z_file)) {
@@ -628,8 +633,11 @@ class CertificadosAntecorePDF {
                 $font_regular = $font_names['regular'];
                 error_log('CertificadosAntecorePDF: Usando fuente DIN Pro Regular ya convertida: ' . $font_regular);
             } else {
-                // Si no está convertida, convertirla ahora
-                $source_font_regular = $source_fonts_dir . 'dinpro.otf';
+                // Si no está convertida, convertirla ahora (buscar .ttf primero, luego .otf)
+                $source_font_regular = $source_fonts_dir . 'dinpro.ttf';
+                if (!file_exists($source_font_regular)) {
+                    $source_font_regular = $source_fonts_dir . 'dinpro.otf';
+                }
                 if (file_exists($source_font_regular)) {
                     error_log('CertificadosAntecorePDF: Convirtiendo DIN Pro Regular desde: ' . $source_font_regular);
                     $font_regular = TCPDF_FONTS::addTTFfont($source_font_regular, 'TrueTypeUnicode', '', 32, $fonts_dir);
@@ -640,7 +648,7 @@ class CertificadosAntecorePDF {
                         $font_regular = null;
                     }
                 } else {
-                    error_log('CertificadosAntecorePDF: Archivo fuente no encontrado: ' . $source_font_regular);
+                    error_log('CertificadosAntecorePDF: Archivo fuente no encontrado (buscado: dinpro.ttf y dinpro.otf)');
                 }
             }
             
@@ -661,8 +669,11 @@ class CertificadosAntecorePDF {
                 $font_bold = $font_names['bold'];
                 error_log('CertificadosAntecorePDF: Usando fuente DIN Pro Bold ya convertida: ' . $font_bold);
             } else {
-                // Si no está convertida, convertirla ahora
-                $source_font_bold = $source_fonts_dir . 'dinpro_bold.otf';
+                // Si no está convertida, convertirla ahora (buscar .ttf primero, luego .otf)
+                $source_font_bold = $source_fonts_dir . 'dinpro_bold.ttf';
+                if (!file_exists($source_font_bold)) {
+                    $source_font_bold = $source_fonts_dir . 'dinpro_bold.otf';
+                }
                 if (file_exists($source_font_bold)) {
                     error_log('CertificadosAntecorePDF: Convirtiendo DIN Pro Bold desde: ' . $source_font_bold);
                     $font_bold = TCPDF_FONTS::addTTFfont($source_font_bold, 'TrueTypeUnicode', '', 32, $fonts_dir);
@@ -673,7 +684,7 @@ class CertificadosAntecorePDF {
                         $font_bold = null;
                     }
                 } else {
-                    error_log('CertificadosAntecorePDF: Archivo fuente no encontrado: ' . $source_font_bold);
+                    error_log('CertificadosAntecorePDF: Archivo fuente no encontrado (buscado: dinpro_bold.ttf y dinpro_bold.otf)');
                 }
             }
             

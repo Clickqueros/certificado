@@ -452,7 +452,8 @@ if (!defined('ABSPATH')) {
             $php_files = glob($fonts_dir . 'dinpro*.php');
             foreach ($php_files as $file) {
                 $basename = basename($file, '.php');
-                if (stripos($basename, 'bold') === false) {
+                // El regular es exactamente "dinpro" sin sufijos
+                if ($basename == 'dinpro') {
                     $z_file = $fonts_dir . $basename . '.z';
                     if (file_exists($z_file)) {
                         $dinpro_regular_name = $basename;
@@ -461,11 +462,17 @@ if (!defined('ABSPATH')) {
                 }
             }
             
-            $bold_php_files = glob($fonts_dir . '*.php');
+            // Buscar archivos bold (pueden ser dinpro_b, dinprobold, dinpro_bold, etc.)
+            $bold_php_files = glob($fonts_dir . 'dinpro*.php');
             foreach ($bold_php_files as $file) {
                 $basename = basename($file, '.php');
-                if ((stripos($basename, 'dinpro') !== false && stripos($basename, 'bold') !== false) || 
-                    (stripos($basename, 'bold') !== false && stripos($basename, 'dinpro') !== false)) {
+                // Excluir el regular (dinpro sin sufijos)
+                if ($basename == 'dinpro') {
+                    continue;
+                }
+                // Buscar archivos que contengan "dinpro" y "bold" o "dinpro_b" (formato generado por TCPDF)
+                if ((stripos($basename, 'dinpro') !== false && (stripos($basename, 'bold') !== false || stripos($basename, '_b') !== false)) ||
+                    (stripos($basename, 'dinpro_b') === 0)) {
                     $z_file = $fonts_dir . $basename . '.z';
                     if (file_exists($z_file)) {
                         $dinpro_bold_name = $basename;
