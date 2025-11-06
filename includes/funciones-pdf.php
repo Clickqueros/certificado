@@ -158,25 +158,16 @@ class CertificadosAntecorePDF {
     public static function generar_html_certificado($certificado) {
         $plantilla_path = plugin_dir_path(__FILE__) . '../templates/plantilla-certificado.html';
         
-        // Debug: Verificar si la plantilla existe
-        error_log('DEBUG PDF: Ruta plantilla: ' . $plantilla_path);
-        error_log('DEBUG PDF: Plantilla existe: ' . (file_exists($plantilla_path) ? 'SI' : 'NO'));
-        
         if (file_exists($plantilla_path)) {
             $html = file_get_contents($plantilla_path);
-            error_log('DEBUG PDF: Usando plantilla personalizada - Tamaño: ' . strlen($html) . ' caracteres');
         } else {
             $html = self::generar_plantilla_por_defecto($certificado, $certificado->actividad);
-            error_log('DEBUG PDF: Usando plantilla por defecto - Tamaño: ' . strlen($html) . ' caracteres');
         }
 
         // Convertir ruta relativa de imagen a ruta absoluta para TCPDF
         $imagen_path = plugin_dir_path(__FILE__) . '../images/bg-pdf-antecore.jpg';
         if (file_exists($imagen_path)) {
             $html = str_replace("url('images/bg-pdf-antecore.jpg')", "url('" . $imagen_path . "')", $html);
-            error_log('DEBUG PDF: Imagen de fondo encontrada y ruta convertida: ' . $imagen_path);
-        } else {
-            error_log('DEBUG PDF: Imagen de fondo NO encontrada en: ' . $imagen_path);
         }
         
         // Obtener información del tipo de certificado
@@ -199,21 +190,10 @@ class CertificadosAntecorePDF {
         $html = str_replace('[CAPACIDAD_ALMACENAMIENTO]', htmlspecialchars($capacidad_formateada), $html);
         $html = str_replace('[NUMERO_TANQUES]', htmlspecialchars($certificado->numero_tanques), $html);
         
-        // Debug: Verificar si los placeholders están en el HTML
-        error_log('DEBUG PDF: Contiene [ALCANCE_CERTIFICADO]: ' . (strpos($html, '[ALCANCE_CERTIFICADO]') !== false ? 'SI' : 'NO'));
-        error_log('DEBUG PDF: Contiene [REQUISITOS_CERTIFICADO]: ' . (strpos($html, '[REQUISITOS_CERTIFICADO]') !== false ? 'SI' : 'NO'));
-        
         // Reemplazar alcance y requisitos según el tipo de certificado
         $html = str_replace('[ALCANCE_CERTIFICADO]', htmlspecialchars($info_certificado['alcance']), $html);
         // No usar htmlspecialchars en requisitos porque contiene <br> para saltos de línea
         $html = str_replace('[REQUISITOS_CERTIFICADO]', $info_certificado['requisitos'], $html);
-        
-        // Debug: Verificar si se reemplazaron
-        error_log('DEBUG PDF: Después del reemplazo - Contiene [ALCANCE_CERTIFICADO]: ' . (strpos($html, '[ALCANCE_CERTIFICADO]') !== false ? 'SI' : 'NO'));
-        error_log('DEBUG PDF: Después del reemplazo - Contiene [REQUISITOS_CERTIFICADO]: ' . (strpos($html, '[REQUISITOS_CERTIFICADO]') !== false ? 'SI' : 'NO'));
-        error_log('DEBUG PDF: Tipo certificado: ' . $certificado->tipo_certificado);
-        error_log('DEBUG PDF: Alcance: ' . $info_certificado['alcance']);
-        error_log('DEBUG PDF: Requisitos: ' . $info_certificado['requisitos']);
         
         return $html;
     }
@@ -805,9 +785,6 @@ class CertificadosAntecorePDF {
                 
                 // Asegura que el contenido HTML quede POR ENCIMA del fondo
                 $pdf->setPageMark();
-                error_log('TCPDF: Imagen de fondo aplicada correctamente: ' . $bg_path);
-            } else {
-                error_log('TCPDF: No se pudo leer la imagen de fondo en: ' . $bg_path);
             }
             
             // Generar contenido del PDF
@@ -876,8 +853,6 @@ class CertificadosAntecorePDF {
         if ($dinpro_registered) {
             $html = preg_replace("/font-family:\s*['\"]dinpro['\"],\s*['\"]dinprobold['\"]/i", "font-family: dinpro, dinprobold", $html);
         }
-        
-        error_log('CertificadosAntecorePDF: HTML convertido para TCPDF. dinpro_registered: ' . ($dinpro_registered ? 'SI' : 'NO') . ', dinprobold_registered: ' . ($dinprobold_registered ? 'SI' : 'NO'));
         
         return $html;
     }

@@ -93,9 +93,6 @@ class CertificadosAntecore {
         // Hook para crear archivo de prueba simple
         add_action('admin_post_crear_archivo_prueba_simple', array($this, 'crear_archivo_prueba_simple'));
         
-        // Hook para debug directo de archivos
-        add_action('admin_post_debug_archivo_directo', array($this, 'debug_archivo_directo'));
-        
         
         
         // Cargar archivos necesarios
@@ -502,16 +499,6 @@ class CertificadosAntecore {
                 array($this, 'mostrar_configuracion_notificaciones')
             );
             
-            // Submenú de diagnóstico de fuentes DIN Pro
-            add_submenu_page(
-                'certificados',
-                __('Diagnóstico de Fuentes', 'certificados-personalizados'),
-                __('Diagnóstico de Fuentes', 'certificados-personalizados'),
-                'manage_options',
-                'diagnostico-fuentes-din',
-                array($this, 'mostrar_diagnostico_fuentes')
-            );
-            
             
         }
     }
@@ -557,18 +544,6 @@ class CertificadosAntecore {
         ConfiguracionNotificaciones::mostrar_pagina_configuracion();
     }
     
-    /**
-     * Mostrar diagnóstico de fuentes DIN Pro
-     */
-    public function mostrar_diagnostico_fuentes() {
-        // Verificar permisos
-        if (!current_user_can('manage_options')) {
-            wp_die(__('No tienes permisos para acceder a esta página.', 'certificados-personalizados'));
-        }
-        
-        // Incluir el script de diagnóstico
-        include CERTIFICADOS_ANTECORE_PLUGIN_PATH . 'debug-fuentes-din.php';
-    }
     
     /**
      * Registrar shortcode para mostrar certificados aprobados
@@ -700,9 +675,6 @@ class CertificadosAntecore {
         $resultado = CertificadosAntecoreBD::actualizar_certificado($certificado_id, $datos_actualizados);
         
         if ($resultado) {
-            // Debug: Verificar datos actualizados
-            CertificadosAntecoreBD::debug_certificado($certificado_id);
-            
             // Verificar que la actualización fue exitosa obteniendo los datos actualizados
             $certificado_actualizado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
             
@@ -727,34 +699,25 @@ class CertificadosAntecore {
      * Procesar edición de certificado por administrador
      */
     public function procesar_edicion_certificado_admin() {
-        // Debug: Log para verificar que se está ejecutando
-        error_log('CertificadosPersonalizados: Iniciando procesar_edicion_certificado_admin');
-        
         // Verificar permisos de administrador
         if (!current_user_can('administrator')) {
-            error_log('CertificadosPersonalizados: Error - Usuario no es administrador');
             wp_die('No tienes permisos para realizar esta acción.');
         }
         
         // Verificar nonce
         if (!isset($_POST['editar_certificado_admin_nonce']) || 
             !wp_verify_nonce($_POST['editar_certificado_admin_nonce'], 'editar_certificado_admin')) {
-            error_log('CertificadosPersonalizados: Error - Nonce inválido');
             wp_die('Error de seguridad.');
         }
         
         $certificado_id = intval($_POST['certificado_id']);
-        error_log('CertificadosPersonalizados: Certificado ID: ' . $certificado_id);
         
         // Obtener certificado para administrador (sin restricciones)
         $certificado = CertificadosAntecoreBD::obtener_certificado_para_edicion_admin($certificado_id);
         
         if (!$certificado) {
-            error_log('CertificadosPersonalizados: Error - Certificado no encontrado para ID: ' . $certificado_id);
             wp_die('Certificado no encontrado.');
         }
-        
-        error_log('CertificadosPersonalizados: Certificado encontrado, continuando con validación');
         
         // Validar datos básicos
         $estado = sanitize_text_field($_POST['estado']);
@@ -840,9 +803,6 @@ class CertificadosAntecore {
         error_log('CertificadosPersonalizados: Resultado de actualización: ' . ($resultado ? 'ÉXITO' : 'FALLO'));
         
         if ($resultado) {
-            // Debug: Verificar datos actualizados
-            CertificadosAntecoreBD::debug_certificado($certificado_id);
-            
             // Obtener certificado actualizado para regeneración
             $certificado_actualizado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
             
@@ -895,8 +855,6 @@ class CertificadosAntecore {
                 CertificadosAntecoreBD::actualizar_certificado($certificado_id, array(
                     'pdf_path' => $url_actualizada
                 ));
-                
-                error_log('CertificadosPersonalizados: URL del PDF actualizada para admin - ID: ' . $certificado_id . ' - Nueva URL: ' . $url_actualizada);
             }
             
             $mensaje_texto = 'Certificado actualizado correctamente.';
@@ -958,14 +916,10 @@ class CertificadosAntecore {
         // Buscar certificados aprobados (con o sin búsqueda)
         $certificados = CertificadosAntecoreBD::obtener_certificados_aprobados($busqueda);
         
-        // Debug: Log para verificar qué se está obteniendo
-        error_log('CertificadosPersonalizados: Búsqueda: "' . $busqueda . '", Resultados: ' . count($certificados));
-        
         if (empty($certificados)) {
             wp_send_json_success(array(
                 'encontrados' => false,
-                'mensaje' => 'No se encontraron certificados con ese criterio de búsqueda.',
-                'debug' => 'Búsqueda: "' . $busqueda . '", Total encontrados: 0'
+                'mensaje' => 'No se encontraron certificados con ese criterio de búsqueda.'
             ));
             return;
         }
@@ -999,16 +953,9 @@ class CertificadosAntecore {
             // Obtener el certificado
             $certificado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
             
-            // Debug: Log para verificar el certificado
-            error_log('CertificadosPersonalizados: Certificado ID: ' . $certificado_id);
-            error_log('CertificadosPersonalizados: ¿Certificado existe? ' . ($certificado ? 'SÍ' : 'NO'));
-            
             if (!$certificado) {
                 wp_die('Certificado no encontrado.');
             }
-            
-            // Debug: Log del estado del certificado
-            error_log('CertificadosPersonalizados: Estado del certificado: ' . $certificado->estado);
             
             // Verificar que el certificado esté aprobado
             if ($certificado->estado !== 'aprobado') {
@@ -1018,9 +965,6 @@ class CertificadosAntecore {
             // Generar o obtener el PDF
             $pdf_path = CertificadosAntecorePDF::generar_certificado_pdf($certificado_id);
             
-            // Debug: Log para verificar la generación del PDF
-            error_log('CertificadosPersonalizados: PDF generado - Ruta: ' . $pdf_path);
-            
             if (!$pdf_path) {
                 wp_die('Error al generar el PDF.');
             }
@@ -1029,10 +973,6 @@ class CertificadosAntecore {
             $upload_dir = wp_upload_dir();
             $pdf_path_clean = strtok($pdf_path, '?'); // Remover parámetros de query
             $file_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $pdf_path_clean);
-            
-            // Debug: Log para verificar la ruta del archivo
-            error_log('CertificadosPersonalizados: Ruta física del archivo: ' . $file_path);
-            error_log('CertificadosPersonalizados: ¿Archivo existe? ' . (file_exists($file_path) ? 'SÍ' : 'NO'));
             
             if (!file_exists($file_path)) {
                 wp_die('Archivo PDF no encontrado. Ruta: ' . $file_path);
@@ -1182,234 +1122,6 @@ class CertificadosAntecore {
         echo $contenido;
         exit;
     }
-    
-    /**
-     * Debug directo de archivos - muestra información en pantalla
-     */
-    public function debug_archivo_directo() {
-        // Verificar permisos
-        if (!current_user_can('read')) {
-            wp_die('No tienes permisos para realizar esta acción.');
-        }
-        
-        // Crear un archivo de prueba temporal
-        $timestamp = time();
-        $archivo_temporal = sys_get_temp_dir() . '/debug_certificado_' . $timestamp . '.csv';
-        
-        // Crear contenido CSV de prueba
-        $contenido = "NOMBRE_INSTALACION,DIRECCION_INSTALACION,RAZON_SOCIAL,NIT,TIPO_CERTIFICADO,NUMERO_CERTIFICADO,FECHA_APROBACION,CAPACIDAD_ALMACENAMIENTO,NUMERO_TANQUES\n";
-        $contenido .= "Estación de Servicio Debug,Calle 123 #45-67 Bogotá,Servicios Debug S.A.S.,DEBUG{$timestamp}-1,PAGLP,001,15/12/2024,10000,5\n";
-        $contenido .= "Taller Mecánico Debug,Carrera 456 #78-90 Medellín,Taller Debug Ltda.,DEBUG{$timestamp}-2,PAGLP,002,16/12/2024,5000,3\n";
-        
-        // Escribir archivo temporal
-        file_put_contents($archivo_temporal, $contenido);
-        
-        // Ejecutar debug detallado
-        $debug_info = $this->ejecutar_debug_completo($archivo_temporal);
-        
-        // Limpiar archivo temporal
-        if (file_exists($archivo_temporal)) {
-            unlink($archivo_temporal);
-        }
-        
-        // Mostrar resultados en HTML
-        ?>
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Debug de Archivos Excel/CSV</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 20px; background: #f1f1f1; }
-                .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
-                .debug-section h3 { margin-top: 0; color: #333; }
-                .debug-section h4 { color: #666; margin-bottom: 10px; }
-                .code-block { background: #f8f8f8; padding: 10px; border-radius: 4px; font-family: monospace; white-space: pre-wrap; overflow-x: auto; }
-                .success { background: #d4edda; border-color: #c3e6cb; color: #155724; }
-                .error { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
-                .warning { background: #fff3cd; border-color: #ffeaa7; color: #856404; }
-                .info { background: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
-                .back-btn { display: inline-block; padding: 10px 20px; background: #0073aa; color: white; text-decoration: none; border-radius: 4px; margin: 20px 0; }
-                .back-btn:hover { background: #005a87; }
-                table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                th { background: #f8f8f8; }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>🔍 Debug de Archivos Excel/CSV</h1>
-                <p><strong>Fecha:</strong> <?php echo date('Y-m-d H:i:s'); ?></p>
-                
-                <?php foreach ($debug_info as $section => $data): ?>
-                    <div class="debug-section <?php echo $data['type']; ?>">
-                        <h3><?php echo $data['title']; ?></h3>
-                        <?php if (isset($data['content'])): ?>
-                            <div class="code-block"><?php echo htmlspecialchars($data['content']); ?></div>
-                        <?php endif; ?>
-                        <?php if (isset($data['data']) && is_array($data['data'])): ?>
-                            <?php foreach ($data['data'] as $item): ?>
-                                <h4><?php echo $item['label']; ?></h4>
-                                <div class="code-block"><?php echo htmlspecialchars($item['value']); ?></div>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </div>
-                <?php endforeach; ?>
-                
-                <a href="javascript:history.back()" class="back-btn">← Volver</a>
-            </div>
-        </body>
-        </html>
-        <?php
-        exit;
-    }
-    
-    /**
-     * Ejecutar debug completo de un archivo
-     */
-    private function ejecutar_debug_completo($archivo_path) {
-        $debug_info = [];
-        
-        // 1. Información básica del archivo
-        $debug_info['file_info'] = [
-            'type' => 'info',
-            'title' => '📁 Información del Archivo',
-            'data' => [
-                [
-                    'label' => 'Ruta del archivo:',
-                    'value' => $archivo_path
-                ],
-                [
-                    'label' => '¿Existe el archivo?:',
-                    'value' => file_exists($archivo_path) ? 'SÍ' : 'NO'
-                ],
-                [
-                    'label' => 'Tamaño del archivo:',
-                    'value' => file_exists($archivo_path) ? filesize($archivo_path) . ' bytes' : 'N/A'
-                ],
-                [
-                    'label' => 'Extensión:',
-                    'value' => pathinfo($archivo_path, PATHINFO_EXTENSION)
-                ]
-            ]
-        ];
-        
-        if (!file_exists($archivo_path)) {
-            return $debug_info;
-        }
-        
-        // 2. Contenido del archivo
-        $contenido = file_get_contents($archivo_path);
-        $debug_info['file_content'] = [
-            'type' => 'info',
-            'title' => '📄 Contenido del Archivo',
-            'content' => $contenido
-        ];
-        
-        // 3. Análisis de líneas
-        $lineas = explode("\n", $contenido);
-        $debug_info['lines_analysis'] = [
-            'type' => 'info',
-            'title' => '📊 Análisis de Líneas',
-            'data' => [
-                [
-                    'label' => 'Número total de líneas:',
-                    'value' => count($lineas)
-                ]
-            ]
-        ];
-        
-        // Mostrar primeras 5 líneas
-        for ($i = 0; $i < min(5, count($lineas)); $i++) {
-            $debug_info['lines_analysis']['data'][] = [
-                'label' => "Línea $i:",
-                'value' => "'" . $lineas[$i] . "' (longitud: " . strlen($lineas[$i]) . ")"
-            ];
-        }
-        
-        // 4. Detección de codificación
-        $encoding = mb_detect_encoding($contenido, ['UTF-8', 'ISO-8859-1', 'Windows-1252'], true);
-        $debug_info['encoding'] = [
-            'type' => 'info',
-            'title' => '🔤 Detección de Codificación',
-            'data' => [
-                [
-                    'label' => 'Codificación detectada:',
-                    'value' => $encoding ?: 'No detectada'
-                ]
-            ]
-        ];
-        
-        // 5. Análisis de separadores
-        $separadores = [',', ';', '\t', '|'];
-        $debug_info['separators'] = [
-            'type' => 'info',
-            'title' => '🔧 Análisis de Separadores',
-            'data' => []
-        ];
-        
-        foreach ($separadores as $sep) {
-            $count = substr_count($contenido, $sep);
-            $debug_info['separators']['data'][] = [
-                'label' => "Separador '$sep':",
-                'value' => "$count ocurrencias"
-            ];
-        }
-        
-        // 6. Intentar leer con CertificadosAntecoreExcel
-        $debug_info['excel_processing'] = [
-            'type' => 'info',
-            'title' => '⚙️ Procesamiento con CertificadosAntecoreExcel',
-            'data' => []
-        ];
-        
-        try {
-            $datos = CertificadosAntecoreExcel::leer_archivo_excel_simple($archivo_path);
-            $debug_info['excel_processing']['data'][] = [
-                'label' => 'Datos leídos:',
-                'value' => count($datos) . ' filas'
-            ];
-            
-            if (!empty($datos)) {
-                $debug_info['excel_processing']['type'] = 'success';
-                $debug_info['excel_processing']['data'][] = [
-                    'label' => 'Primera fila de datos:',
-                    'value' => print_r($datos[0], true)
-                ];
-            } else {
-                $debug_info['excel_processing']['type'] = 'error';
-                $debug_info['excel_processing']['data'][] = [
-                    'label' => 'Error:',
-                    'value' => 'No se pudieron leer datos del archivo'
-                ];
-            }
-        } catch (Exception $e) {
-            $debug_info['excel_processing']['type'] = 'error';
-            $debug_info['excel_processing']['data'][] = [
-                'label' => 'Excepción:',
-                'value' => $e->getMessage()
-            ];
-        }
-        
-        // 7. Diagnóstico detallado
-        try {
-            $diagnostico = CertificadosAntecoreExcel::diagnosticar_archivo($archivo_path);
-            $debug_info['diagnosis'] = [
-                'type' => $diagnostico['tiene_contenido'] ? 'success' : 'error',
-                'title' => '🔍 Diagnóstico Detallado',
-                'content' => print_r($diagnostico, true)
-            ];
-        } catch (Exception $e) {
-            $debug_info['diagnosis'] = [
-                'type' => 'error',
-                'title' => '🔍 Diagnóstico Detallado',
-                'content' => 'Error al ejecutar diagnóstico: ' . $e->getMessage()
-            ];
-        }
-        
-        return $debug_info;
-    }
-    
     
 }
 
