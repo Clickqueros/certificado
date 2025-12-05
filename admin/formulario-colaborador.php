@@ -1031,6 +1031,7 @@ jQuery(document).ready(function($) {
     }
     
     // Función para calcular fecha de vencimiento
+    // La fecha de vencimiento será un día antes de la fecha calculada (X años después)
     function calcularFechaVencimiento(fechaAprobacion, tipoCertificado) {
         if (!fechaAprobacion || !tipoCertificado) return 'Selecciona fecha y tipo';
         
@@ -1042,6 +1043,9 @@ jQuery(document).ready(function($) {
         // Calcular años según el tipo
         const anos = info.vigencia === '5 años' ? 5 : 3;
         fecha.setFullYear(fecha.getFullYear() + anos);
+        
+        // Restar 1 día
+        fecha.setDate(fecha.getDate() - 1);
         
         return fecha.toLocaleDateString('es-ES');
     }

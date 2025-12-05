@@ -239,6 +239,7 @@ class CertificadosAntecorePDF {
     
     /**
      * Calcular fecha de vencimiento según el tipo de certificado
+     * La fecha de vencimiento será un día antes de la fecha calculada (X años después)
      */
     private static function calcular_fecha_vencimiento($fecha_aprobacion, $tipo_certificado) {
         // Certificados con vigencia de 5 años
@@ -248,12 +249,14 @@ class CertificadosAntecorePDF {
         $certificados_3_anos = array('DEGLP', 'PVGLP');
         
         if (in_array($tipo_certificado, $certificados_5_anos)) {
-            return date('Y-m-d', strtotime($fecha_aprobacion . ' +5 years'));
+            // Sumar 5 años y restar 1 día
+            return date('Y-m-d', strtotime($fecha_aprobacion . ' +5 years -1 day'));
         } elseif (in_array($tipo_certificado, $certificados_3_anos)) {
-            return date('Y-m-d', strtotime($fecha_aprobacion . ' +3 years'));
+            // Sumar 3 años y restar 1 día
+            return date('Y-m-d', strtotime($fecha_aprobacion . ' +3 years -1 day'));
         } else {
-            // Por defecto, 5 años
-            return date('Y-m-d', strtotime($fecha_aprobacion . ' +5 years'));
+            // Por defecto, 5 años y restar 1 día
+            return date('Y-m-d', strtotime($fecha_aprobacion . ' +5 years -1 day'));
         }
     }
     
