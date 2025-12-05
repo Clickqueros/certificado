@@ -248,16 +248,20 @@ class CertificadosAntecorePDF {
         // Certificados con vigencia de 3 años
         $certificados_3_anos = array('DEGLP', 'PVGLP');
         
+        // Determinar número de años
+        $anos = 5; // Por defecto
         if (in_array($tipo_certificado, $certificados_5_anos)) {
-            // Sumar 5 años y restar 1 día
-            return date('Y-m-d', strtotime($fecha_aprobacion . ' +5 years -1 day'));
+            $anos = 5;
         } elseif (in_array($tipo_certificado, $certificados_3_anos)) {
-            // Sumar 3 años y restar 1 día
-            return date('Y-m-d', strtotime($fecha_aprobacion . ' +3 years -1 day'));
-        } else {
-            // Por defecto, 5 años y restar 1 día
-            return date('Y-m-d', strtotime($fecha_aprobacion . ' +5 years -1 day'));
+            $anos = 3;
         }
+        
+        // Usar DateTime para mayor precisión
+        $fecha_obj = new DateTime($fecha_aprobacion);
+        $fecha_obj->modify("+{$anos} years");
+        $fecha_obj->modify("-1 day");
+        
+        return $fecha_obj->format('Y-m-d');
     }
     
     /**
