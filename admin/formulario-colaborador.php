@@ -1021,7 +1021,20 @@ jQuery(document).ready(function($) {
     // Función para formatear fecha
     function formatearFecha(fecha) {
         if (!fecha) return 'No especificada';
-        const fechaObj = new Date(fecha);
+        
+        // Parsear la fecha correctamente evitando problemas de zona horaria
+        // Si la fecha viene en formato YYYY-MM-DD, parsearla manualmente
+        const partesFecha = fecha.split('-');
+        let fechaObj;
+        
+        if (partesFecha.length === 3) {
+            // Formato YYYY-MM-DD - crear fecha en hora local
+            fechaObj = new Date(parseInt(partesFecha[0]), parseInt(partesFecha[1]) - 1, parseInt(partesFecha[2]));
+        } else {
+            // Intentar con constructor normal
+            fechaObj = new Date(fecha);
+        }
+        
         return fechaObj.toLocaleDateString('es-ES', {
             weekday: 'long',
             year: 'numeric',
