@@ -129,7 +129,7 @@ function procesar_solicitud_certificado() {
     
     // Validar nuevos campos
     $capacidad_almacenamiento = sanitize_text_field($_POST['capacidad_almacenamiento']);
-    $numero_tanques = intval($_POST['numero_tanques']);
+    $numero_tanques = isset($_POST['numero_tanques']) ? intval($_POST['numero_tanques']) : 0;
     $nombre_instalacion = sanitize_text_field($_POST['nombre_instalacion']);
     $direccion_instalacion = sanitize_textarea_field($_POST['direccion_instalacion']);
     $razon_social = sanitize_text_field($_POST['razon_social']);
@@ -138,10 +138,12 @@ function procesar_solicitud_certificado() {
     $numero_certificado = intval($_POST['numero_certificado']);
     $fecha_aprobacion = sanitize_text_field($_POST['fecha_aprobacion']);
     
+    $tipos_sin_tanques_en_pdf = array('DEGLP', 'PVGLP');
+    $requiere_tanques = !in_array($tipo_certificado, $tipos_sin_tanques_en_pdf, true);
+
     // Validaciones obligatorias
     $campos_obligatorios = array(
         'capacidad_almacenamiento' => $capacidad_almacenamiento,
-        'numero_tanques' => $numero_tanques,
         'nombre_instalacion' => $nombre_instalacion,
         'direccion_instalacion' => $direccion_instalacion,
         'razon_social' => $razon_social,
@@ -150,6 +152,10 @@ function procesar_solicitud_certificado() {
         'numero_certificado' => $numero_certificado,
         'fecha_aprobacion' => $fecha_aprobacion
     );
+
+    if ($requiere_tanques) {
+        $campos_obligatorios['numero_tanques'] = $numero_tanques;
+    }
     
     foreach ($campos_obligatorios as $campo => $valor) {
         if (empty($valor)) {
@@ -169,9 +175,16 @@ function procesar_solicitud_certificado() {
         return array('tipo' => 'error', 'mensaje' => 'Tipo de certificado no válido.');
     }
     
-    // Validar que el número de tanques sea positivo
-    if ($numero_tanques <= 0) {
-        return array('tipo' => 'error', 'mensaje' => 'El número de tanques debe ser mayor a 0.');
+    // Validar / normalizar número de tanques
+    if ($requiere_tanques) {
+        if ($numero_tanques <= 0) {
+            return array('tipo' => 'error', 'mensaje' => 'El número de tanques debe ser mayor a 0.');
+        }
+    } else {
+        // Para DEGLP/PVGLP no se usa en el PDF; guardar un valor válido por compatibilidad
+        if ($numero_tanques <= 0) {
+            $numero_tanques = 1;
+        }
     }
     
     // Validar que el número de certificado sea positivo
@@ -395,7 +408,7 @@ function obtener_tipos_certificado() {
                     </tr>
                     
                     <!-- Información Técnica -->
-                    <tr>
+                    <tr id="row-capacidad-almacenamiento">
                         <th scope="row">
                             <label for="capacidad_almacenamiento"><?php _e('Capacidad de Almacenamiento', 'certificados-personalizados'); ?> *</label>
                         </th>
@@ -403,11 +416,11 @@ function obtener_tipos_certificado() {
                             <input type="number" id="capacidad_almacenamiento" name="capacidad_almacenamiento" class="regular-text" 
                                    value="<?php echo $modo_edicion ? esc_attr($certificado_edicion->capacidad_almacenamiento) : ''; ?>" 
                                    placeholder="Ej: 4000" min="1" required>
-                            <p class="description"><?php _e('Capacidad de almacenamiento en galones (solo números). Los puntos de miles se agregarán automáticamente en el PDF.', 'certificados-personalizados'); ?></p>
+                            <p class="description" id="desc-capacidad-unidad"><?php _e('Capacidad de almacenamiento en galones (solo números). Los puntos de miles se agregarán automáticamente en el PDF.', 'certificados-personalizados'); ?></p>
                         </td>
                     </tr>
                     
-                    <tr>
+                    <tr id="row-numero-tanques">
                         <th scope="row">
                             <label for="numero_tanques"><?php _e('Número de Tanques', 'certificados-personalizados'); ?> *</label>
                         </th>
@@ -605,10 +618,19 @@ function obtener_tipos_certificado() {
                                     <small><?php echo esc_html($certificado->razon_social); ?></small>
                                 </td>
                                 <td>
-                                    <?php echo esc_html($certificado->capacidad_almacenamiento); ?> galones
+                                    <?php
+                                    $es_kg = in_array($certificado->tipo_certificado, array('DEGLP', 'PVGLP'), true);
+                                    echo esc_html($certificado->capacidad_almacenamiento) . ($es_kg ? ' kilogramos' : ' galones');
+                                    ?>
                                 </td>
                                 <td>
-                                    <?php echo esc_html($certificado->numero_tanques); ?>
+                                    <?php
+                                    if (in_array($certificado->tipo_certificado, array('DEGLP', 'PVGLP'), true)) {
+                                        echo '-';
+                                    } else {
+                                        echo esc_html($certificado->numero_tanques);
+                                    }
+                                    ?>
                                 </td>
                                 <td>
                                     <?php
@@ -960,7 +982,7 @@ function obtener_tipos_certificado() {
                 <div class="confirmacion-valor" id="confirm-capacidad"></div>
             </div>
             
-            <div class="confirmacion-item">
+            <div class="confirmacion-item" id="confirmacion-item-numero-tanques">
                 <span class="confirmacion-label">Número de Tanques</span>
                 <div class="confirmacion-valor" id="confirm-numero-tanques"></div>
             </div>
@@ -1093,6 +1115,31 @@ jQuery(document).ready(function($) {
             $('#expiry-text').text('Selecciona fecha de aprobación para calcular vencimiento');
         }
     }
+
+    function esTipoKgSinTanques(tipoCertificado) {
+        return tipoCertificado === 'DEGLP' || tipoCertificado === 'PVGLP';
+    }
+
+    function aplicarReglasPorTipo() {
+        const tipoCertificado = $('#tipo_certificado').val();
+        const enKgSinTanques = esTipoKgSinTanques(tipoCertificado);
+
+        if (enKgSinTanques) {
+            // Ocultar número de tanques y dejar un valor válido para backend
+            $('#row-numero-tanques').hide();
+            $('#numero_tanques').prop('required', false);
+            if (!$('#numero_tanques').val()) {
+                $('#numero_tanques').val('1');
+            }
+
+            // Ajustar texto de unidad (solo UI)
+            $('#desc-capacidad-unidad').text('Capacidad de almacenamiento en kilogramos (solo números). Los puntos de miles se agregarán automáticamente en el PDF.');
+        } else {
+            $('#row-numero-tanques').show();
+            $('#numero_tanques').prop('required', true);
+            $('#desc-capacidad-unidad').text('Capacidad de almacenamiento en galones (solo números). Los puntos de miles se agregarán automáticamente en el PDF.');
+        }
+    }
     
     // Función para mostrar el modal
     function mostrarModal() {
@@ -1107,9 +1154,10 @@ jQuery(document).ready(function($) {
         const fechaAprobacion = $('#fecha_aprobacion').val();
         const capacidad = $('#capacidad_almacenamiento').val();
         const numeroTanques = $('#numero_tanques').val();
+        const enKgSinTanques = esTipoKgSinTanques(tipoCertificado);
         
         // Validar campos obligatorios
-        if (!nombreInstalacion || !direccion || !razonSocial || !nit || !tipoCertificado || !numeroCertificado || !fechaAprobacion || !capacidad || !numeroTanques) {
+        if (!nombreInstalacion || !direccion || !razonSocial || !nit || !tipoCertificado || !numeroCertificado || !fechaAprobacion || !capacidad || (!enKgSinTanques && !numeroTanques)) {
             alert('Por favor, completa todos los campos obligatorios antes de continuar.');
             return false;
         }
@@ -1140,8 +1188,15 @@ jQuery(document).ready(function($) {
         $('#confirm-tipo-certificado').text(tiposCertificado[tipoCertificado] || tipoCertificado);
         $('#confirm-numero-certificado').text(tipoCertificado + '-' + numeroCertificado.toString().padStart(2, '0'));
         $('#confirm-fecha-aprobacion').text(formatearFecha(fechaAprobacion));
-        $('#confirm-capacidad').text(capacidad + ' galones');
-        $('#confirm-numero-tanques').text(numeroTanques);
+        $('#confirm-capacidad').text(capacidad + (enKgSinTanques ? ' kilogramos' : ' galones'));
+
+        if (enKgSinTanques) {
+            $('#confirmacion-item-numero-tanques').hide();
+            $('#confirm-numero-tanques').text('');
+        } else {
+            $('#confirmacion-item-numero-tanques').show();
+            $('#confirm-numero-tanques').text(numeroTanques);
+        }
         
         // Mostrar modal
         $('#modal-confirmacion').fadeIn(300).css('display', 'flex');
@@ -1210,6 +1265,7 @@ jQuery(document).ready(function($) {
     // Actualizar información del certificado cuando cambie el tipo o la fecha
     $('#tipo_certificado, #fecha_aprobacion').on('change', function() {
         actualizarInfoCertificado();
+        aplicarReglasPorTipo();
     });
     
     // Función para verificar estado del botón
@@ -1223,10 +1279,11 @@ jQuery(document).ready(function($) {
         const fechaAprobacion = $('#fecha_aprobacion').val();
         const capacidad = $('#capacidad_almacenamiento').val();
         const numeroTanques = $('#numero_tanques').val();
+        const enKgSinTanques = esTipoKgSinTanques(tipoCertificado);
         
         // Verificar que todos los campos obligatorios estén llenos
         if (nombreInstalacion && direccion && razonSocial && nit && tipoCertificado && 
-            numeroCertificado && fechaAprobacion && capacidad && numeroTanques) {
+            numeroCertificado && fechaAprobacion && capacidad && (enKgSinTanques || numeroTanques)) {
             $('#btn-confirmar-certificado').prop('disabled', false);
             console.log('Botón habilitado - todos los campos llenos');
         } else {
@@ -1243,7 +1300,10 @@ jQuery(document).ready(function($) {
     }
     
     // Inicializar información del certificado
-    setTimeout(actualizarInfoCertificado, 100);
+    setTimeout(function() {
+        actualizarInfoCertificado();
+        aplicarReglasPorTipo();
+    }, 100);
 });
 </script>
 

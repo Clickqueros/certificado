@@ -606,7 +606,7 @@ class CertificadosAntecore {
         
         // Validar nuevos campos
         $capacidad_almacenamiento = sanitize_text_field($_POST['capacidad_almacenamiento']);
-        $numero_tanques = intval($_POST['numero_tanques']);
+        $numero_tanques = isset($_POST['numero_tanques']) ? intval($_POST['numero_tanques']) : 0;
         $nombre_instalacion = sanitize_text_field($_POST['nombre_instalacion']);
         $direccion_instalacion = sanitize_textarea_field($_POST['direccion_instalacion']);
         $razon_social = sanitize_text_field($_POST['razon_social']);
@@ -615,10 +615,12 @@ class CertificadosAntecore {
         $numero_certificado = intval($_POST['numero_certificado']);
         $fecha_aprobacion = sanitize_text_field($_POST['fecha_aprobacion']);
         
+        $tipos_sin_tanques_en_pdf = array('DEGLP', 'PVGLP');
+        $requiere_tanques = !in_array($tipo_certificado, $tipos_sin_tanques_en_pdf, true);
+
         // Validaciones obligatorias
         $campos_obligatorios = array(
             'capacidad_almacenamiento' => $capacidad_almacenamiento,
-            'numero_tanques' => $numero_tanques,
             'nombre_instalacion' => $nombre_instalacion,
             'direccion_instalacion' => $direccion_instalacion,
             'razon_social' => $razon_social,
@@ -627,6 +629,10 @@ class CertificadosAntecore {
             'numero_certificado' => $numero_certificado,
             'fecha_aprobacion' => $fecha_aprobacion
         );
+
+        if ($requiere_tanques) {
+            $campos_obligatorios['numero_tanques'] = $numero_tanques;
+        }
         
         foreach ($campos_obligatorios as $campo => $valor) {
             if (empty($valor)) {
@@ -646,9 +652,16 @@ class CertificadosAntecore {
             wp_die('Tipo de certificado no válido.');
         }
         
-        // Validar que el número de tanques sea positivo
-        if ($numero_tanques <= 0) {
-            wp_die('El número de tanques debe ser mayor a 0.');
+        // Validar / normalizar número de tanques
+        if ($requiere_tanques) {
+            if ($numero_tanques <= 0) {
+                wp_die('El número de tanques debe ser mayor a 0.');
+            }
+        } else {
+            // Para DEGLP/PVGLP no se usa en el PDF; guardar un valor válido por compatibilidad
+            if ($numero_tanques <= 0) {
+                $numero_tanques = 1;
+            }
         }
         
         // Validar que el número de certificado sea positivo
@@ -724,7 +737,7 @@ class CertificadosAntecore {
         
         // Validar nuevos campos
         $capacidad_almacenamiento = sanitize_text_field($_POST['capacidad_almacenamiento']);
-        $numero_tanques = intval($_POST['numero_tanques']);
+        $numero_tanques = isset($_POST['numero_tanques']) ? intval($_POST['numero_tanques']) : 0;
         $nombre_instalacion = sanitize_text_field($_POST['nombre_instalacion']);
         $direccion_instalacion = sanitize_textarea_field($_POST['direccion_instalacion']);
         $razon_social = sanitize_text_field($_POST['razon_social']);
@@ -733,10 +746,12 @@ class CertificadosAntecore {
         $numero_certificado = intval($_POST['numero_certificado']);
         $fecha_aprobacion = sanitize_text_field($_POST['fecha_aprobacion']);
         
+        $tipos_sin_tanques_en_pdf = array('DEGLP', 'PVGLP');
+        $requiere_tanques = !in_array($tipo_certificado, $tipos_sin_tanques_en_pdf, true);
+
         // Validaciones obligatorias
         $campos_obligatorios = array(
             'capacidad_almacenamiento' => $capacidad_almacenamiento,
-            'numero_tanques' => $numero_tanques,
             'nombre_instalacion' => $nombre_instalacion,
             'direccion_instalacion' => $direccion_instalacion,
             'razon_social' => $razon_social,
@@ -745,6 +760,10 @@ class CertificadosAntecore {
             'numero_certificado' => $numero_certificado,
             'fecha_aprobacion' => $fecha_aprobacion
         );
+
+        if ($requiere_tanques) {
+            $campos_obligatorios['numero_tanques'] = $numero_tanques;
+        }
         
         foreach ($campos_obligatorios as $campo => $valor) {
             if (empty($valor)) {
@@ -764,9 +783,16 @@ class CertificadosAntecore {
             wp_die('Tipo de certificado no válido.');
         }
         
-        // Validar que el número de tanques sea positivo
-        if ($numero_tanques <= 0) {
-            wp_die('El número de tanques debe ser mayor a 0.');
+        // Validar / normalizar número de tanques
+        if ($requiere_tanques) {
+            if ($numero_tanques <= 0) {
+                wp_die('El número de tanques debe ser mayor a 0.');
+            }
+        } else {
+            // Para DEGLP/PVGLP no se usa en el PDF; guardar un valor válido por compatibilidad
+            if ($numero_tanques <= 0) {
+                $numero_tanques = 1;
+            }
         }
         
         // Validar que el número de certificado sea positivo

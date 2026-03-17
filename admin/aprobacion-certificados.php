@@ -223,18 +223,18 @@ function obtener_tipos_certificado_admin() {
                     </tr>
                     
                     <!-- Información Técnica -->
-                    <tr>
+                    <tr id="row-capacidad-almacenamiento-admin">
                         <th scope="row">
                             <label for="capacidad_almacenamiento"><?php _e('Capacidad de Almacenamiento', 'certificados-personalizados'); ?></label>
                         </th>
                         <td>
                             <input type="number" id="capacidad_almacenamiento" name="capacidad_almacenamiento" class="small-text" 
                                    value="<?php echo esc_attr(get_certificado_value($certificado_edicion, 'capacidad_almacenamiento')); ?>" min="0" step="0.01" required>
-                            <span>galones</span>
+                            <span id="capacidad-unidad-admin">galones</span>
                         </td>
                     </tr>
                     
-                    <tr>
+                    <tr id="row-numero-tanques-admin">
                         <th scope="row">
                             <label for="numero_tanques"><?php _e('Número de Tanques', 'certificados-personalizados'); ?></label>
                         </th>
@@ -258,6 +258,39 @@ function obtener_tipos_certificado_admin() {
                         </td>
                     </tr>
                 </table>
+
+                <script>
+                (function() {
+                    function esTipoKgSinTanques(tipo) {
+                        return tipo === 'DEGLP' || tipo === 'PVGLP';
+                    }
+
+                    function aplicarReglas() {
+                        var tipo = document.getElementById('tipo_certificado');
+                        if (!tipo) return;
+                        var v = tipo.value;
+                        var enKg = esTipoKgSinTanques(v);
+
+                        var rowTanques = document.getElementById('row-numero-tanques-admin');
+                        var inputTanques = document.getElementById('numero_tanques');
+                        var unidad = document.getElementById('capacidad-unidad-admin');
+
+                        if (unidad) unidad.textContent = enKg ? 'kilogramos' : 'galones';
+
+                        if (rowTanques) rowTanques.style.display = enKg ? 'none' : '';
+                        if (inputTanques) {
+                            inputTanques.required = !enKg;
+                            if (enKg && !inputTanques.value) inputTanques.value = '1';
+                        }
+                    }
+
+                    document.addEventListener('DOMContentLoaded', function() {
+                        aplicarReglas();
+                        var tipo = document.getElementById('tipo_certificado');
+                        if (tipo) tipo.addEventListener('change', aplicarReglas);
+                    });
+                })();
+                </script>
                 
                 <!-- Botones de Acción -->
                 <div class="botones-accion" style="margin: 20px 0;">
@@ -344,10 +377,19 @@ function obtener_tipos_certificado_admin() {
                                 <small>NIT: <?php echo esc_html($certificado->nit); ?></small>
                             </td>
                             <td>
-                                <?php echo esc_html($certificado->capacidad_almacenamiento); ?> galones
+                                <?php
+                                $es_kg = in_array($certificado->tipo_certificado, array('DEGLP', 'PVGLP'), true);
+                                echo esc_html($certificado->capacidad_almacenamiento) . ($es_kg ? ' kilogramos' : ' galones');
+                                ?>
                             </td>
                             <td>
-                                <?php echo esc_html($certificado->numero_tanques); ?>
+                                <?php
+                                if (in_array($certificado->tipo_certificado, array('DEGLP', 'PVGLP'), true)) {
+                                    echo '-';
+                                } else {
+                                    echo esc_html($certificado->numero_tanques);
+                                }
+                                ?>
                             </td>
                             <td>
                                 <?php 

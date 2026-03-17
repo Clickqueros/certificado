@@ -189,6 +189,18 @@ class CertificadosAntecorePDF {
         $capacidad_formateada = number_format($certificado->capacidad_almacenamiento, 0, ',', '.');
         $html = str_replace('[CAPACIDAD_ALMACENAMIENTO]', htmlspecialchars($capacidad_formateada), $html);
         $html = str_replace('[NUMERO_TANQUES]', htmlspecialchars($certificado->numero_tanques), $html);
+
+        // Ajustes por tipo de certificado:
+        // - DEGLP / PVGLP: expresar unidades en kilogramos y ocultar la línea de número de tanques
+        // - Otros: mantener galones y mostrar la línea de tanques
+        $tipos_en_kg_sin_tanques = array('DEGLP', 'PVGLP');
+        if (in_array($certificado->tipo_certificado, $tipos_en_kg_sin_tanques, true)) {
+            $html = str_replace('[UNIDAD_CAPACIDAD]', 'kilogramos', $html);
+            $html = str_replace('[LINEA_TANQUES]', '', $html);
+        } else {
+            $html = str_replace('[UNIDAD_CAPACIDAD]', 'galones', $html);
+            $html = str_replace('[LINEA_TANQUES]', '<br>Número de tanques: [NUMERO_TANQUES]', $html);
+        }
         
         // Reemplazar alcance y requisitos según el tipo de certificado
         $html = str_replace('[ALCANCE_CERTIFICADO]', htmlspecialchars($info_certificado['alcance']), $html);
