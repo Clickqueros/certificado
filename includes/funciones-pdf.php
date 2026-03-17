@@ -772,7 +772,18 @@ class CertificadosAntecorePDF {
              * - Cubre toda la página
              * - Debe ir ANTES de escribir el HTML
              */
-            $bg_path = plugin_dir_path(__FILE__) . '../images/bg-pdf-antecore.jpg';
+            $images_dir = plugin_dir_path(__FILE__) . '../images/';
+            $bg_con_firma = $images_dir . 'bg-pdf-antecore.jpg';
+            $bg_sin_firma = $images_dir . 'bg-pdf-antecore-sin-firma.jpg';
+
+            // Si el certificado NO está aprobado, debe salir sin firma
+            $esta_aprobado = isset($certificado->estado) && $certificado->estado === 'aprobado';
+            $bg_path = $esta_aprobado ? $bg_con_firma : $bg_sin_firma;
+
+            // Fallback por si falta la imagen sin firma (evita PDF sin fondo)
+            if (!$esta_aprobado && (!file_exists($bg_path) || !is_readable($bg_path))) {
+                $bg_path = $bg_con_firma;
+            }
             
             if (file_exists($bg_path) && is_readable($bg_path)) {
                 // Opcional: calidad JPEG (si fuese JPG)
