@@ -66,6 +66,10 @@ class CertificadosAntecore {
         // Hooks para aprobar/rechazar certificados
         add_action('admin_post_aprobar_certificado', array($this, 'procesar_aprobar_certificado'));
         add_action('admin_post_rechazar_certificado', array($this, 'procesar_rechazar_certificado'));
+
+        // Hooks para eliminar certificados (solo administradores)
+        add_action('admin_post_eliminar_certificado', array($this, 'procesar_eliminar_certificado'));
+        add_action('admin_post_eliminar_certificados_rechazados', array($this, 'procesar_eliminar_certificados_rechazados'));
         
         // Hook para editar certificados
         add_action('admin_post_editar_certificado', array($this, 'procesar_edicion_certificado'));
@@ -405,6 +409,101 @@ class CertificadosAntecore {
         }
         
         // Redirigir de vuelta al panel de aprobación
+        $redirect_url = admin_url('admin.php?page=certificados&mensaje=' . $mensaje . '&texto=' . urlencode($texto));
+        wp_redirect($redirect_url);
+        exit;
+    }
+
+    /**
+     * Eliminar un certificado (solo administradores)
+     */
+    public function procesar_eliminar_certificado() {
+        if (!current_user_can('administrator')) {
+            wp_die('No tienes permisos para realizar esta acción.');
+        }
+
+        if (!isset($_POST['eliminar_certificado_nonce']) ||
+            !wp_verify_nonce($_POST['eliminar_certificado_nonce'], 'eliminar_certificado')) {
+            wp_die('Error de seguridad.');
+        }
+
+        $certificado_id = intval($_POST['certificado_id'] ?? 0);
+        $confirmacion = sanitize_text_field($_POST['confirmacion'] ?? '');
+        $codigo_enviado = sanitize_text_field($_POST['codigo_unico'] ?? '');
+
+        if ($certificado_id <= 0) {
+            wp_die('Certificado no válido.');
+        }
+
+        // Confirmación básica anti-borrado accidental
+        if ($confirmacion !== 'ELIMINAR') {
+            wp_die('Confirmación inválida. Debes escribir ELIMINAR.');
+        }
+
+        $certificado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
+        if (!$certificado) {
+            wp_die('Certificado no encontrado.');
+        }
+
+        if (!empty($codigo_enviado) && $codigo_enviado !== $certificado->codigo_unico) {
+            wp_die('Código de certificado no coincide.');
+        }
+
+        // Eliminar archivos asociados (PDF/HTML) antes de eliminar de BD
+        if (class_exists('CertificadosAntecorePDF')) {
+            CertificadosAntecorePDF::eliminar_archivos_certificado($certificado_id);
+        }
+
+        $resultado = CertificadosAntecoreBD::eliminar_certificado($certificado_id);
+
+        $mensaje = $resultado ? 'exito' : 'error';
+        $texto = $resultado ? 'Certificado eliminado correctamente.' : 'Error al eliminar el certificado.';
+
+        $redirect_url = admin_url('admin.php?page=certificados&mensaje=' . $mensaje . '&texto=' . urlencode($texto));
+        wp_redirect($redirect_url);
+        exit;
+    }
+
+    /**
+     * Eliminar todos los certificados rechazados (solo administradores)
+     */
+    public function procesar_eliminar_certificados_rechazados() {
+        if (!current_user_can('administrator')) {
+            wp_die('No tienes permisos para realizar esta acción.');
+        }
+
+        if (!isset($_POST['eliminar_rechazados_nonce']) ||
+            !wp_verify_nonce($_POST['eliminar_rechazados_nonce'], 'eliminar_certificados_rechazados')) {
+            wp_die('Error de seguridad.');
+        }
+
+        $confirmacion = sanitize_text_field($_POST['confirmacion'] ?? '');
+        if ($confirmacion !== 'ELIMINAR') {
+            wp_die('Confirmación inválida. Debes escribir ELIMINAR.');
+        }
+
+        // Obtener todos los rechazados (límite alto) y eliminarlos uno a uno para limpiar archivos
+        $rechazados = CertificadosAntecoreBD::obtener_todos_certificados('rechazado', 100000);
+        $eliminados = 0;
+
+        if (!empty($rechazados)) {
+            foreach ($rechazados as $cert) {
+                $id = intval($cert->id);
+                if ($id <= 0) {
+                    continue;
+                }
+                if (class_exists('CertificadosAntecorePDF')) {
+                    CertificadosAntecorePDF::eliminar_archivos_certificado($id);
+                }
+                if (CertificadosAntecoreBD::eliminar_certificado($id)) {
+                    $eliminados++;
+                }
+            }
+        }
+
+        $mensaje = 'exito';
+        $texto = 'Certificados rechazados eliminados: ' . $eliminados;
+
         $redirect_url = admin_url('admin.php?page=certificados&mensaje=' . $mensaje . '&texto=' . urlencode($texto));
         wp_redirect($redirect_url);
         exit;

@@ -1344,6 +1344,51 @@ class CertificadosAntecorePDF {
         error_log('CertificadosPersonalizados: Error al regenerar PDF - ID: ' . $certificado_id);
         return false;
     }
+
+    /**
+     * Eliminar archivos generados (PDF/HTML) asociados a un certificado.
+     * No modifica la base de datos.
+     */
+    public static function eliminar_archivos_certificado($certificado_id) {
+        $certificado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
+        if (!$certificado) {
+            return false;
+        }
+
+        $upload_dir = wp_upload_dir();
+        $certificados_dir = $upload_dir['basedir'] . '/certificados/';
+
+        $codigo_unico = $certificado->codigo_unico;
+        $archivos_a_eliminar = array(
+            $certificados_dir . 'certificado_' . $codigo_unico . '.pdf',
+            $certificados_dir . 'certificado_' . $codigo_unico . '.html',
+            $certificados_dir . $codigo_unico . '.pdf',
+            $certificados_dir . $codigo_unico . '.html'
+        );
+
+        // Si hay una ruta específica en la base de datos, eliminar esa también
+        if (!empty($certificado->pdf_path)) {
+            $local_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $certificado->pdf_path);
+            $local_path = preg_replace('/\?.*/', '', $local_path);
+            $archivos_a_eliminar[] = $local_path;
+        }
+
+        $eliminado_alguno = false;
+        foreach (array_unique($archivos_a_eliminar) as $archivo) {
+            if (!empty($archivo) && file_exists($archivo)) {
+                @unlink($archivo);
+                $eliminado_alguno = true;
+            }
+        }
+
+        // Limpiar cachés relacionados
+        if (function_exists('delete_transient')) {
+            delete_transient('certificado_pdf_' . $certificado_id);
+            delete_transient('certificado_url_' . $certificado_id);
+        }
+
+        return $eliminado_alguno;
+    }
     
     /**
      * Limpiar archivos dobles

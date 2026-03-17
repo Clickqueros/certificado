@@ -330,6 +330,24 @@ function obtener_tipos_certificado_admin() {
             }
             ?>
         </h2>
+
+        <?php if (current_user_can('administrator') && $estado_filtro === 'rechazado'): ?>
+            <div class="notice notice-warning" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                <div>
+                    <strong><?php _e('Acción peligrosa:', 'certificados-personalizados'); ?></strong>
+                    <?php _e('Eliminará permanentemente todos los certificados rechazados (y sus archivos PDF/HTML).', 'certificados-personalizados'); ?>
+                </div>
+                <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" style="margin:0; display:flex; gap:8px; align-items:center;">
+                    <input type="hidden" name="action" value="eliminar_certificados_rechazados">
+                    <?php wp_nonce_field('eliminar_certificados_rechazados', 'eliminar_rechazados_nonce'); ?>
+                    <input type="text" name="confirmacion" placeholder="Escribe ELIMINAR" style="max-width:180px;" required>
+                    <button type="submit" class="button button-secondary"
+                            onclick="return confirm('Esto eliminará TODOS los certificados rechazados. ¿Continuar?');">
+                        🧹 <?php _e('Eliminar rechazados', 'certificados-personalizados'); ?>
+                    </button>
+                </form>
+            </div>
+        <?php endif; ?>
         
         <?php if (empty($certificados)): ?>
             <div class="notice notice-info">
@@ -479,6 +497,20 @@ function obtener_tipos_certificado_admin() {
                                     class="button button-secondary">
                                      ✏️ <?php _e('Editar', 'certificados-personalizados'); ?>
                                  </a>
+
+                                 <?php if (current_user_can('administrator')): ?>
+                                     <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" style="display: inline; margin-top: 8px;">
+                                         <input type="hidden" name="action" value="eliminar_certificado">
+                                         <input type="hidden" name="certificado_id" value="<?php echo esc_attr($certificado->id); ?>">
+                                         <input type="hidden" name="codigo_unico" value="<?php echo esc_attr($certificado->codigo_unico); ?>">
+                                         <?php wp_nonce_field('eliminar_certificado', 'eliminar_certificado_nonce'); ?>
+                                         <input type="hidden" name="confirmacion" value="ELIMINAR">
+                                         <button type="submit" class="button button-link-delete"
+                                                 onclick="return confirm('Eliminar permanentemente el certificado <?php echo esc_js($certificado->codigo_unico); ?>? Esta acción no se puede deshacer.');">
+                                             🗑️ <?php _e('Eliminar', 'certificados-personalizados'); ?>
+                                         </button>
+                                     </form>
+                                 <?php endif; ?>
                              </td>
                         </tr>
                     <?php endforeach; ?>
