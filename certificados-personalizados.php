@@ -349,6 +349,9 @@ class CertificadosAntecore {
         $resultado = CertificadosAntecoreBD::cambiar_estado_certificado($certificado_id, 'aprobado');
         
         if ($resultado) {
+            // Regenerar PDF para que use la plantilla/fondo correspondiente a "aprobado"
+            CertificadosAntecorePDF::forzar_regeneracion_pdf($certificado_id);
+
             $mensaje = 'exito';
             $texto = 'Certificado aprobado correctamente.';
         } else {
