@@ -42,14 +42,28 @@ if (isset($_GET['mensaje']) && isset($_GET['texto'])) {
     );
 }
 
-// Get pending certificates
-$certificados_pendientes = CertificadosAntecoreBD::obtener_todos_certificados('pendiente');
-
 // Get filter parameter
 $estado_filtro = isset($_GET['estado']) ? sanitize_text_field($_GET['estado']) : 'pendiente';
 
-// Get certificates based on filter
-$certificados = CertificadosAntecoreBD::obtener_todos_certificados($estado_filtro);
+// Paginación
+$por_pagina = 50;
+$pagina_actual = isset($_GET['pagina_actual']) ? max(1, intval($_GET['pagina_actual'])) : 1;
+$offset = ($pagina_actual - 1) * $por_pagina;
+
+// Normalizar filtro "todos"
+$estado_consulta = ($estado_filtro === '') ? null : $estado_filtro;
+
+// Get certificates based on filter + page
+$total_certificados = CertificadosAntecoreBD::contar_todos_certificados($estado_consulta);
+$total_paginas = max(1, (int) ceil($total_certificados / $por_pagina));
+
+// Evitar páginas fuera de rango
+if ($pagina_actual > $total_paginas) {
+    $pagina_actual = $total_paginas;
+    $offset = ($pagina_actual - 1) * $por_pagina;
+}
+
+$certificados = CertificadosAntecoreBD::obtener_todos_certificados($estado_consulta, $por_pagina, $offset);
 
 // Get statistics
 $estadisticas = CertificadosAntecoreBD::obtener_estadisticas();
@@ -516,6 +530,47 @@ function obtener_tipos_certificado_admin() {
                     <?php endforeach; ?>
                 </tbody>
             </table>
+
+            <?php
+            $base_url = add_query_arg(
+                array(
+                    'page' => 'certificados',
+                    'estado' => $estado_filtro,
+                    'pagina_actual' => '%#%'
+                ),
+                admin_url('admin.php')
+            );
+
+            $enlaces_paginacion = paginate_links(array(
+                'base' => $base_url,
+                'format' => '',
+                'current' => $pagina_actual,
+                'total' => $total_paginas,
+                'prev_text' => __('« Anterior', 'certificados-personalizados'),
+                'next_text' => __('Siguiente »', 'certificados-personalizados'),
+                'type' => 'array'
+            ));
+            ?>
+
+            <?php if (!empty($enlaces_paginacion)): ?>
+                <div class="tablenav">
+                    <div class="tablenav-pages">
+                        <span class="displaying-num">
+                            <?php
+                            echo esc_html(sprintf(
+                                __('Mostrando %1$d-%2$d de %3$d certificados', 'certificados-personalizados'),
+                                $offset + 1,
+                                min($offset + count($certificados), $total_certificados),
+                                $total_certificados
+                            ));
+                            ?>
+                        </span>
+                        <span class="pagination-links">
+                            <?php echo wp_kses_post(implode(' ', $enlaces_paginacion)); ?>
+                        </span>
+                    </div>
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
     </div>
 </div>

@@ -97,7 +97,7 @@ class CertificadosAntecoreBD {
     /**
      * Obtener todos los certificados (para administradores)
      */
-    public static function obtener_todos_certificados($estado = null, $limit = 50) {
+    public static function obtener_todos_certificados($estado = null, $limit = 50, $offset = 0) {
         global $wpdb;
         
         $tabla = self::obtener_tabla();
@@ -121,11 +121,31 @@ class CertificadosAntecoreBD {
              LEFT JOIN {$wpdb->users} u ON c.user_id = u.ID 
              $where_clause 
              ORDER BY c.created_at DESC 
-             LIMIT %d",
-            array_merge($valores, array($limit))
+             LIMIT %d OFFSET %d",
+            array_merge($valores, array($limit, $offset))
         );
         
         return $wpdb->get_results($sql);
+    }
+
+    /**
+     * Contar certificados para paginación (administradores)
+     */
+    public static function contar_todos_certificados($estado = null) {
+        global $wpdb;
+
+        $tabla = self::obtener_tabla();
+
+        if ($estado !== null) {
+            $sql = $wpdb->prepare(
+                "SELECT COUNT(*) FROM $tabla WHERE estado = %s",
+                $estado
+            );
+        } else {
+            $sql = "SELECT COUNT(*) FROM $tabla";
+        }
+
+        return intval($wpdb->get_var($sql));
     }
     
     /**
