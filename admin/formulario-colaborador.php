@@ -59,8 +59,19 @@ if (isset($_GET['editar']) && !empty($_GET['editar'])) {
     }
 }
 
-// Get current user's certificates
-$certificados = CertificadosAntecoreBD::obtener_certificados_usuario();
+// Get current user's certificates (con paginación)
+$por_pagina = 20;
+$pagina_actual = isset($_GET['pagina_actual']) ? max(1, intval($_GET['pagina_actual'])) : 1;
+$offset = ($pagina_actual - 1) * $por_pagina;
+$total_certificados = CertificadosAntecoreBD::contar_certificados_usuario();
+$total_paginas = max(1, (int) ceil($total_certificados / $por_pagina));
+
+if ($pagina_actual > $total_paginas) {
+    $pagina_actual = $total_paginas;
+    $offset = ($pagina_actual - 1) * $por_pagina;
+}
+
+$certificados = CertificadosAntecoreBD::obtener_certificados_usuario(null, null, $por_pagina, $offset);
 
 /**
  * Procesar Excel masivo
@@ -685,8 +696,8 @@ function obtener_tipos_certificado() {
                                             <input type="hidden" name="action" value="enviar_certificado_aprobacion">
                                             <input type="hidden" name="certificado_id" value="<?php echo $certificado->id; ?>">
                                             <?php wp_nonce_field('enviar_certificado_aprobacion', 'enviar_aprobacion_nonce'); ?>
-                                            <button type="submit" class="button button-primary">
-                                                <?php _e('Enviar para Aprobación', 'certificados-personalizados'); ?>
+                                            <button type="submit" class="button button-primary btn-enviar-aprobacion">
+                                                <?php _e('Enviar aprobación', 'certificados-personalizados'); ?>
                                             </button>
                                         </form>
                                     <?php elseif ($certificado->estado === 'pendiente' && $certificado->notificado == 1): ?>
@@ -711,6 +722,46 @@ function obtener_tipos_certificado() {
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+
+                <?php
+                $base_url = add_query_arg(
+                    array(
+                        'page' => 'mis-certificados',
+                        'pagina_actual' => '%#%'
+                    ),
+                    admin_url('admin.php')
+                );
+
+                $enlaces_paginacion = paginate_links(array(
+                    'base' => $base_url,
+                    'format' => '',
+                    'current' => $pagina_actual,
+                    'total' => $total_paginas,
+                    'prev_text' => __('« Anterior', 'certificados-personalizados'),
+                    'next_text' => __('Siguiente »', 'certificados-personalizados'),
+                    'type' => 'array'
+                ));
+                ?>
+
+                <?php if (!empty($enlaces_paginacion)): ?>
+                    <div class="tablenav">
+                        <div class="tablenav-pages">
+                            <span class="displaying-num">
+                                <?php
+                                echo esc_html(sprintf(
+                                    __('Mostrando %1$d-%2$d de %3$d certificados', 'certificados-personalizados'),
+                                    $offset + 1,
+                                    min($offset + count($certificados), $total_certificados),
+                                    $total_certificados
+                                ));
+                                ?>
+                            </span>
+                            <span class="pagination-links">
+                                <?php echo wp_kses_post(implode(' ', $enlaces_paginacion)); ?>
+                            </span>
+                        </div>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>
@@ -760,6 +811,12 @@ function obtener_tipos_certificado() {
     background-color: #f8d7da;
     color: #721c24;
     border: 1px solid #f5c6cb;
+}
+
+.btn-enviar-aprobacion {
+    font-size: 12px;
+    padding: 2px 8px;
+    line-height: 1.4;
 }
 
 .form-table th {

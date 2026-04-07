@@ -67,7 +67,7 @@ class CertificadosAntecoreBD {
     /**
      * Obtener certificados por usuario
      */
-    public static function obtener_certificados_usuario($user_id = null, $estado = null) {
+    public static function obtener_certificados_usuario($user_id = null, $estado = null, $limit = null, $offset = 0) {
         global $wpdb;
         
         $tabla = self::obtener_tabla();
@@ -86,12 +86,47 @@ class CertificadosAntecoreBD {
         
         $where_clause = 'WHERE ' . implode(' AND ', $where);
         
-        $sql = $wpdb->prepare(
-            "SELECT * FROM $tabla $where_clause ORDER BY created_at DESC",
-            $valores
-        );
+        if ($limit !== null) {
+            $sql = $wpdb->prepare(
+                "SELECT * FROM $tabla $where_clause ORDER BY created_at DESC LIMIT %d OFFSET %d",
+                array_merge($valores, array(intval($limit), intval($offset)))
+            );
+        } else {
+            $sql = $wpdb->prepare(
+                "SELECT * FROM $tabla $where_clause ORDER BY created_at DESC",
+                $valores
+            );
+        }
         
         return $wpdb->get_results($sql);
+    }
+
+    /**
+     * Contar certificados por usuario para paginación
+     */
+    public static function contar_certificados_usuario($user_id = null, $estado = null) {
+        global $wpdb;
+
+        $tabla = self::obtener_tabla();
+
+        if ($user_id === null) {
+            $user_id = get_current_user_id();
+        }
+
+        if ($estado !== null) {
+            $sql = $wpdb->prepare(
+                "SELECT COUNT(*) FROM $tabla WHERE user_id = %d AND estado = %s",
+                $user_id,
+                $estado
+            );
+        } else {
+            $sql = $wpdb->prepare(
+                "SELECT COUNT(*) FROM $tabla WHERE user_id = %d",
+                $user_id
+            );
+        }
+
+        return intval($wpdb->get_var($sql));
     }
     
     /**
