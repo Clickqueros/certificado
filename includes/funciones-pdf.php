@@ -194,7 +194,7 @@ class CertificadosAntecorePDF {
         // - Otros: mantener galones y mostrar la línea de tanques
         $tipos_en_kg_sin_tanques = array('DEGLP', 'PVGLP');
         if (in_array($certificado->tipo_certificado, $tipos_en_kg_sin_tanques, true)) {
-            $html = str_replace('[UNIDAD_CAPACIDAD]', 'kilogramos', $html);
+            $html = str_replace('[UNIDAD_CAPACIDAD]', 'kg', $html);
             $html = str_replace('[LINEA_TANQUES]', '', $html);
         } else {
             $html = str_replace('[UNIDAD_CAPACIDAD]', 'galones', $html);
