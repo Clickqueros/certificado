@@ -238,7 +238,7 @@ class CertificadosAntecorePDF {
             'DEGLP' => array(
                 'alcance' => 'Certificación de Depósito de Cilindro de GLP',
                 'requisitos' => 'Resolución 40248 de marzo de 2016 del Ministerio de Minas y Energía Capítulo I /' . '<br>' . 
-                              'Capítulo III Artículos 6, 7 y 8' . '<br>' . 
+                              'Capítulo II Artículos 6, 7 y 8' . '<br>' . 
                               'Resolución 40869 de septiembre de 2016 del Ministerio de Minas y Energía'
             ),
             'PVGLP' => array(
