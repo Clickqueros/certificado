@@ -434,9 +434,10 @@ class CertificadosAntecoreExcel {
     }
     
     /**
-     * Generar CSV con los certificados aprobados (publicados) para exportación de administrador
+     * Generar XML (SpreadsheetML / Excel XML 2003) con los certificados aprobados (publicados)
+     * Excel abre este formato de forma nativa, sin necesidad de librerías externas.
      */
-    public static function generar_exportacion_aprobados($certificados) {
+    public static function generar_exportacion_aprobados_xml($certificados) {
         $encabezados = [
             'CODIGO',
             'TIPO_CERTIFICADO',
@@ -459,8 +460,17 @@ class CertificadosAntecoreExcel {
         ];
         $tipos_sin_tanques = ['DEGLP', 'PVGLP'];
 
-        $contenido = "\xEF\xBB\xBF"; // BOM para UTF-8
-        $contenido .= self::escapar_csv($encabezados) . "\n";
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        $xml .= '<?mso-application progid="Excel.Sheet"?>' . "\n";
+        $xml .= '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">' . "\n";
+        $xml .= '<Worksheet ss:Name="Certificados Publicados">' . "\n";
+        $xml .= '<Table>' . "\n";
+
+        $xml .= '<Row>' . "\n";
+        foreach ($encabezados as $encabezado) {
+            $xml .= '<Cell><Data ss:Type="String">' . self::escapar_xml($encabezado) . '</Data></Cell>' . "\n";
+        }
+        $xml .= '</Row>' . "\n";
 
         foreach ($certificados as $certificado) {
             $tipo = $certificado->tipo_certificado;
@@ -480,10 +490,25 @@ class CertificadosAntecoreExcel {
                 ucfirst((string) $certificado->estado)
             ];
 
-            $contenido .= self::escapar_csv($fila) . "\n";
+            $xml .= '<Row>' . "\n";
+            foreach ($fila as $valor) {
+                $xml .= '<Cell><Data ss:Type="String">' . self::escapar_xml($valor) . '</Data></Cell>' . "\n";
+            }
+            $xml .= '</Row>' . "\n";
         }
 
-        return $contenido;
+        $xml .= '</Table>' . "\n";
+        $xml .= '</Worksheet>' . "\n";
+        $xml .= '</Workbook>';
+
+        return $xml;
+    }
+
+    /**
+     * Escapar texto para uso seguro dentro de XML
+     */
+    private static function escapar_xml($texto) {
+        return htmlspecialchars((string) $texto, ENT_QUOTES | ENT_XML1, 'UTF-8');
     }
 
     /**

@@ -1240,11 +1240,11 @@ class CertificadosAntecore {
 
         $certificados = CertificadosAntecoreBD::obtener_todos_certificados('aprobado', 100000, 0);
 
-        $contenido = CertificadosAntecoreExcel::generar_exportacion_aprobados($certificados);
+        $contenido = CertificadosAntecoreExcel::generar_exportacion_aprobados_xml($certificados);
 
-        $nombre_archivo = 'certificados-publicados-' . date('Y-m-d') . '.csv';
+        $nombre_archivo = 'certificados-publicados-' . date('Y-m-d') . '.xml';
 
-        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Type: application/xml; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . $nombre_archivo . '"');
         header('Cache-Control: no-cache, no-store, must-revalidate');
         header('Pragma: no-cache');
