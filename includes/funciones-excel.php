@@ -213,7 +213,7 @@ class CertificadosAntecoreExcel {
                             
                             // Solo agregar si no es una fila completamente vacía
                             if (!empty(array_filter($fila_limpia))) {
-                                // Orden correcto: nombre, direccion, razon_social, nit, tipo, numero, fecha, capacidad, tanques
+                                // Orden correcto: nombre, direccion, razon_social, nit, tipo, numero, fecha, capacidad, tanques, alcance
                                 $datos[] = [
                                     'nombre_instalacion' => isset($fila_limpia[0]) ? $fila_limpia[0] : '',
                                     'direccion_instalacion' => isset($fila_limpia[1]) ? $fila_limpia[1] : '',
@@ -223,7 +223,8 @@ class CertificadosAntecoreExcel {
                                     'numero_certificado' => isset($fila_limpia[5]) ? $fila_limpia[5] : '',
                                     'fecha_aprobacion' => isset($fila_limpia[6]) ? $fila_limpia[6] : '',
                                     'capacidad_almacenamiento' => isset($fila_limpia[7]) ? $fila_limpia[7] : '',
-                                    'numero_tanques' => isset($fila_limpia[8]) ? $fila_limpia[8] : ''
+                                    'numero_tanques' => isset($fila_limpia[8]) ? $fila_limpia[8] : '',
+                                    'alcance_certificado' => isset($fila_limpia[9]) ? $fila_limpia[9] : ''
                                 ];
                             }
                         }
@@ -275,7 +276,7 @@ class CertificadosAntecoreExcel {
                         // Leer datos con este separador
                         while (($fila = fgetcsv($handle, 1000, $separador)) !== FALSE) {
                             if (count($fila) >= 9) {
-                                // Orden correcto: nombre, direccion, razon_social, nit, tipo, numero, fecha, capacidad, tanques
+                                // Orden correcto: nombre, direccion, razon_social, nit, tipo, numero, fecha, capacidad, tanques, alcance
                                 $datos[] = [
                                     'nombre_instalacion' => isset($fila[0]) ? trim($fila[0]) : '',
                                     'direccion_instalacion' => isset($fila[1]) ? trim($fila[1]) : '',
@@ -285,7 +286,8 @@ class CertificadosAntecoreExcel {
                                     'numero_certificado' => isset($fila[5]) ? trim($fila[5]) : '',
                                     'fecha_aprobacion' => isset($fila[6]) ? trim($fila[6]) : '',
                                     'capacidad_almacenamiento' => isset($fila[7]) ? trim($fila[7]) : '',
-                                    'numero_tanques' => isset($fila[8]) ? trim($fila[8]) : ''
+                                    'numero_tanques' => isset($fila[8]) ? trim($fila[8]) : '',
+                                    'alcance_certificado' => isset($fila[9]) ? trim($fila[9]) : ''
                                 ];
                             }
                         }
@@ -316,7 +318,8 @@ class CertificadosAntecoreExcel {
             'numero_tanques' => 'Número de Tanques',
             'tipo_certificado' => 'Tipo de Certificado',
             'numero_certificado' => 'Número de Certificado',
-            'fecha_aprobacion' => 'Fecha de Aprobación'
+            'fecha_aprobacion' => 'Fecha de Aprobación',
+            'alcance_certificado' => 'Alcance del Certificado'
         ];
         
         foreach ($campos_obligatorios as $campo => $nombre) {
@@ -398,6 +401,7 @@ class CertificadosAntecoreExcel {
             'tipo_certificado' => sanitize_text_field($datos['tipo_certificado']),
             'numero_certificado' => intval($datos['numero_certificado']),
             'fecha_aprobacion' => self::convertir_fecha($datos['fecha_aprobacion']),
+            'alcance_certificado' => sanitize_textarea_field($datos['alcance_certificado']),
             'actividad' => sanitize_text_field($datos['tipo_certificado']), // Usar tipo como actividad
             'estado' => 'pendiente',
             'notificado' => 0
@@ -591,9 +595,10 @@ class CertificadosAntecoreExcel {
             'NUMERO_CERTIFICADO',
             'FECHA_APROBACION',
             'CAPACIDAD_ALMACENAMIENTO',
-            'NUMERO_TANQUES'
+            'NUMERO_TANQUES',
+            'ALCANCE_CERTIFICADO'
         ];
-        
+
         $ejemplos = [
             'Estación de Servicio ABC',
             'Calle 123 #45-67, Bogotá',
@@ -603,9 +608,10 @@ class CertificadosAntecoreExcel {
             '001',
             '15/12/2024',
             '10000',
-            '5'
+            '5',
+            'Certificación de Planta de Almacenamiento de GLP para redes de distribución.'
         ];
-        
+
         $descripciones = [
             'Nombre de la instalación o lugar',
             'Dirección completa de la instalación',
@@ -615,7 +621,8 @@ class CertificadosAntecoreExcel {
             'Número del certificado',
             'Fecha en formato DD/MM/YYYY',
             'Capacidad en galones',
-            'Cantidad de tanques'
+            'Cantidad de tanques',
+            'Texto de alcance que aparecerá impreso en el certificado (PDF)'
         ];
         
         // Crear contenido CSV con BOM para UTF-8

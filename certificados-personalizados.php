@@ -204,9 +204,10 @@ class CertificadosAntecore {
         if ($tabla_nueva_existe) {
             // Verificar si falta alguna columna nueva
             $columna_capacidad = $wpdb->get_var("SHOW COLUMNS FROM $tabla_nueva LIKE 'capacidad_almacenamiento'");
-            
-            if (!$columna_capacidad) {
-                // Si falta la columna capacidad_almacenamiento, actualizar toda la tabla
+            $columna_alcance = $wpdb->get_var("SHOW COLUMNS FROM $tabla_nueva LIKE 'alcance_certificado'");
+
+            if (!$columna_capacidad || !$columna_alcance) {
+                // Si falta alguna columna nueva, actualizar toda la tabla
                 $this->actualizar_tabla_existente();
                 error_log("CertificadosAntecore: Base de datos actualizada automáticamente.");
             }
@@ -248,7 +249,8 @@ class CertificadosAntecore {
                 'nit' => 'VARCHAR(50)',
                 'tipo_certificado' => 'VARCHAR(10)',
                 'numero_certificado' => 'INT',
-                'fecha_aprobacion' => 'DATE'
+                'fecha_aprobacion' => 'DATE',
+                'alcance_certificado' => 'TEXT'
             );
             
             // Agregar columnas que no existen
@@ -549,6 +551,7 @@ class CertificadosAntecore {
             tipo_certificado VARCHAR(10),
             numero_certificado INT,
             fecha_aprobacion DATE,
+            alcance_certificado TEXT,
             PRIMARY KEY (id),
             KEY user_id (user_id),
             KEY estado (estado),
@@ -719,7 +722,8 @@ class CertificadosAntecore {
         $tipo_certificado = sanitize_text_field($_POST['tipo_certificado']);
         $numero_certificado = intval($_POST['numero_certificado']);
         $fecha_aprobacion = sanitize_text_field($_POST['fecha_aprobacion']);
-        
+        $alcance_certificado = sanitize_textarea_field($_POST['alcance_certificado']);
+
         $tipos_sin_tanques_en_pdf = array('DEGLP', 'PVGLP');
         $requiere_tanques = !in_array($tipo_certificado, $tipos_sin_tanques_en_pdf, true);
 
@@ -732,31 +736,32 @@ class CertificadosAntecore {
             'nit' => $nit,
             'tipo_certificado' => $tipo_certificado,
             'numero_certificado' => $numero_certificado,
-            'fecha_aprobacion' => $fecha_aprobacion
+            'fecha_aprobacion' => $fecha_aprobacion,
+            'alcance_certificado' => $alcance_certificado
         );
 
         if ($requiere_tanques) {
             $campos_obligatorios['numero_tanques'] = $numero_tanques;
         }
-        
+
         foreach ($campos_obligatorios as $campo => $valor) {
             if (empty($valor)) {
                 wp_die('El campo ' . ucfirst(str_replace('_', ' ', $campo)) . ' es obligatorio.');
             }
         }
-        
+
         // Validar fecha de aprobación
         $fecha_actual = date('Y-m-d');
         if ($fecha_aprobacion > $fecha_actual) {
             wp_die('La fecha de aprobación no puede ser futura.');
         }
-        
+
         // Validar tipo de certificado
         $tipos_validos = array('PAGLP', 'TEGLP', 'PEGLP', 'DEGLP', 'PVGLP');
         if (!in_array($tipo_certificado, $tipos_validos)) {
             wp_die('Tipo de certificado no válido.');
         }
-        
+
         // Validar / normalizar número de tanques
         if ($requiere_tanques) {
             if ($numero_tanques <= 0) {
@@ -768,12 +773,12 @@ class CertificadosAntecore {
                 $numero_tanques = 1;
             }
         }
-        
+
         // Validar que el número de certificado sea positivo
         if ($numero_certificado <= 0) {
             wp_die('El número de certificado debe ser mayor a 0.');
         }
-        
+
         // Preparar datos para actualización
         $datos_actualizados = array(
             'actividad' => $tipo_certificado, // Usamos tipo_certificado como actividad
@@ -786,12 +791,13 @@ class CertificadosAntecore {
             'tipo_certificado' => $tipo_certificado,
             'numero_certificado' => $numero_certificado,
             'fecha_aprobacion' => $fecha_aprobacion,
+            'alcance_certificado' => $alcance_certificado,
             'updated_at' => current_time('mysql')
         );
-        
+
         // Actualizar certificado
         $resultado = CertificadosAntecoreBD::actualizar_certificado($certificado_id, $datos_actualizados);
-        
+
         if ($resultado) {
             // Verificar que la actualización fue exitosa obteniendo los datos actualizados
             $certificado_actualizado = CertificadosAntecoreBD::obtener_certificado($certificado_id);
@@ -850,7 +856,8 @@ class CertificadosAntecore {
         $tipo_certificado = sanitize_text_field($_POST['tipo_certificado']);
         $numero_certificado = intval($_POST['numero_certificado']);
         $fecha_aprobacion = sanitize_text_field($_POST['fecha_aprobacion']);
-        
+        $alcance_certificado = sanitize_textarea_field($_POST['alcance_certificado']);
+
         $tipos_sin_tanques_en_pdf = array('DEGLP', 'PVGLP');
         $requiere_tanques = !in_array($tipo_certificado, $tipos_sin_tanques_en_pdf, true);
 
@@ -863,31 +870,32 @@ class CertificadosAntecore {
             'nit' => $nit,
             'tipo_certificado' => $tipo_certificado,
             'numero_certificado' => $numero_certificado,
-            'fecha_aprobacion' => $fecha_aprobacion
+            'fecha_aprobacion' => $fecha_aprobacion,
+            'alcance_certificado' => $alcance_certificado
         );
 
         if ($requiere_tanques) {
             $campos_obligatorios['numero_tanques'] = $numero_tanques;
         }
-        
+
         foreach ($campos_obligatorios as $campo => $valor) {
             if (empty($valor)) {
                 wp_die('El campo ' . ucfirst(str_replace('_', ' ', $campo)) . ' es obligatorio.');
             }
         }
-        
+
         // Validar fecha de aprobación
         $fecha_actual = date('Y-m-d');
         if ($fecha_aprobacion > $fecha_actual) {
             wp_die('La fecha de aprobación no puede ser futura.');
         }
-        
+
         // Validar tipo de certificado
         $tipos_validos = array('PAGLP', 'TEGLP', 'PEGLP', 'DEGLP', 'PVGLP');
         if (!in_array($tipo_certificado, $tipos_validos)) {
             wp_die('Tipo de certificado no válido.');
         }
-        
+
         // Validar / normalizar número de tanques
         if ($requiere_tanques) {
             if ($numero_tanques <= 0) {
@@ -899,18 +907,18 @@ class CertificadosAntecore {
                 $numero_tanques = 1;
             }
         }
-        
+
         // Validar que el número de certificado sea positivo
         if ($numero_certificado <= 0) {
             wp_die('El número de certificado debe ser mayor a 0.');
         }
-        
+
         // Validar estado
         $estados_validos = array('pendiente', 'aprobado', 'rechazado');
         if (!in_array($estado, $estados_validos)) {
             wp_die('Estado no válido.');
         }
-        
+
         // Preparar datos para actualización
         $datos_actualizados = array(
             'actividad' => $tipo_certificado, // Usamos tipo_certificado como actividad
@@ -923,6 +931,7 @@ class CertificadosAntecore {
             'tipo_certificado' => $tipo_certificado,
             'numero_certificado' => $numero_certificado,
             'fecha_aprobacion' => $fecha_aprobacion,
+            'alcance_certificado' => $alcance_certificado,
             'estado' => $estado,
             'updated_at' => current_time('mysql')
         );
@@ -1271,9 +1280,9 @@ class CertificadosAntecore {
         $timestamp = time();
         
         // Crear contenido CSV simple
-        $contenido = "NOMBRE_INSTALACION,DIRECCION_INSTALACION,RAZON_SOCIAL,NIT,TIPO_CERTIFICADO,NUMERO_CERTIFICADO,FECHA_APROBACION,CAPACIDAD_ALMACENAMIENTO,NUMERO_TANQUES\n";
-        $contenido .= "Estación de Servicio Test,Calle 123 #45-67 Bogotá,Servicios Test S.A.S.,TEST{$timestamp}-1,PAGLP,001,15/12/2024,10000,5\n";
-        $contenido .= "Taller Mecánico ABC,Carrera 456 #78-90 Medellín,Taller ABC Ltda.,TEST{$timestamp}-2,PAGLP,002,16/12/2024,5000,3\n";
+        $contenido = "NOMBRE_INSTALACION,DIRECCION_INSTALACION,RAZON_SOCIAL,NIT,TIPO_CERTIFICADO,NUMERO_CERTIFICADO,FECHA_APROBACION,CAPACIDAD_ALMACENAMIENTO,NUMERO_TANQUES,ALCANCE_CERTIFICADO\n";
+        $contenido .= "Estación de Servicio Test,Calle 123 #45-67 Bogotá,Servicios Test S.A.S.,TEST{$timestamp}-1,PAGLP,001,15/12/2024,10000,5,\"Certificación de Planta de Almacenamiento de GLP para redes de distribución.\"\n";
+        $contenido .= "Taller Mecánico ABC,Carrera 456 #78-90 Medellín,Taller ABC Ltda.,TEST{$timestamp}-2,PAGLP,002,16/12/2024,5000,3,\"Certificación de Planta de Almacenamiento de GLP para redes de distribución.\"\n";
         
         // Configurar headers para descarga
         header('Content-Type: text/csv; charset=UTF-8');

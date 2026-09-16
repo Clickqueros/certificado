@@ -148,7 +148,8 @@ function procesar_solicitud_certificado() {
     $tipo_certificado = sanitize_text_field($_POST['tipo_certificado']);
     $numero_certificado = intval($_POST['numero_certificado']);
     $fecha_aprobacion = sanitize_text_field($_POST['fecha_aprobacion']);
-    
+    $alcance_certificado = sanitize_textarea_field($_POST['alcance_certificado']);
+
     $tipos_sin_tanques_en_pdf = array('DEGLP', 'PVGLP');
     $requiere_tanques = !in_array($tipo_certificado, $tipos_sin_tanques_en_pdf, true);
 
@@ -161,7 +162,8 @@ function procesar_solicitud_certificado() {
         'nit' => $nit,
         'tipo_certificado' => $tipo_certificado,
         'numero_certificado' => $numero_certificado,
-        'fecha_aprobacion' => $fecha_aprobacion
+        'fecha_aprobacion' => $fecha_aprobacion,
+        'alcance_certificado' => $alcance_certificado
     );
 
     if ($requiere_tanques) {
@@ -214,9 +216,10 @@ function procesar_solicitud_certificado() {
         'nit' => $nit,
         'tipo_certificado' => $tipo_certificado,
         'numero_certificado' => $numero_certificado,
-        'fecha_aprobacion' => $fecha_aprobacion
+        'fecha_aprobacion' => $fecha_aprobacion,
+        'alcance_certificado' => $alcance_certificado
     );
-    
+
     $certificado_id = CertificadosAntecoreBD::crear_certificado($datos);
     
     if ($certificado_id) {
@@ -443,6 +446,16 @@ function obtener_tipos_certificado() {
                         </td>
                     </tr>
                     
+                    <tr id="row-alcance-certificado">
+                        <th scope="row">
+                            <label for="alcance_certificado"><?php _e('Alcance del Certificado', 'certificados-personalizados'); ?> *</label>
+                        </th>
+                        <td>
+                            <textarea id="alcance_certificado" name="alcance_certificado" rows="3" cols="50" class="large-text" required><?php echo $modo_edicion ? esc_textarea($certificado_edicion->alcance_certificado) : ''; ?></textarea>
+                            <p class="description"><?php _e('Escribe el texto de alcance que aparecerá impreso en el certificado (PDF).', 'certificados-personalizados'); ?></p>
+                        </td>
+                    </tr>
+
                     <!-- Información dinámica del certificado -->
                     <tr>
                         <th scope="row">
@@ -451,7 +464,7 @@ function obtener_tipos_certificado() {
                         <td>
                             <div id="certificate-info" style="background: #f9f9f9; padding: 15px; border-radius: 5px; border-left: 4px solid #0073aa;">
                                 <div id="certificate-scope" style="margin-bottom: 10px;">
-                                    <strong>Alcance:</strong> <span id="scope-text">Selecciona un tipo de certificado para ver el alcance</span>
+                                    <strong>Alcance sugerido (referencia, no se imprime automáticamente):</strong> <span id="scope-text">Selecciona un tipo de certificado para ver el alcance</span>
                                 </div>
                                 <div id="certificate-requirements" style="margin-bottom: 10px;">
                                     <strong>Requisitos:</strong> <span id="requirements-text">Selecciona un tipo de certificado para ver los requisitos</span>
@@ -569,6 +582,7 @@ function obtener_tipos_certificado() {
                             <li><strong>TIPO_CERTIFICADO:</strong> <?php _e('PAGLP, TEGLP, PEGLP, DEGLP, PVGLP', 'certificados-personalizados'); ?></li>
                             <li><strong>NUMERO_CERTIFICADO:</strong> <?php _e('Número del certificado', 'certificados-personalizados'); ?></li>
                             <li><strong>FECHA_APROBACION:</strong> <?php _e('Fecha en formato DD/MM/YYYY', 'certificados-personalizados'); ?></li>
+                            <li><strong>ALCANCE_CERTIFICADO:</strong> <?php _e('Texto de alcance que aparecerá impreso en el certificado (PDF)', 'certificados-personalizados'); ?></li>
                         </ul>
                     </div>
                     
@@ -1043,6 +1057,11 @@ function obtener_tipos_certificado() {
                 <span class="confirmacion-label">Número de Tanques</span>
                 <div class="confirmacion-valor" id="confirm-numero-tanques"></div>
             </div>
+
+            <div class="confirmacion-item">
+                <span class="confirmacion-label">Alcance del Certificado</span>
+                <div class="confirmacion-valor" id="confirm-alcance-certificado"></div>
+            </div>
         </div>
         <div class="modal-footer">
             <button type="button" class="modal-btn modal-btn-cancelar" id="btn-cancelar">
@@ -1211,10 +1230,11 @@ jQuery(document).ready(function($) {
         const fechaAprobacion = $('#fecha_aprobacion').val();
         const capacidad = $('#capacidad_almacenamiento').val();
         const numeroTanques = $('#numero_tanques').val();
+        const alcanceCertificado = $('#alcance_certificado').val().trim();
         const enKgSinTanques = esTipoKgSinTanques(tipoCertificado);
-        
+
         // Validar campos obligatorios
-        if (!nombreInstalacion || !direccion || !razonSocial || !nit || !tipoCertificado || !numeroCertificado || !fechaAprobacion || !capacidad || (!enKgSinTanques && !numeroTanques)) {
+        if (!nombreInstalacion || !direccion || !razonSocial || !nit || !tipoCertificado || !numeroCertificado || !fechaAprobacion || !capacidad || !alcanceCertificado || (!enKgSinTanques && !numeroTanques)) {
             alert('Por favor, completa todos los campos obligatorios antes de continuar.');
             return false;
         }
@@ -1246,6 +1266,7 @@ jQuery(document).ready(function($) {
         $('#confirm-numero-certificado').text(tipoCertificado + '-' + numeroCertificado.toString().padStart(2, '0'));
         $('#confirm-fecha-aprobacion').text(formatearFecha(fechaAprobacion));
         $('#confirm-capacidad').text(capacidad + (enKgSinTanques ? ' kilogramos' : ' galones'));
+        $('#confirm-alcance-certificado').text(alcanceCertificado);
 
         if (enKgSinTanques) {
             $('#confirmacion-item-numero-tanques').hide();

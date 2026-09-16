@@ -261,11 +261,21 @@ function obtener_tipos_certificado_admin() {
                             <label for="numero_tanques"><?php _e('Número de Tanques', 'certificados-personalizados'); ?></label>
                         </th>
                         <td>
-                            <input type="number" id="numero_tanques" name="numero_tanques" class="small-text" 
+                            <input type="number" id="numero_tanques" name="numero_tanques" class="small-text"
                                    value="<?php echo esc_attr(get_certificado_value($certificado_edicion, 'numero_tanques')); ?>" min="1" required>
                         </td>
                     </tr>
-                    
+
+                    <tr>
+                        <th scope="row">
+                            <label for="alcance_certificado"><?php _e('Alcance del Certificado', 'certificados-personalizados'); ?></label>
+                        </th>
+                        <td>
+                            <textarea id="alcance_certificado" name="alcance_certificado" rows="3" cols="50" class="large-text" required><?php echo esc_textarea(get_certificado_value($certificado_edicion, 'alcance_certificado')); ?></textarea>
+                            <p class="description"><?php _e('Texto de alcance que aparece impreso en el certificado (PDF).', 'certificados-personalizados'); ?></p>
+                        </td>
+                    </tr>
+
                     <!-- Estado del Certificado -->
                     <tr>
                         <th scope="row">

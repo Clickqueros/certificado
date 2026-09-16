@@ -205,8 +205,10 @@ class CertificadosAntecorePDF {
         // Compatibilidad: si el placeholder existe en otras partes
         $html = str_replace('[NUMERO_TANQUES]', htmlspecialchars($certificado->numero_tanques), $html);
         
-        // Reemplazar alcance y requisitos según el tipo de certificado
-        $html = str_replace('[ALCANCE_CERTIFICADO]', htmlspecialchars($info_certificado['alcance']), $html);
+        // Alcance: usa el texto ingresado por el colaborador; si el certificado es antiguo y no lo tiene,
+        // usa el texto automático por tipo como respaldo (compatibilidad con registros existentes).
+        $alcance = !empty($certificado->alcance_certificado) ? $certificado->alcance_certificado : $info_certificado['alcance'];
+        $html = str_replace('[ALCANCE_CERTIFICADO]', htmlspecialchars($alcance), $html);
         // No usar htmlspecialchars en requisitos porque contiene <br> para saltos de línea
         $html = str_replace('[REQUISITOS_CERTIFICADO]', $info_certificado['requisitos'], $html);
         

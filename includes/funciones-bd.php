@@ -50,7 +50,8 @@ class CertificadosAntecoreBD {
             'nit' => '',
             'tipo_certificado' => '',
             'numero_certificado' => 0,
-            'fecha_aprobacion' => ''
+            'fecha_aprobacion' => '',
+            'alcance_certificado' => ''
         );
         
         $datos = wp_parse_args($datos, $datos_default);
