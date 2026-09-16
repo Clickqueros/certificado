@@ -136,7 +136,15 @@ function obtener_tipos_certificado_admin() {
             <input type="submit" class="button" value="<?php _e('Filtrar', 'certificados-personalizados'); ?>">
         </form>
     </div>
-    
+
+    <!-- Exportar certificados publicados -->
+    <div class="exportar-certificados" style="margin: 15px 0;">
+        <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=exportar_certificados_publicados'), 'exportar_certificados_publicados', 'exportar_publicados_nonce')); ?>"
+           class="button button-secondary">
+            📥 <?php _e('Descargar DB Publicados', 'certificados-personalizados'); ?>
+        </a>
+    </div>
+
     <!-- Función helper para obtener valores del certificado de forma segura -->
     <?php
     function get_certificado_value($certificado, $field, $default = '') {

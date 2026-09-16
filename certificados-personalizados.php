@@ -93,6 +93,9 @@ class CertificadosAntecore {
         
         // Hook para descargar plantilla Excel
         add_action('admin_post_descargar_plantilla_excel', array($this, 'descargar_plantilla_excel'));
+
+        // Hook para descargar Excel/CSV de certificados publicados (aprobados)
+        add_action('admin_post_exportar_certificados_publicados', array($this, 'exportar_certificados_publicados'));
         
         // Hook para crear archivo de prueba simple
         add_action('admin_post_crear_archivo_prueba_simple', array($this, 'crear_archivo_prueba_simple'));
@@ -1222,6 +1225,35 @@ class CertificadosAntecore {
         exit;
     }
     
+    /**
+     * Exportar certificados publicados (aprobados) a Excel/CSV - solo administradores
+     */
+    public function exportar_certificados_publicados() {
+        if (!current_user_can('administrator')) {
+            wp_die('No tienes permisos para realizar esta acción.');
+        }
+
+        if (!isset($_GET['exportar_publicados_nonce']) ||
+            !wp_verify_nonce($_GET['exportar_publicados_nonce'], 'exportar_certificados_publicados')) {
+            wp_die('Error de seguridad.');
+        }
+
+        $certificados = CertificadosAntecoreBD::obtener_todos_certificados('aprobado', 100000, 0);
+
+        $contenido = CertificadosAntecoreExcel::generar_exportacion_aprobados($certificados);
+
+        $nombre_archivo = 'certificados-publicados-' . date('Y-m-d') . '.csv';
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $nombre_archivo . '"');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        echo $contenido;
+        exit;
+    }
+
     /**
      * Crear archivo de prueba simple para debug
      */

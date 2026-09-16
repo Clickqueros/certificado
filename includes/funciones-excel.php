@@ -434,6 +434,59 @@ class CertificadosAntecoreExcel {
     }
     
     /**
+     * Generar CSV con los certificados aprobados (publicados) para exportación de administrador
+     */
+    public static function generar_exportacion_aprobados($certificados) {
+        $encabezados = [
+            'CODIGO',
+            'TIPO_CERTIFICADO',
+            'NUMERO',
+            'INSTALACION',
+            'EMPRESA',
+            'DIRECCION',
+            'NIT',
+            'CAPACIDAD',
+            'TANQUES',
+            'ESTADO'
+        ];
+
+        $tipos_certificado = [
+            'PAGLP' => 'PAGLP - Planta de Almacenamiento de GLP',
+            'TEGLP' => 'TEGLP - Tanque de Almacenamiento de GLP',
+            'PEGLP' => 'PEGLP - Planta de Envasado de GLP',
+            'DEGLP' => 'DEGLP - Distribuidora de GLP',
+            'PVGLP' => 'PVGLP - Punto de Venta de GLP'
+        ];
+        $tipos_sin_tanques = ['DEGLP', 'PVGLP'];
+
+        $contenido = "\xEF\xBB\xBF"; // BOM para UTF-8
+        $contenido .= self::escapar_csv($encabezados) . "\n";
+
+        foreach ($certificados as $certificado) {
+            $tipo = $certificado->tipo_certificado;
+            $tipo_mostrar = isset($tipos_certificado[$tipo]) ? $tipos_certificado[$tipo] : $tipo;
+            $es_kg = in_array($tipo, $tipos_sin_tanques, true);
+
+            $fila = [
+                (string) $certificado->codigo_unico,
+                (string) $tipo_mostrar,
+                $tipo . '-' . str_pad((string) $certificado->numero_certificado, 3, '0', STR_PAD_LEFT),
+                (string) $certificado->nombre_instalacion,
+                (string) $certificado->razon_social,
+                (string) $certificado->direccion_instalacion,
+                (string) $certificado->nit,
+                $certificado->capacidad_almacenamiento . ($es_kg ? ' kilogramos' : ' galones'),
+                $es_kg ? '-' : (string) $certificado->numero_tanques,
+                ucfirst((string) $certificado->estado)
+            ];
+
+            $contenido .= self::escapar_csv($fila) . "\n";
+        }
+
+        return $contenido;
+    }
+
+    /**
      * Generar plantilla Excel/CSV
      */
     public static function generar_plantilla() {
