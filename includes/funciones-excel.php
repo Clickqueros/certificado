@@ -438,11 +438,11 @@ class CertificadosAntecoreExcel {
     }
     
     /**
-     * Generar un archivo .xlsx real (Office Open XML) con los certificados aprobados (publicados)
+     * Generar un archivo .xlsx real (Office Open XML) con certificados (pendientes, aprobados y/o rechazados)
      * Se construye a mano con ZipArchive (sin librerías externas tipo PhpSpreadsheet).
      * Retorna el contenido binario del archivo, o false si el servidor no tiene la extensión zip.
      */
-    public static function generar_exportacion_aprobados_xlsx($certificados) {
+    public static function generar_exportacion_certificados_xlsx($certificados) {
         if (!class_exists('ZipArchive')) {
             return false;
         }

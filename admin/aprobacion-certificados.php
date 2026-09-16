@@ -137,11 +137,11 @@ function obtener_tipos_certificado_admin() {
         </form>
     </div>
 
-    <!-- Exportar certificados publicados -->
+    <!-- Exportar todos los certificados -->
     <div class="exportar-certificados" style="margin: 15px 0;">
-        <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=exportar_certificados_publicados'), 'exportar_certificados_publicados', 'exportar_publicados_nonce')); ?>"
+        <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=exportar_certificados_excel'), 'exportar_certificados_excel', 'exportar_certificados_nonce')); ?>"
            class="button button-secondary">
-            📥 <?php _e('Descargar DB Publicados', 'certificados-personalizados'); ?>
+            📥 <?php _e('Descargar DB Certificados', 'certificados-personalizados'); ?>
         </a>
     </div>
 

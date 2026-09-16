@@ -94,8 +94,8 @@ class CertificadosAntecore {
         // Hook para descargar plantilla Excel
         add_action('admin_post_descargar_plantilla_excel', array($this, 'descargar_plantilla_excel'));
 
-        // Hook para descargar Excel/CSV de certificados publicados (aprobados)
-        add_action('admin_post_exportar_certificados_publicados', array($this, 'exportar_certificados_publicados'));
+        // Hook para descargar Excel de todos los certificados (pendientes, aprobados y rechazados)
+        add_action('admin_post_exportar_certificados_excel', array($this, 'exportar_certificados_excel'));
         
         // Hook para crear archivo de prueba simple
         add_action('admin_post_crear_archivo_prueba_simple', array($this, 'crear_archivo_prueba_simple'));
@@ -1235,27 +1235,28 @@ class CertificadosAntecore {
     }
     
     /**
-     * Exportar certificados publicados (aprobados) a Excel (.xlsx) - solo administradores
+     * Exportar todos los certificados (pendientes, aprobados y rechazados) a Excel (.xlsx) - solo administradores
      */
-    public function exportar_certificados_publicados() {
+    public function exportar_certificados_excel() {
         if (!current_user_can('administrator')) {
             wp_die('No tienes permisos para realizar esta acción.');
         }
 
-        if (!isset($_GET['exportar_publicados_nonce']) ||
-            !wp_verify_nonce($_GET['exportar_publicados_nonce'], 'exportar_certificados_publicados')) {
+        if (!isset($_GET['exportar_certificados_nonce']) ||
+            !wp_verify_nonce($_GET['exportar_certificados_nonce'], 'exportar_certificados_excel')) {
             wp_die('Error de seguridad.');
         }
 
-        $certificados = CertificadosAntecoreBD::obtener_todos_certificados('aprobado', 100000, 0);
+        // Sin filtro de estado: incluye pendientes, aprobados y rechazados
+        $certificados = CertificadosAntecoreBD::obtener_todos_certificados(null, 100000, 0);
 
-        $contenido = CertificadosAntecoreExcel::generar_exportacion_aprobados_xlsx($certificados);
+        $contenido = CertificadosAntecoreExcel::generar_exportacion_certificados_xlsx($certificados);
 
         if ($contenido === false) {
             wp_die('No se pudo generar el archivo Excel: la extensión PHP "zip" no está disponible en este servidor.');
         }
 
-        $nombre_archivo = 'certificados-publicados-' . date('Y-m-d') . '.xlsx';
+        $nombre_archivo = 'certificados-' . date('Y-m-d') . '.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment; filename="' . $nombre_archivo . '"');
