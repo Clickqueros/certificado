@@ -434,10 +434,15 @@ class CertificadosAntecoreExcel {
     }
     
     /**
-     * Generar XML (SpreadsheetML / Excel XML 2003) con los certificados aprobados (publicados)
-     * Excel abre este formato de forma nativa, sin necesidad de librerías externas.
+     * Generar un archivo .xlsx real (Office Open XML) con los certificados aprobados (publicados)
+     * Se construye a mano con ZipArchive (sin librerías externas tipo PhpSpreadsheet).
+     * Retorna el contenido binario del archivo, o false si el servidor no tiene la extensión zip.
      */
-    public static function generar_exportacion_aprobados_xml($certificados) {
+    public static function generar_exportacion_aprobados_xlsx($certificados) {
+        if (!class_exists('ZipArchive')) {
+            return false;
+        }
+
         $encabezados = [
             'CODIGO',
             'TIPO_CERTIFICADO',
@@ -460,24 +465,14 @@ class CertificadosAntecoreExcel {
         ];
         $tipos_sin_tanques = ['DEGLP', 'PVGLP'];
 
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $xml .= '<?mso-application progid="Excel.Sheet"?>' . "\n";
-        $xml .= '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">' . "\n";
-        $xml .= '<Worksheet ss:Name="Certificados Publicados">' . "\n";
-        $xml .= '<Table>' . "\n";
-
-        $xml .= '<Row>' . "\n";
-        foreach ($encabezados as $encabezado) {
-            $xml .= '<Cell><Data ss:Type="String">' . self::escapar_xml($encabezado) . '</Data></Cell>' . "\n";
-        }
-        $xml .= '</Row>' . "\n";
+        $filas = [$encabezados];
 
         foreach ($certificados as $certificado) {
             $tipo = $certificado->tipo_certificado;
             $tipo_mostrar = isset($tipos_certificado[$tipo]) ? $tipos_certificado[$tipo] : $tipo;
             $es_kg = in_array($tipo, $tipos_sin_tanques, true);
 
-            $fila = [
+            $filas[] = [
                 (string) $certificado->codigo_unico,
                 (string) $tipo_mostrar,
                 $tipo . '-' . str_pad((string) $certificado->numero_certificado, 3, '0', STR_PAD_LEFT),
@@ -489,19 +484,90 @@ class CertificadosAntecoreExcel {
                 $es_kg ? '-' : (string) $certificado->numero_tanques,
                 ucfirst((string) $certificado->estado)
             ];
-
-            $xml .= '<Row>' . "\n";
-            foreach ($fila as $valor) {
-                $xml .= '<Cell><Data ss:Type="String">' . self::escapar_xml($valor) . '</Data></Cell>' . "\n";
-            }
-            $xml .= '</Row>' . "\n";
         }
 
-        $xml .= '</Table>' . "\n";
-        $xml .= '</Worksheet>' . "\n";
-        $xml .= '</Workbook>';
+        $sheet_xml = self::generar_hoja_xlsx($filas);
 
-        return $xml;
+        $content_types = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' .
+            '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' .
+            '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' .
+            '<Default Extension="xml" ContentType="application/xml"/>' .
+            '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' .
+            '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' .
+            '</Types>';
+
+        $root_rels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' .
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' .
+            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' .
+            '</Relationships>';
+
+        $workbook_xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' .
+            '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' .
+            '<sheets><sheet name="Certificados Publicados" sheetId="1" r:id="rId1"/></sheets>' .
+            '</workbook>';
+
+        $workbook_rels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' .
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' .
+            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' .
+            '</Relationships>';
+
+        $archivo_temporal = tempnam(sys_get_temp_dir(), 'xlsx_');
+
+        $zip = new ZipArchive();
+        if ($zip->open($archivo_temporal, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            @unlink($archivo_temporal);
+            return false;
+        }
+
+        $zip->addFromString('[Content_Types].xml', $content_types);
+        $zip->addFromString('_rels/.rels', $root_rels);
+        $zip->addFromString('xl/workbook.xml', $workbook_xml);
+        $zip->addFromString('xl/_rels/workbook.xml.rels', $workbook_rels);
+        $zip->addFromString('xl/worksheets/sheet1.xml', $sheet_xml);
+        $zip->close();
+
+        $contenido = file_get_contents($archivo_temporal);
+        @unlink($archivo_temporal);
+
+        return $contenido;
+    }
+
+    /**
+     * Construir el XML de la hoja (sheet1.xml) a partir de filas de valores
+     */
+    private static function generar_hoja_xlsx($filas) {
+        $filas_xml = '';
+        $num_fila = 1;
+
+        foreach ($filas as $fila) {
+            $celdas_xml = '';
+            foreach ($fila as $col_index => $valor) {
+                $referencia = self::columna_letra($col_index) . $num_fila;
+                $valor_escapado = self::escapar_xml($valor);
+                $celdas_xml .= '<c r="' . $referencia . '" t="inlineStr"><is><t xml:space="preserve">' . $valor_escapado . '</t></is></c>';
+            }
+            $filas_xml .= '<row r="' . $num_fila . '">' . $celdas_xml . '</row>';
+            $num_fila++;
+        }
+
+        return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' .
+            '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' .
+            '<sheetData>' . $filas_xml . '</sheetData>' .
+            '</worksheet>';
+    }
+
+    /**
+     * Convertir un índice de columna base 0 a la letra de columna de Excel (0 => A, 1 => B, 26 => AA...)
+     */
+    private static function columna_letra($indice) {
+        $indice++; // pasar a base 1
+        $letra = '';
+        while ($indice > 0) {
+            $residuo = ($indice - 1) % 26;
+            $letra = chr(65 + $residuo) . $letra;
+            $indice = intdiv($indice - $residuo, 26);
+        }
+        return $letra;
     }
 
     /**

@@ -1226,7 +1226,7 @@ class CertificadosAntecore {
     }
     
     /**
-     * Exportar certificados publicados (aprobados) a Excel/CSV - solo administradores
+     * Exportar certificados publicados (aprobados) a Excel (.xlsx) - solo administradores
      */
     public function exportar_certificados_publicados() {
         if (!current_user_can('administrator')) {
@@ -1240,12 +1240,17 @@ class CertificadosAntecore {
 
         $certificados = CertificadosAntecoreBD::obtener_todos_certificados('aprobado', 100000, 0);
 
-        $contenido = CertificadosAntecoreExcel::generar_exportacion_aprobados_xml($certificados);
+        $contenido = CertificadosAntecoreExcel::generar_exportacion_aprobados_xlsx($certificados);
 
-        $nombre_archivo = 'certificados-publicados-' . date('Y-m-d') . '.xml';
+        if ($contenido === false) {
+            wp_die('No se pudo generar el archivo Excel: la extensión PHP "zip" no está disponible en este servidor.');
+        }
 
-        header('Content-Type: application/xml; charset=utf-8');
+        $nombre_archivo = 'certificados-publicados-' . date('Y-m-d') . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment; filename="' . $nombre_archivo . '"');
+        header('Content-Length: ' . strlen($contenido));
         header('Cache-Control: no-cache, no-store, must-revalidate');
         header('Pragma: no-cache');
         header('Expires: 0');
